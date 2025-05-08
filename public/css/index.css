@@ -1,0 +1,83 @@
+* {
+    padding: 0%;
+    margin: 0%;
+    text-decoration: none;
+    list-style: none;
+    box-sizing: border-box;
+}
+
+header {
+ width: 100%;
+ height: 100vh;
+ background-image: url(../../resources/image/11.jpg);
+ background-repeat: no-repeat;
+ background-position:center ;
+ background-size: cover;
+}
+
+nav {
+    height: 100px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    width: 140px;
+    margin-left: 20px;
+}
+
+
+/* BANNER TEXT */
+
+.banner-text {
+    padding:0 30px;
+    margin-top: 150px;
+    text-align: center;
+    color: #fff;
+}
+
+.banner-text h1{
+    font-size: 50px;
+    margin-bottom: 30px;
+}
+.banner-text span{
+color: rgb(248, 8, 8);
+}
+.banner-text h2{
+    font-size: 16px;
+    font-weight: 600 ;
+}
+.button1{
+    margin-right: 20px;
+    padding: 10px 30px;
+    background-color: rgb(248, 8, 8);
+    color: #fff;
+    border-radius: 5px;
+}
+.button1:hover{
+    background-color: #fff;
+    color: rgb(248, 8, 8);
+    transition: .5s;
+}
+/*.button2{
+    margin-right: 40px;
+    padding: 10px 30px;
+    background-color: #fff;
+    color: rgb(248, 8, 8);
+    border-radius: 5px;
+}
+.button2:hover{
+    background-color: rgb(248, 8, 8);
+    color: #fff;
+    transition: .5s;
+} */
+ 
+.banner-text h1{
+    font-size: 70px;
+    margin-bottom: 30px;
+}
+.banner-text h2{
+    font-size: 20px;
+}
