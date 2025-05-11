@@ -1,25 +1,20 @@
 const formulario = document.getElementById('formulario')
 const inputs = document.querySelectorAll('#formulario input');
 const selects = document.querySelectorAll('#formulario select');
-
+const archive = document.querySelectorAll('#formulario file');
 
 const expresiones = {
-    cedula: /^[0-9]{7,8}$/,
     nombre: /^[a-zA-ZÁ-ÿ]{3,40}$/,
     nombres: /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+(?:\s+[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+){1,5}(?:\s+[-\sa-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+)?$/,
-    apellido: /^[a-zA-ZÁ-ÿ]{3,40}$/,
     fechanacimiento: /^\d{2,4}\-\d{1,2}\-\d{1,2}$/
     
 }
 
 const campos = {
-    cedula: false,
     nombre: false,
-    apellido: false,
-    sexo: false,
-    fechanacimiento: false,
-    familia: false,
-    direccion: false
+    extension: false,
+    direccion: false,
+    imagen: false
 }
 
 const validarNombre = (expresion, input, campo) => {
@@ -41,8 +36,8 @@ const validarNombre = (expresion, input, campo) => {
 }
 
 
-const validarcampo = (expresion, input, campo) => {
-    if(expresion.test(input.value)){
+const validardireccion = (input, campo) => {
+    if(input.value.length >= 10 && input.value.length <= 150){
         document.getElementById(`grupo__${campo}`).classList.remove('formulario__grupo-incorrecto');
         document.getElementById(`grupo__${campo}`).classList.add('formulario__grupo-correcto');
         document.querySelector(`#grupo__${campo} i`).classList.remove('fa-times-circle');
@@ -79,42 +74,56 @@ const validarselect = (select, campo) => {
 }
 
 
+const validarimg = (archive, campo) => {
+    if(expresion.test(input.value)) {
+        document.getElementById(`grupo__${campo}`).classList.remove('formulario__grupo-correcto');
+        document.getElementById(`grupo__${campo}`).classList.add('formulario__grupo-incorrecto');
+        document.querySelector(`#grupo__${campo} i`).classList.remove('fa-check-circle');
+        document.querySelector(`#grupo__${campo} i`).classList.add('fa-times-circle');
+        document.querySelector(`#grupo__${campo} .formulario__input-error`).classList.add('formulario__input-error-activo');
+        campos[campo] = false;
+    }else{
+        document.getElementById(`grupo__${campo}`).classList.remove('formulario__grupo-incorrecto');
+        document.getElementById(`grupo__${campo}`).classList.add('formulario__grupo-correcto');
+        document.querySelector(`#grupo__${campo} i`).classList.remove('fa-times-circle');
+        document.querySelector(`#grupo__${campo} i`).classList.add('fa-check-circle');
+        document.querySelector(`#grupo__${campo} .formulario__input-error`).classList.remove('formulario__input-error-activo');
+        campos[campo] = true;
+    }
+}
+
+
 const select22 = () => {
     $(document).ready(function(){
-        $('#direccion').select2();
+        $('#extension').select2();
       });
 }
+
 const validarFormulario = (e) => {
     switch (e.target.name) {
-        case "cedula":
-            validarcampo(expresiones.cedula, e.target, 'cedula');
-        break;
         case "nombre":
             validarNombre(expresiones.nombre, e.target, 'nombre');
         break;
-        case "apellido":
-            validarNombre(expresiones.apellido, e.target, 'apellido');
-        break;
-        case "fechanacimiento":
-            validarcampo(expresiones.fechanacimiento, e.target, 'fechanacimiento');
+        case "direccion":
+            validardireccion(e.target, 'direccion');
         break;
     }
 }
 
-const validarFormularioS = (b) => {
-    console.log(b.target.name);
-    switch (b.target.name) {
-        case "sexo":
-            validarselect(b.target.value, 'sexo');
+const validarFormularioS = (e) => {
+    console.log(e.target.name);
+    switch (e.target.name) {
+        case "extension":
+            validarselect(e.target.value, 'extension');
         break;
-        case "familia":
-            validarselect(b.target.value, 'familia');
-        break;
-        case "direccion":
-            validarselect(b.target.value, 'direccion');            
-        break;
-        case "cedulanac":
-            validarselect(b.target.value, 'cedulanac');
+    }
+}
+
+const validarFormularioA = (e) => {
+    console.log(e.target.name);
+    switch (e.target.name) {
+        case "archivo":
+            validarimg(e.target, 'archivo');
         break;
     }
 }
@@ -129,9 +138,14 @@ selects.forEach((select) => {
     select.addEventListener('blur', validarFormularioS);
 })
 
+archive.forEach((file) => {
+    file.addEventListener('change', validarFormularioA);
+    file.addEventListener('blur', validarFormularioA);
+})
+
 formulario.addEventListener('submit', (e) => {
 
-    if(campos.cedula && campos.nombre && campos.apellido && campos.fechanacimiento && campos.sexo && campos.familia && campos.direccion){
+    if(campos.nombre && campos.extension && campos.direccion && campos.imagen){
 
     }else{
         e.preventDefault();
