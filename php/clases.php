@@ -12,7 +12,9 @@
             $rol=mysqli_fetch_array($validar_login);
 
             if(mysqli_num_rows($validar_login) > 0){
-                
+                    $last_connect=date("yyyy-mm-dd");
+                    $query = "UPDATE login_user SET last_connect='$last_connect' WHERE user='$data[0]'";
+                    $ejecutar = mysqli_query($conexion, $query);
                     $_SESSION['usuario'] = $data[0];
                     header("location: ../vista/inicio.php");
                     exit();
@@ -21,7 +23,7 @@
                 echo'
                     <script>
                     alert("Usuario no existe verifique los datos introducidos");
-                    window.location = "../index.php";
+                    window.location = "../vista/login.php";
                     </script>';
                 exit();
             }
@@ -43,7 +45,7 @@
             if(mysqli_num_rows($verificar_usuario) > 0){
                 echo'<script>
                     alert("Este usuario ya se encuentra registrado");
-                    window.location = "../index.php";
+                    window.location = "../index.html";
                     </script>';
                 exit();
             } else {
@@ -52,13 +54,13 @@
                 if($ejecutar == 1){
                     echo'<script>
                     alert("Se Registro los datos con exito");
-                    window.location = "../index.php";
+                    window.location = "../index.html";
                     </script>';
                     exit();
                 }else{
                     echo'<script>
                     alert("Fallo el Registro");
-                    window.location = "../index.php";
+                    window.location = "../index.html";
                     </script>';
                     exit();
                 }

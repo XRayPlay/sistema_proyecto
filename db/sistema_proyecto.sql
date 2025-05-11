@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 22-05-2025 a las 01:53:12
+-- Tiempo de generación: 21-06-2025 a las 02:40:47
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -26,6 +26,46 @@ USE `sistema_proyecto`;
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `especialidad`
+--
+
+CREATE TABLE `especialidad` (
+  `especialidad_id` int(11) NOT NULL,
+  `descripcion` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `especialidad`
+--
+
+INSERT INTO `especialidad` (`especialidad_id`, `descripcion`) VALUES
+(1, 'Soporte'),
+(2, 'Sistema'),
+(3, 'Redes');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `estado`
+--
+
+CREATE TABLE `estado` (
+  `estado_id` int(11) NOT NULL,
+  `descripcion` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `estado`
+--
+
+INSERT INTO `estado` (`estado_id`, `descripcion`) VALUES
+(1, 'Inactivo'),
+(2, 'Disponible'),
+(3, 'Ocupado');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `login_user`
 --
 
@@ -36,6 +76,31 @@ CREATE TABLE `login_user` (
   `create_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `last_connect` datetime NOT NULL,
   `id_tipo_user` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `login_user`
+--
+
+INSERT INTO `login_user` (`id_login`, `user`, `pass`, `create_date`, `last_connect`, `id_tipo_user`) VALUES
+(1, 'admin', 'Admin45*', '2025-06-21 00:09:54', '0000-00-00 00:00:00', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tecnico`
+--
+
+CREATE TABLE `tecnico` (
+  `id_tecnico` int(11) NOT NULL,
+  `nombre` varchar(300) NOT NULL,
+  `telefono` int(13) NOT NULL,
+  `email` text NOT NULL,
+  `fecha_ingreso` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `incidencia_id` int(11) NOT NULL,
+  `especialidad_id` int(11) NOT NULL,
+  `estado_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -114,11 +179,33 @@ CREATE TABLE `usuarios` (
 --
 
 --
+-- Indices de la tabla `especialidad`
+--
+ALTER TABLE `especialidad`
+  ADD PRIMARY KEY (`especialidad_id`);
+
+--
+-- Indices de la tabla `estado`
+--
+ALTER TABLE `estado`
+  ADD PRIMARY KEY (`estado_id`);
+
+--
 -- Indices de la tabla `login_user`
 --
 ALTER TABLE `login_user`
   ADD PRIMARY KEY (`id_login`),
   ADD KEY `id_tipo_user` (`id_tipo_user`);
+
+--
+-- Indices de la tabla `tecnico`
+--
+ALTER TABLE `tecnico`
+  ADD PRIMARY KEY (`id_tecnico`),
+  ADD KEY `estado_id` (`estado_id`),
+  ADD KEY `especialidad_id` (`especialidad_id`),
+  ADD KEY `tipo_reporte_id` (`incidencia_id`),
+  ADD KEY `id_login` (`user_id`);
 
 --
 -- Indices de la tabla `tickets`
@@ -159,10 +246,28 @@ ALTER TABLE `usuarios`
 --
 
 --
+-- AUTO_INCREMENT de la tabla `especialidad`
+--
+ALTER TABLE `especialidad`
+  MODIFY `especialidad_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de la tabla `estado`
+--
+ALTER TABLE `estado`
+  MODIFY `estado_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT de la tabla `login_user`
 --
 ALTER TABLE `login_user`
-  MODIFY `id_login` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_login` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `tecnico`
+--
+ALTER TABLE `tecnico`
+  MODIFY `id_tecnico` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `tipo_reporte`
@@ -197,6 +302,15 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `login_user`
   ADD CONSTRAINT `login_user_ibfk_1` FOREIGN KEY (`id_tipo_user`) REFERENCES `tipo_user` (`id_tipo_user`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `tecnico`
+--
+ALTER TABLE `tecnico`
+  ADD CONSTRAINT `tecnico_ibfk_1` FOREIGN KEY (`incidencia_id`) REFERENCES `tipo_reporte` (`tipo_reporte_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tecnico_ibfk_2` FOREIGN KEY (`especialidad_id`) REFERENCES `especialidad` (`especialidad_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tecnico_ibfk_3` FOREIGN KEY (`estado_id`) REFERENCES `estado` (`estado_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tecnico_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `login_user` (`id_login`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `tickets`

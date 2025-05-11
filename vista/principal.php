@@ -222,7 +222,11 @@
             <div class="new--report">
                 <div class="title">
                     <h2 class="section--title"> Solicitudes</h2>
+<<<<<<< HEAD:vista/principal.php
                     <button class="add"> <i class="ri-add-line"></i> <a href="reporte.php">Nuevo Reporte</a></button>
+=======
+                    <button class="add"> <i class="ri-add-line"></i> <a href="reporte.html">Nuevo Reporte</a></button>
+>>>>>>> 8bb99f0 (Update 11 05: Agregado de formulario de reporte):vista/principal.html
                 </div>
                 <div class="table">
                 <table>
