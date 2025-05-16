@@ -95,7 +95,7 @@
 
     <center><h1 class="titulo">Registro Habitantes</h1></center><br><br>
 
-    <form action="../php/insertar_datos.php" class="formulario" id="formulario" enctype="multipart/form-data" method="post">
+    <form action="#" class="formulario" id="formulario" enctype="multipart/form-data" method="post">
       
       <!-- Grupo: Nombre del tecnico -->
       <div class="formulario__grupo" id="grupo__nombre">
@@ -111,7 +111,7 @@
       <div class="formulario__grupo" id="grupo__telefono">
       <label for="telefono" class="formulario__label">Telefono</label>
       <div class="formulario__grupo-input">
-      <input type="text" class="formulario__input" name="telefono" id="telefono" placeholder="telefono">
+      <input type="tel" class="formulario__input" name="telefono" id="telefono" placeholder="telefono">
       <i class="formulario__validacion-estado fas fa-times-circle"></i>
       </div>
       <p class="formulario__input-error">El telefono tiene que ser (0424) 000 00 00.</p>

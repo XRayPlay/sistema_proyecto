@@ -233,7 +233,7 @@
             <div class="new--report">
                 <div class="title">
                     <h2 class="section--title"> Solicitudes</h2>
-                    <button class="add"> <i class="ri-add-line"></i> <a href="reporte.html">Nuevo Reporte</a></button>
+                    <button class="add"> <i class="ri-add-line"></i> <a href="reporte.php">Nuevo Reporte</a></button>
                 </div>
                 <div class="table">
                 <table>

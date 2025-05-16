@@ -15,14 +15,14 @@
    
     <div class="formulario" id="formulario-login">
       <h1>INICIAR SESIÓN</h1>
-      <form method="post" action="principal.html" id="formulario">
+      <form method="post" action="principal.php" id="formulario">
         <div class="username" id="usuario">
-          <input type="text" name="usuario" id="usuario" required>
+          <input type="text" name="usuario" id="usuario" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="40" required title="Su usuario debe ser solo letras y no debe contener espacios.">
           <label>Usuario</label>
           <p class="errorform">su Usuario debe ser entre 3 y 15 caracteres, sin espacios</p>
         </div>                    
         <div class="contrasena" id="password">
-          <input type="password" name="password" id="password" required>
+          <input type="password" name="password" id="password" required title="Debe ser de 8 a 15 caracteres" minlength="8" maxlength="15">
           <label>Contraseña</label>
           <p class="errorform">tienes que colocar simbolos especiales() y tiene que ser entre 8 y 15 caracteres</p>
         </div>
@@ -31,13 +31,12 @@
       </div>
         <input type="submit" value="Entrar">                    
         <div class="registrarse">
-          <a href="registro.html">¿Aún no se ha registrado? Presione aqui</a>
+          <a href="registro.php">¿Aún no se ha registrado? Presione aqui</a>
         </div>
         <p class="warning" id="warning"></p>
        </form>
 
     </div>
     <script src="../public/js/bootstrapjs/bootstrap.min.js"></script>
-    <script src="../public/js/formuservalidar.js"></script>
   </body>
 </html>

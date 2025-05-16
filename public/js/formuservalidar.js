@@ -2,18 +2,16 @@ const formulario = document.getElementById('formulario')
 const inputs = document.querySelectorAll('#formulario input');
 
 const expresiones = {
-    usuario: /^[a-zA-ZÁ-ÿ]{3,15}$/,
-    password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,15}/
+    usuario: /^[a-zA-ZÁ-ÿ]{3,15}$/
 }
 
 const campos = {
     usuario: false,
-    password: false
+    password: true
 }
 
-const validarform = (expresion, input, campo) => {
+const validarform = (expresion, input) => {
     if(expresion.test(input.value)){
-        
         campos[campo] = true;
     } else {
         campos[campo] = false;
@@ -24,11 +22,7 @@ const validarFormulario = (e) => {
     switch (e.target.name) {
         case "usuario":
             console.log(e.target.name)
-            validarform(expresiones.usuario, e.target, 'usuario', 'username');
-        break;
-        case "password":
-            console.log(e.target.name)
-            validarform(expresiones.password, e.target, 'password', 'contrasena');
+            validarform(expresiones.usuario, e.target);
         break;
 
     }

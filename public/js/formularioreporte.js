@@ -4,7 +4,7 @@ const selects = document.querySelectorAll('#formulario select');
 const archive = document.querySelectorAll('#formulario file');
 
 const expresiones = {
-    nombre: /^[a-zA-ZÁ-ÿ]{3,40}$/,
+    nombre: /^[a-zA-ZÁ-ÿ]{3,40}+$/,
     nombres: /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+(?:\s+[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+){1,5}(?:\s+[-\sa-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+)?$/,
     fechanacimiento: /^\d{2,4}\-\d{1,2}\-\d{1,2}$/
     
@@ -74,25 +74,6 @@ const validarselect = (select, campo) => {
 }
 
 
-const validarimg = (archive, campo) => {
-    if(expresion.test(input.value)) {
-        document.getElementById(`grupo__${campo}`).classList.remove('formulario__grupo-correcto');
-        document.getElementById(`grupo__${campo}`).classList.add('formulario__grupo-incorrecto');
-        document.querySelector(`#grupo__${campo} i`).classList.remove('fa-check-circle');
-        document.querySelector(`#grupo__${campo} i`).classList.add('fa-times-circle');
-        document.querySelector(`#grupo__${campo} .formulario__input-error`).classList.add('formulario__input-error-activo');
-        campos[campo] = false;
-    }else{
-        document.getElementById(`grupo__${campo}`).classList.remove('formulario__grupo-incorrecto');
-        document.getElementById(`grupo__${campo}`).classList.add('formulario__grupo-correcto');
-        document.querySelector(`#grupo__${campo} i`).classList.remove('fa-times-circle');
-        document.querySelector(`#grupo__${campo} i`).classList.add('fa-check-circle');
-        document.querySelector(`#grupo__${campo} .formulario__input-error`).classList.remove('formulario__input-error-activo');
-        campos[campo] = true;
-    }
-}
-
-
 const select22 = () => {
     $(document).ready(function(){
         $('#extension').select2();
@@ -110,20 +91,11 @@ const validarFormulario = (e) => {
     }
 }
 
-const validarFormularioS = (e) => {
-    console.log(e.target.name);
-    switch (e.target.name) {
-        case "extension":
-            validarselect(e.target.value, 'extension');
-        break;
-    }
-}
-
-const validarFormularioA = (e) => {
-    console.log(e.target.name);
-    switch (e.target.name) {
-        case "archivo":
-            validarimg(e.target, 'archivo');
+const validarFormularioS = (b) => {
+    console.log(b.target.name);
+    switch (b.target.name) {
+        case "area":
+            validarselect(b.target.value, 'area');
         break;
     }
 }
@@ -136,11 +108,6 @@ inputs.forEach((input) => {
 selects.forEach((select) => {
     select.addEventListener('change', validarFormularioS);
     select.addEventListener('blur', validarFormularioS);
-})
-
-archive.forEach((file) => {
-    file.addEventListener('change', validarFormularioA);
-    file.addEventListener('blur', validarFormularioA);
 })
 
 formulario.addEventListener('submit', (e) => {
