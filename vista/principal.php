@@ -9,7 +9,7 @@
 <body>
     <section class="header"> 
         <div class="logo">
-        <i class="ri-menu-line icon icon-0 menu"></i>
+        
         <h2>Soporte <span>Técnico</span></h2>
         </div>
         <div class="search--notification--profile">
@@ -18,18 +18,7 @@
             <button><i class="ri-search-2-line"></i></button>
         </div>
         <div class="notification--profile">
-            <div class="pico lock">
-                <i class="ri-lock-line"></i>
-            </div>
-            <div class="pico bell">
-                <i class="ri-notification-2-line"></i>
-            </div>
-            <div class="pico chat">
-                <i class="ri-wechat-2-line"></i>
-            </div>
-            <div class="pico profile">
-                <img src="../resources/image/usuario.png" alt="">
-            </div>
+            <img src="../resources/image/lo.png" class="imagenlogo">
 
         </div>
     </div>
@@ -52,7 +41,7 @@
             <li>
                 <a href="#">
                     <span class="icon icon-3"> <i class="ri-user-2-line"></i></span>
-                    <span class="sidebar--items style="white-space:nowrap;"> Tecnicos </span>
+                    <span class="sidebar--items" style="white-space:nowrap;"> Tecnicos </span>
                 </a>
             </li>
             <li>
@@ -82,7 +71,7 @@
                 </a>
             </li>
             <li>
-                <a href="#">
+                <a href="../php/cerrar_sesion.php">
                     <span class="icon icon-8"> <i class="ri-logout-box-r-line"></i></span>
                     <span class="sidebar--items"> Cerrar sesion</span>
                 </a>
@@ -176,7 +165,7 @@
                             <a href="#" class="tecnic--card">
                                 <div class="img--box--cover">
                                     <div class="img--box">
-                                    <img src="../resources/image/usuario.png" alt="">
+                                    <img src="../resources/image/usuario.png" class="imagentec" alt="">
                                 </div>
                             </div>
                             <p class="scheduled"> Ocupado</p>
@@ -185,7 +174,7 @@
                             <a href="#" class="tecnic--card">
                                 <div class="img--box--cover">
                                     <div class="img--box">
-                                    <img src="../resources/image/usuario.png" alt="">
+                                    <img src="../resources/image/usuario.png" class="imagentec" alt="">
                                 </div>
                             </div>
                             <p class="free"> Libre</p>
@@ -193,7 +182,7 @@
                             <a href="#" class="tecnic--card">
                                 <div class="img--box--cover">
                                     <div class="img--box">
-                                    <img src="../resources/image/usuario.png" alt="">
+                                    <img src="../resources/image/usuario.png" class="imagentec" alt="">
                                 </div>
                             </div>
                             <p class="scheduled"> Ocupado</p>
@@ -201,21 +190,21 @@
                             <a href="#" class="tecnic--card">
                                 <div class="img--box--cover">
                                     <div class="img--box">
-                                    <img src="../resources/image/usuario.png" alt="">
+                                    <img src="../resources/image/usuario.png" class="imagentec" alt="">
                                 </div>
                             </div>
                             <p class="free"> Libre</p>
                             </a> <a href="#" class="tecnic--card">
                                 <div class="img--box--cover">
                                     <div class="img--box">
-                                    <img src="../resources/image/usuario.png" alt="">
+                                    <img src="../resources/image/usuario.png" class="imagentec" alt="">
                                 </div>
                             </div>
                             <p class="scheduled"> Ocupado</p>
                             </a> <a href="#" class="tecnic--card">
                                 <div class="img--box--cover">
                                     <div class="img--box">
-                                    <img src="../resources/image/usuario.png" alt="">
+                                    <img src="../resources/image/usuario.png" class="imagentec" alt="">
                                 </div>
                             </div>
                             <p class="free"> Libre</p>
@@ -223,7 +212,7 @@
                         </a> <a href="#" class="tecnic--card">
                             <div class="img--box--cover">
                                 <div class="img--box">
-                                <img src="../resources/image/usuario.png" alt="">
+                                <img src="../resources/image/usuario.png" class="imagentec" alt="">
                             </div>
                         </div>
                         <p class="scheduled"> Ocupado</p>

@@ -17,6 +17,11 @@ body{
     border-bottom: 2px solid #f1f1f1;
 }
 
+.imagenlogo{
+    width: 69px;
+    height: 100%;
+    object-fit: cover;
+}
 .logo{
     display: flex;
     align-items: center;
@@ -104,7 +109,7 @@ body{
     overflow: hidden;
 }
 
-img{
+.imagentec{
     position: absolute;
     top: 0;
     left: 0;

@@ -1,4 +1,4 @@
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,28 +9,17 @@
 </head>
 <body>
   <section class="header"> 
-    <div class="logo">
-    <i class="ri-menu-line icon icon-0 menu"></i>
-    <h2>Soporte <span>Técnico</span></h2>
-    </div>
+        <div class="logo">
+        
+        <h2>Soporte <span>Técnico</span></h2>
+        </div>
     <div class="search--notification--profile">
     <div class="search">
         <input type="text" placeholder="search Scdule..">
         <button><i class="ri-search-2-line"></i></button>
     </div>
     <div class="notification--profile">
-        <div class="pico lock">
-            <i class="ri-lock-line"></i>
-        </div>
-        <div class="pico bell">
-            <i class="ri-notification-2-line"></i>
-        </div>
-        <div class="pico chat">
-            <i class="ri-wechat-2-line"></i>
-        </div>
-        <div class="pico profile">
-            <img src="../resources/image/usuario.png" alt="">
-        </div>
+        <img src="../resources/image/lo.png" class="imagenlogo">
 
     </div>
 </div>
@@ -53,7 +42,7 @@
         <li>
             <a href="#">
                 <span class="icon icon-3"> <i class="ri-user-2-line"></i></span>
-                <span class="sidebar--items style="white-space:nowrap;"> Tecnicos </span>
+                <span class="sidebar--items" style="white-space:nowrap"> Tecnicos </span>
             </a>
         </li>
         <li>
@@ -83,7 +72,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="../php/cerrar_sesion.php">
                 <span class="icon icon-8"> <i class="ri-logout-box-r-line"></i></span>
                 <span class="sidebar--items"> Cerrar sesion</span>
             </a>
@@ -93,7 +82,7 @@
 <div class="main--content">
   <main>
 
-    <center><h1 class="titulo">Registro Habitantes</h1></center><br><br>
+    <center><h1 class="titulo">Reporte</h1></center><br><br>
 
     <form action="#" class="formulario" id="formulario" enctype="multipart/form-data" method="post">
       
@@ -101,7 +90,7 @@
       <div class="formulario__grupo" id="grupo__nombre">
       <label for="nombre" class="formulario__label">Nombre</label>
       <div class="formulario__grupo-input">
-      <input type="text" class="formulario__input" name="nombre" id="nombre" placeholder="Nombre">
+      <input type="text" class="formulario__input" name="nombre" id="nombre" placeholder="Nombre" require>
       <i class="formulario__validacion-estado fas fa-times-circle"></i>
       </div>
       <p class="formulario__input-error">El nombre tiene que tener solo letras y espacios.</p>
@@ -111,10 +100,10 @@
       <div class="formulario__grupo" id="grupo__telefono">
       <label for="telefono" class="formulario__label">Telefono</label>
       <div class="formulario__grupo-input">
-      <input type="tel" class="formulario__input" name="telefono" id="telefono" placeholder="telefono">
+      <input type="tel" class="formulario__input" name="telefono" id="telefono" placeholder="telefono" >
       <i class="formulario__validacion-estado fas fa-times-circle"></i>
       </div>
-      <p class="formulario__input-error">El telefono tiene que ser (0424) 000 00 00.</p>
+      <p class="formulario__input-error">El telefono tiene que ser 04123620901</p>
       </div>
 
       <!-- Grupo: Direccion del tecnico -->
@@ -158,7 +147,7 @@
     <script src="../public/js/formularioreporte.js"></script>    
 
     </main>
-</div>
+    </div>
     
  </body>
 
