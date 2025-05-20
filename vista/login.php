@@ -1,3 +1,14 @@
+<?php
+  session_start();
+  if (isset($_SESSION["usuario"])){
+    ?>
+    <script>
+      alert("usted ya tiene una sesion ingresada");
+      window.location("principal.php");
+    </script>
+    <?php
+  }
+?>
 <!doctype html>
 <html lang="en">
   <head>
@@ -15,7 +26,7 @@
    
     <div class="formulario" id="formulario-login">
       <h1>INICIAR SESIÓN</h1>
-      <form method="post" action="principal.php" id="formulario">
+      <form method="post" action="../php/login_usuario_be.php" id="formulario">
         <div class="username" id="usuario">
           <input type="text" name="usuario" id="usuario" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="40" required title="Su usuario debe ser solo letras y no debe contener espacios.">
           <label>Usuario</label>

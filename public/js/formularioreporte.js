@@ -15,7 +15,8 @@ const campos = {
     extension: false,
     direccion: false,
     area: false,
-    telefono: false
+    telefono: false,
+    estado: false
 }
 
 const validarNombre = (expresion, input, campo) => {
@@ -119,6 +120,9 @@ const validarFormularioS = (b) => {
         case "area":
             validarselect(b.target.value, 'area');
         break;
+        case "estado":
+            validarselect(b.target.value, 'estado');
+        break;
     }
 }
 
@@ -134,7 +138,7 @@ selects.forEach((select) => {
 
 formulario.addEventListener('submit', (e) => {
 
-    if(campos.nombre && campos.extension && campos.direccion && campos.area && campos.telefono){
+    if(campos.nombre && campos.extension && campos.direccion && campos.area && campos.telefono && campos.estado){
 
     }else{
         e.preventDefault();

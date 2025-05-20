@@ -130,6 +130,19 @@
       <p class="formulario__input-error">Tiene que seleccionar una opción</p>
       </div>
 
+    <!-- Grupo: Estado de la problematica del usuario -->
+      <div class="formulario__grupo" id="grupo__estado">
+      <label for="estado" class="formulario__label">Estado del reporte</label>
+      <div class="formulario__grupo-input">
+      <select class="formulario__input" name="estado" id="estado" placeholder="estado">
+        <option value="">Seleccione</option>    
+        <option value="pendiente">Pendiente</option>
+        <option value="solucionado">Solucionado</option>
+      </select>
+      <i class="formulario__validacion-estado fas fa-times-circle"></i>
+      </div>
+      <p class="formulario__input-error">Tiene que seleccionar una opción</p>
+      </div>
 
 
       <div class="formulario__mensaje" id="formulario__mensaje">
