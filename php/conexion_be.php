@@ -1,39 +1,27 @@
 <?php
+include "config.php";
 class conectar{
-    private static $conexion;
+    
+    private $servidor=host;
+    private $usuario=user;
+    private $pass=pass;
+    private $bd=database;
 
-    public static function conexion(){
-        if(!isset(self::$conexion)){
-            try{
-                include_once("config.php");
+    public function conexion(){
+        $conexion = mysqli_connect($this->servidor, $this->usuario, $this->pass, $this->bd);
+        return $conexion;
 
-                self::$conexion = new PDO('pgsql:host='.host.'; dbname='.database, user, pass);
-                self::$conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                self::$conexion->exec("SET NAMES 'utf8'");
-            }
-            catch(PDOException $ex){
-                print "ERROR: ".$ex->getMessage(). "<br>";
-            }
-        }
-    }
-    public static function desconectar(){
-        if(isset(self::$conexion)){
-            self::$conexion =null;
-        }
-    }
-    public static function obtenerConexion(){
-        if(isset(self::$conexion)){
-            echo "Conexion establecida";
-        } else {
-            echo "No se pudo conectar con la base de datos";
-        }
         
-        //return self::$conexion;
     }
 }
 
-    conectar::conexion();
-    conectar::obtenerConexion();
-
+$obj = new conectar;
+$connect = $obj->conexion();
+if($connect->connect_error){
+    echo'<script>
+        alert("No se pudo establecer la conexion")
+        window.location = "../index.php"
+    </script>';
+}else{echo "conexion exitosa";}
 
 ?>
