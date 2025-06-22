@@ -4,7 +4,8 @@
     ?>
     <script>
       alert("usted ya tiene una sesion ingresada");
-      window.location("principal.php");
+      window.location("inicio.php");
+      exit();
     </script>
     <?php
   }

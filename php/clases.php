@@ -35,10 +35,7 @@
             $v=3;
             $date=date('Y-m-d H:i:s');
 
-            $query = "
-            INSERT INTO user(usuario, pass, last_connect, idrol) VALUES('$datos[2]','$datos[3]','$date','$v');
-            ";
-
+            $query = "INSERT INTO user(usuario, pass, last_connect, idrol) VALUES('$datos[2]','$datos[3]','$date','$v');";
 
             $verificar_usuario = mysqli_query($conexion, "SELECT * FROM user WHERE usuario='$datos[2]'");
 
@@ -70,18 +67,4 @@
         }
         
         }
-
-
-
-    class Tecnico{
-
-        public function insertarReporte($datos){
-            $c= new conectar();
-            $conexion=$c->conexion();
-            $query = 'INSERT INTO reporte VALUES()';
-            $ejecutar = mysqli_query($conexion, $query);
-        }
-        
-        }
-
 ?>

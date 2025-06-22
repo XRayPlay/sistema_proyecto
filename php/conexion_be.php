@@ -15,15 +15,6 @@ class conectar{
     }
 }
 
-$obj = new conectar;
-$connect = $obj->conexion();
-if($connect->connect_error){
-    echo'<script>
-        alert("No se pudo establecer la conexion")
-        window.location = "../index.php"
-    </script>';
-}else{echo "conexion exitosa";}
-
 
 /*
 class DBConexion {
