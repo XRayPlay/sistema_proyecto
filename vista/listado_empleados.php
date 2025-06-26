@@ -41,10 +41,15 @@
                         <a href="#" onclick="modalRegistrarEmpleado()" class="btn btn-success" title="Registrar Nuevo Empleado">
                             <i class="bi bi-person-plus"></i>
                         </a>
+
+                        
                     </span>
                     Lista de tecnicos
                     <span class="float-end">
                         <a href="../php/empleados/exportar.php" class="btn btn-success" title="Exportar a CSV" download="empleados.csv"><i class="bi bi-filetype-csv"></i></a>
+                        <a href="inicio.php" class="btn btn-danger" title="Regresar Al Inicio">
+                            <i class="bi bi-box-arrow-left"></i>
+                        </a>
                     </span>
                     <hr>
                 </h1>
