@@ -197,6 +197,25 @@
     <section class="content">
       <div class="container-fluid">
 
+      <!-- Listado de Técnicos -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Listado de Técnicos</h3>
+            <a href="listado_empleados.php" class="btn btn-primary float-right">Gestionar Empleados</a>
+          </div>
+          <div class="card-body">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tecnicosTable"></tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Gráfico Equipos Reparados -->
         <div class="card">
           <div class="card-header">
@@ -217,23 +236,7 @@
           </div>
         </div>
 
-        <!-- Listado de Técnicos -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Listado de Técnicos</h3>
-          </div>
-          <div class="card-body">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="tecnicosTable"></tbody>
-            </table>
-          </div>
-        </div>
+        
 
       </div>
     </section>

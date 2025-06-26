@@ -1,6 +1,6 @@
 <?php
 include "conexion_be.php";
-$obj = new conectar();
+$obj = new conectar2();
 $connect = $obj->conexion();
 
 $type = $_GET['type'];
