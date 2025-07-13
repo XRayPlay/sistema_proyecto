@@ -47,13 +47,15 @@ async function cargarDatosEmpleadoEditar(idEmpleado) {
       `../php/empleados/detallesEmpleado.php?id=${idEmpleado}`
     );
     if (response.status === 200) {
-      const { id, nombre, edad, cedula, sexo, telefono, cargo, avatar } =
+      const { id_tecnico, nombre, pass, email, fecha_nacimiento, cedula, sexo, telefono, especialidad_id, avatar } =
         response.data;
 
-      console.log(id, nombre, edad, cedula, sexo, telefono, cargo, avatar);
-      document.querySelector("#idempleado").value = id;
+      console.log(response.data);
+      document.querySelector("#idempleado").value = id_tecnico;
       document.querySelector("#nombre").value = nombre;
-      document.querySelector("#edad").value = edad;
+      document.querySelector("#pass").value = pass;
+      document.querySelector("#correo").value = email;
+      document.querySelector("#birthday").value = fecha_nacimiento;
       document.querySelector("#cedula").value = cedula;
       document.querySelector("#telefono").value = telefono;
 
@@ -61,12 +63,12 @@ async function cargarDatosEmpleadoEditar(idEmpleado) {
       seleccionarSexo(sexo);
 
       // Obtener el elemento <select> de cargo
-      seleccionarCargo(cargo);
+      seleccionarCargo(especialidad_id);
 
       document.querySelector("#avatar").value = avatar;
       let elementAvatar = document.querySelector("#avatar");
       if (avatar) {
-        elementAvatar.src = `../resources/fotos_empleados/${avatar}`;
+        elementAvatar.src = `${avatar}`;
       } else {
         elementAvatar.src = "../resources/image/usuario.png";
       }

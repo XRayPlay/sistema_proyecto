@@ -28,12 +28,18 @@
                 exit();
             }
         }
+        public function obtenerPrimerNombre($nombre) {
+            $partes = explode(" ", $nombre);
+            return $partes[0];
+        }
+        
         public function registrar($datos){
 
             $c= new conectar();
             $conexion=$c->conexion();
             $v=3;
             $date=date('Y-m-d H:i:s');
+            
 
             $query = "INSERT INTO user(usuario, pass, last_connect, idrol) VALUES('$datos[2]','$datos[3]','$date','$v');";
 
@@ -66,5 +72,12 @@
 
         }
         
+        public function calcularEdad($birthday){
+            $tiempo = strtotime($birthday); 
+            $ahora = time(); 
+            $edad = ($ahora-$tiempo)/(60*60*24*365.25); 
+            $edad = floor($edad); 
+            return $edad;
+        }
         }
 ?>

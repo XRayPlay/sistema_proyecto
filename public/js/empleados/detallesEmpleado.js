@@ -50,15 +50,32 @@ async function cargarDetalleEmpleado(idEmpleado) {
     );
     if (response.status === 200) {
       console.log(response.data);
-      const { nombre, edad, cedula, sexo, telefono, cargo, avatar } =
+      const { nombre, fecha_nacimiento, cedula, sexo, telefono, descripcion, avatar } =
         response.data;
-      const avatarURL = avatar ? `../php/empleados/fotos_empleados/${avatar}` : null;
+      const avatarURL = avatar ? `${avatar}` : null;
       const avatarExistente = avatarURL
         ? await verificarExistenciaImagen(avatarURL)
         : false;
       const avatarHTML = avatarExistente
         ? `<img src="${avatarURL}" alt="Avatar" style="width: 100px; height: 100px; display:block;">`
         : "No disponible";
+
+
+      // Calcular edad
+      function calcularEdad(fecha_nacimiento) {
+        const hoy = new Date();
+        const nacimiento = new Date(fecha_nacimiento);
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const mes = hoy.getMonth() - nacimiento.getMonth();
+
+        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+            edad--;
+        }
+
+        return edad;
+      }
+
+      const edad = calcularEdad(fecha_nacimiento);
 
       // Limpiar el contenido existente de la lista ul
 
@@ -83,7 +100,7 @@ async function cargarDetalleEmpleado(idEmpleado) {
           telefono ? telefono : "No disponible"
         }</li>
         <li class="list-group-item"><b>Cargo:</b> 
-          ${cargo ? cargo : "No disponible"}
+          ${descripcion ? descripcion : "No disponible"}
         </li>
          <li class="list-group-item"><b>Avatar:</b> ${avatarHTML}</li>
       `;

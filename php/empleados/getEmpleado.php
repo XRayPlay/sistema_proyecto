@@ -6,7 +6,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     $IdEmpleado = (int)$_GET['id'];
 
     // Realizar la consulta para obtener los detalles del empleado con el ID proporcionado
-    $sql = "SELECT * FROM tbl_empleados WHERE id = $IdEmpleado LIMIT 1";
+    $sql = "SELECT * FROM tecnico t INNER JOIN usuarios u ON t.id_tecnico = $IdEmpleado INNER JOIN especialidad e ON t.especialidad_id = e.especialidad_id LIMIT 1";
     $resultado = $conexion->query($sql);
 
     // Verificar si la consulta se ejecutó correctamente

@@ -3,22 +3,25 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 */
-        $c= new conectar();
-            $conexion=$c->conexion();
+        
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include("../conexion_be.php");
-    $tbl_empleados = "tbl_empleados";
+    
+    $class=new usuario();
 
 
     $nombre = trim($_POST['nombre']);
-    $edad = trim($_POST['edad']);
+    $pass = trim($_POST['pass']);
+    $fecha_nacimiento = trim($_POST['birthday']);
     $cedula = trim($_POST['cedula']);
     $sexo = trim($_POST['sexo']);
     $telefono = trim($_POST['telefono']);
+    $correo = trim($_POST['correo']);
     $cargo = trim($_POST['cargo']);
 
-    $dirLocal = "fotos_empleados";
+    $nombre1=$class->obtenerPrimerNombre($nombre);
+
+    $dirLocal = "../php/empleados/fotos_empleados";
 
     if (isset($_FILES['avatar'])) {
         $archivoTemporal = $_FILES['avatar']['tmp_name'];
@@ -33,8 +36,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Mover el archivo a la ubicación deseada
         if (move_uploaded_file($archivoTemporal, $rutaDestino)) {
 
-            $sql = "INSERT INTO $tbl_empleados (nombre, edad, cedula, sexo, telefono, cargo, avatar) 
-            VALUES ('$nombre', '$edad', '$cedula', '$sexo', '$telefono', '$cargo', '$nombreArchivo')";
+            $sql = "INSERT INTO login_user (user, pass) VALUES ('$nombre1', '$pass');
+            SET @ultimo_id = LAST_INSERT_ID();
+            INSERT INTO usuarios (nombre, fecha_nacimiento, piso, direccion_general, avatar, id_login_usuario) VALUES ('$nombre', '$fecha_nacimiento', '$piso', '$dirgeneral', $rutaDestino, @ultimo_id);
+            SET @ultim_id = LAST_INSERT_ID();
+            INSERT INTO tecnico (telefono, email, especialidad_id, estado_id, usuario_id) VALUES ('$telefono', '$correo', '$cargo', 2, @ultim_id); ";
 
             if ($conexion->query($sql) === TRUE) {
                 header("location:../");
@@ -55,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 function obtenerEmpleados($conexion)
 {
-    $sql = "SELECT * FROM tbl_empleados ORDER BY id ASC";
+    $sql = "SELECT * FROM tecnico t INNER JOIN usuarios u ON t.usuario_id = u.idusuarios INNER JOIN especialidad e ON t.especialidad_id = e.especialidad_id ORDER BY id_tecnico ASC";
     $resultado = $conexion->query($sql);
     if (!$resultado) {
         return false;

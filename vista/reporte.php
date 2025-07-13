@@ -1,19 +1,20 @@
 <?php
-    require_once "../php/clases.php";
-
-    
+    require_once "../php/clases.php";    
     session_start();
 
     if(!isset($_SESSION['usuario'])){
-      include('../php/cerrar_sesion.php');
-      session_destroy();
-      die();
-  }
+        include('../php/cerrar_sesion.php');
+        session_destroy();
+        die();
+    }
 
-  $c= new conectar();
-  $conexion=$c->conexion();
-  $sql = "SELECT * FROM tecnico t INNER JOIN usuarios u ON t.usuario_id=u.idusuarios";
-  $result = mysqli_query($conexion, $sql);
+    if(isset($_POST['submit'])){
+        $tipo_reporte= $_POST['tipo_reporte'];
+        $area = $_POST['area'];
+        $estado = $_POST['estado'];
+        $descripcion = $_POST['descripcion'];
+    }
+
 
 ?>
 
@@ -43,8 +44,7 @@
   <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/daterangepicker/daterangepicker.css">
   <!-- summernote -->
   <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/summernote/summernote-bs4.min.css">
-
-  <link rel="stylesheet" href="../public/css/tecnico_disponible.css">
+  <link rel="stylesheet" href="../public/css/reporte.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -95,10 +95,10 @@
       </div>
 
         <?php
-          $pagina = "cronograma";
+          $pagina1 = "reportes";
+          $pagina = "reporte";
           include('../pages/menu.php');
         ?>
-
 
           <!-- Etiqueta -->
           <li class="nav-header">EXAMPLES</li>
@@ -120,93 +120,40 @@
   </aside>
 
   <!-- Content Wrapper. Contains page content -->
-<div class="wrapper">
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
 
-  <div class="content-wrapper p-4">
-    <section class="content">
-      <div class="container-fluid">
+    <main>
+        <form   action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'])?>" method="post">
+            <h1>Registro</h1>
+            <label for="">tipo de reporte:</label>
+            <input type="text" name="tipo_reporte">
+            <label for="">Area:</label>
+            <input type="text" name="area">
+            <label for="">estado:</label>
+            <input type="text" name="estado">
+                <select name="direccion" id="topicos">
+                    <option value="" selected disabled>-- Direccion --</option>
+                    <option value="hardware">Hardware (Equipo Físico)</option>
+                    <option value="software">Software (Programas)</option>
+                    <option value="redes">Redes (Conectividad)</option>
+                    <option value="impresora">Impresora</option>
+                    <option value="otro">Otro / General</option>
+                </select>
+                <label for="">descripcion</label>
+                <input type="text" name="descripcion">
+            <input type="submit" name="submit">
+            <?php
+            include("../php/reporte_validar.php");
+            ?>
+        </form>
+      
+    </main>
 
-      <!-- Listado de Técnicos -->
 
-        <div class="content">
-          <div class="container-fluid">
-            <div class="row">
-              <?php
-              if ($result->num_rows > 0) {
-                  while($tecnico = $result->fetch_assoc()) {
-                    if ($tecnico['estado_id'] == 2){
-                        $tecnicoesta="Libre";
-                    }
-                    if ($tecnico['estado_id'] == 3){                      
-                        $tecnicoesta="Ocupado";
-                    }
-                      
-                      $estado = strtolower($tecnicoesta);
-                      echo '
-                      <div class="col-md-2">
-                        <div class="tecnico-card">
-                          <div class="tecnico-avatar ' . $estado . '">
-                            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User">
-                          </div>
-                          <div class="nombre" style="margin-top: 8px; font-weight: 500;">' . htmlspecialchars($tecnico['nombre']) . '</div>
-                          <div class="estado ' . $estado . '">' . $tecnicoesta . '</div>
-                        </div>
-                      </div>';
-                  }
-              } else {
-                  echo '<p class="text-muted">No hay técnicos registrados.</p>';
-              }
-              $conexion->close();
-              ?>
-            </div>
-          </div>
-        </div>
 
-        <!-- <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Listado de Técnicos</h3>
-            <a href="listado_empleados.php" class="btn btn-primary float-right">Gestionar Empleados</a>
-          </div>
-          <div class="card-body">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="tecnicosTable"></tbody>
-            </table>
-          </div>
-        </div>-->
-
-        <!-- Gráfico Equipos Reparados -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Equipos Reparados</h3>
-          </div>
-          <div class="card-body">
-            <canvas id="equiposChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Gráfico Rendimiento Técnicos -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Rendimiento de Técnicos</h3>
-          </div>
-          <div class="card-body">
-            <canvas id="rendimientoChart"></canvas>
-          </div>
-        </div>
-
-        
-
-      </div>
-    </section>
+    <!-- /.content -->
   </div>
-
-</div>
   <!-- /.content-wrapper -->
   <footer class="main-footer">
     <strong>Copyright &copy; 2025-2026 <a href="#">Una empresa inolvidable XD</a>.</strong>
@@ -223,8 +170,7 @@
   <!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
-<script src="../public/js/script_cronograma.js"></script>
-<script src="../public/js/chart.js"></script>
+
 <!-- jQuery -->
 <script src="../plantilla/AdminLTE/plugins/jquery/jquery.min.js"></script>
 <!-- jQuery UI 1.11.4 -->

@@ -1,0 +1,35 @@
+.tecnico-card {
+    width: 140px;
+    text-align: center;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+.tecnico-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: #065a82;
+    border-radius: 50%;
+    border: 3px solid #9ccc65;
+    margin: 0 auto 10px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tecnico-avatar.ocupado {
+    border-color: red;
+}
+.tecnico-avatar img {
+    width: 30px;
+    height: 30px;
+}
+.estado.libre {
+    color: green;
+    font-weight: bold;
+}
+.estado.ocupado {
+    color: red;
+    font-weight: bold;
+}

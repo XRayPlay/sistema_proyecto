@@ -93,14 +93,13 @@ INSERT INTO `login_user` (`id_login`, `user`, `pass`, `create_date`, `last_conne
 
 CREATE TABLE `tecnico` (
   `id_tecnico` int(11) NOT NULL,
-  `nombre` varchar(300) NOT NULL,
   `telefono` int(13) NOT NULL,
   `email` text NOT NULL,
   `fecha_ingreso` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `incidencia_id` int(11) NOT NULL,
+  `incidencia_id` int(11) NULL,
   `especialidad_id` int(11) NOT NULL,
   `estado_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL
+  `usuario_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -168,7 +167,7 @@ CREATE TABLE `topicos_reportes` (
 CREATE TABLE `usuarios` (
   `idusuarios` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
-  `extension` varchar(20) NOT NULL,
+  `fecha_nacimiento` date DEFAULT NULL,
   `piso` varchar(20) NOT NULL,
   `direccion_general` varchar(255) NOT NULL,
   `id_login_usuario` int(11) NOT NULL
@@ -205,7 +204,7 @@ ALTER TABLE `tecnico`
   ADD KEY `estado_id` (`estado_id`),
   ADD KEY `especialidad_id` (`especialidad_id`),
   ADD KEY `tipo_reporte_id` (`incidencia_id`),
-  ADD KEY `id_login` (`user_id`);
+  ADD KEY `usuario_id` (`usuario_id`);
 
 --
 -- Indices de la tabla `tickets`
@@ -307,10 +306,10 @@ ALTER TABLE `login_user`
 -- Filtros para la tabla `tecnico`
 --
 ALTER TABLE `tecnico`
-  ADD CONSTRAINT `tecnico_ibfk_1` FOREIGN KEY (`incidencia_id`) REFERENCES `tipo_reporte` (`tipo_reporte_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tecnico_ibfk_1` FOREIGN KEY (`incidencia_id`) REFERENCES `tipo_reporte` (`tipo_reporte_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `tecnico_ibfk_2` FOREIGN KEY (`especialidad_id`) REFERENCES `especialidad` (`especialidad_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `tecnico_ibfk_3` FOREIGN KEY (`estado_id`) REFERENCES `estado` (`estado_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `tecnico_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `login_user` (`id_login`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `tecnico_ibfk_4` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`idusuarios`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `tickets`

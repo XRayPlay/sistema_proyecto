@@ -1,3 +1,8 @@
+<?php
+    require_once "../conexion_be.php";
+    $c= new conectar();
+    $conexion=$c->conexion();
+?>
     <div class="modal fade" id="agregarEmpleadoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -15,16 +20,14 @@
                             <label class="form-label">Cédula (NIT)</label>
                             <input type="text" name="cedula" class="form-control" />
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="text" name="pass" class="form-control" />
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <label class="form-label">Seleccione la edad</label>
-                                <select class="form-select" name="edad" required>
-                                    <option value=""> Seleccione </option>
-                                    <?php
-                                    for ($i = 18; $i <= 50; $i++) {
-                                        echo "<option value='$i'>$i</option>";
-                                    } ?>
-                                </select>
+                                <label class="form-label">Ingrese su fecha de nacmiento</label>
+                                <input type="date" name="birthday" class="form-control" />
                             </div>
 
                             <div class="col-md-6">
@@ -48,20 +51,24 @@
                             <label class="form-label">Teléfono</label>
                             <input type="number" name="telefono" class="form-control" required />
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correo</label>
+                            <input type="email" name="correo" class="form-control" required />
+                        </div>
 
                         <div class="mb-3">
                             <label class="form-label">Seleccione el Cargo</label>
                             <select name="cargo" class="form-select" required>
                                 <option selected value="">Seleccione</option>
                                 <?php
-                                $cargos = array(
-                                    "Soporte",
-                                    "Sistemas",
-                                    "Redes",
-                                    "Auxiliar",
-                                );
-                                foreach ($cargos as $cargo) {
-                                    echo "<option value='$cargo'>$cargo</option>";
+                                $c= new conectar();
+                                $conexion=$c->conexion();
+                                $query = "SELECT * FROM especialidad";
+                                $result = mysqli_query($conexion, $query);
+                                foreach ($result as $cargo) {
+                                    $especialidad_id = $cargo["especialidad_id"];
+                                    $descripcion = $cargo["descripcion"];
+                                    echo "<option value='$especialidad_id'>$descripcion</option>";
                                 }
                                 ?>
                             </select>

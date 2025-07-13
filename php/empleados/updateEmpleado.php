@@ -4,7 +4,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $id = trim($_POST['id']); // Asegúrate de recibir el ID del empleado que se actualizará
     $nombre = trim($_POST['nombre']);
-    $edad = trim($_POST['edad']);
+    $pass = trim($_POST['pass']);
+    $fecha_nacimiento = trim($_POST['birthday']);
     $cedula = trim($_POST['cedula']);
     $sexo = trim($_POST['sexo']);
     $telefono = trim($_POST['telefono']);

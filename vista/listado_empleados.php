@@ -22,10 +22,11 @@
 
 <body>
     <?php
-    include("../php/conexion_be.php");
-    include("../php/empleados/acciones.php");
-    $obj = new conectar1();
+    include("../php/clases.php");
+    $obj = new conectar();
     $conexion = $obj->conexion();
+    include("../php/empleados/acciones.php");
+    
 
     $empleados = obtenerEmpleados($conexion);
     $totalEmpleados = $empleados->num_rows;
