@@ -3,25 +3,28 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 */
-        
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    $class=new usuario();
+    include("../config/config.php");
+    include("../../../php/clases.php");
+    $tablename = "user";
 
 
     $nombre = trim($_POST['nombre']);
+    $username = trim($_POST['username']);
     $pass = trim($_POST['pass']);
-    $fecha_nacimiento = trim($_POST['birthday']);
     $cedula = trim($_POST['cedula']);
     $sexo = trim($_POST['sexo']);
-    $telefono = trim($_POST['telefono']);
-    $correo = trim($_POST['correo']);
+    $phone = trim($_POST['telefono']);
+    $email = trim($_POST['email']);
+    $birthday = trim($_POST['birthday']);
+    $address = "Departamento general";
+    $last_connection = date("Y-m-d");
+    $floor = "PB";
     $cargo = trim($_POST['cargo']);
-
-    $nombre1=$class->obtenerPrimerNombre($nombre);
-
-    $dirLocal = "../php/empleados/fotos_empleados";
+    $username = trim($_POST['username']);
+    $dirLocal = "fotos_empleados";
 
     if (isset($_FILES['avatar'])) {
         $archivoTemporal = $_FILES['avatar']['tmp_name'];
@@ -36,11 +39,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Mover el archivo a la ubicación deseada
         if (move_uploaded_file($archivoTemporal, $rutaDestino)) {
 
-            $sql = "INSERT INTO login_user (user, pass) VALUES ('$nombre1', '$pass');
-            SET @ultimo_id = LAST_INSERT_ID();
-            INSERT INTO usuarios (nombre, fecha_nacimiento, piso, direccion_general, avatar, id_login_usuario) VALUES ('$nombre', '$fecha_nacimiento', '$piso', '$dirgeneral', $rutaDestino, @ultimo_id);
-            SET @ultim_id = LAST_INSERT_ID();
-            INSERT INTO tecnico (telefono, email, especialidad_id, estado_id, usuario_id) VALUES ('$telefono', '$correo', '$cargo', 2, @ultim_id); ";
+            $sql = "INSERT INTO $tablename (`username`, `pass`, `name`, `cedula`, `sexo`, `phone`, `email`, `birthday`, `address`, `avatar`, `last_connection`, `id_cargo`, `id_rol`, `id_status_user`) 
+            VALUES ('$username', '$pass', '$nombre', '$cedula', '$sexo', '$phone', '$email', '$birthday', '$address', '$nombreArchivo', '$last_connection', '$cargo', 3, 1);";
 
             if ($conexion->query($sql) === TRUE) {
                 header("location:../");
@@ -61,11 +61,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 function obtenerEmpleados($conexion)
 {
-    $sql = "SELECT * FROM tecnico t INNER JOIN usuarios u ON t.usuario_id = u.idusuarios INNER JOIN especialidad e ON t.especialidad_id = e.especialidad_id ORDER BY id_tecnico ASC";
+    $sql = "SELECT * FROM user WHERE id_rol=3 ORDER BY id_user ASC";
     $resultado = $conexion->query($sql);
     if (!$resultado) {
         return false;
     }
     return $resultado;
 }
-?>

@@ -13,7 +13,7 @@ async function editarEmpleado(idEmpleado) {
       existingModal.remove(); // Eliminar la modal existente
     }
 
-    const response = await fetch("../php/modales/modalEditar.php");
+    const response = await fetch("modales/modalEditar.php");
     if (!response.ok) {
       throw new Error("Error al cargar la modal de editar el empleado");
     }
@@ -44,33 +44,34 @@ async function editarEmpleado(idEmpleado) {
 async function cargarDatosEmpleadoEditar(idEmpleado) {
   try {
     const response = await axios.get(
-      `../php/empleados/detallesEmpleado.php?id=${idEmpleado}`
+      `acciones/detallesEmpleado.php?id=${idEmpleado}`
     );
     if (response.status === 200) {
-      const { id_tecnico, nombre, pass, email, fecha_nacimiento, cedula, sexo, telefono, especialidad_id, avatar } =
+      const { id_user, username, pass, name, birthday, cedula, sexo, phone, email, avatar, id_cargo, cargo } =
         response.data;
 
-      console.log(response.data);
-      document.querySelector("#idempleado").value = id_tecnico;
-      document.querySelector("#nombre").value = nombre;
-      document.querySelector("#pass").value = pass;
-      document.querySelector("#correo").value = email;
-      document.querySelector("#birthday").value = fecha_nacimiento;
+      console.log(id_user, username, pass, name, birthday, cedula, sexo, phone, email, avatar, id_cargo, cargo);
+      document.querySelector("#idempleado").value = id_user;
+      document.querySelector("#nombre").value = name;
+      document.querySelector("#birthday").value = birthday;
       document.querySelector("#cedula").value = cedula;
-      document.querySelector("#telefono").value = telefono;
+      document.querySelector("#telefono").value = phone;
+      document.querySelector("#pass").value = pass;
+      document.querySelector("#username").value = username;
+      document.querySelector("#email").value = email;
 
       // Seleccionar el sexo correspondiente
       seleccionarSexo(sexo);
 
       // Obtener el elemento <select> de cargo
-      seleccionarCargo(especialidad_id);
+      seleccionarCargo(id_cargo);
 
       document.querySelector("#avatar").value = avatar;
       let elementAvatar = document.querySelector("#avatar");
       if (avatar) {
-        elementAvatar.src = `${avatar}`;
+        elementAvatar.src = `acciones/fotos_empleados/${avatar}`;
       } else {
-        elementAvatar.src = "../resources/image/usuario.png";
+        elementAvatar.src = "assets/imgs/sin-foto.jpg";
       }
     } else {
       console.log("Error al cargar el empleado a editar");
@@ -115,7 +116,7 @@ async function actualizarEmpleado(event) {
     const idempleado = formData.get("id");
 
     // Enviar los datos del formulario al backend usando Axios
-    const response = await axios.post("../php/empleados/updateEmpleado.php", formData);
+    const response = await axios.post("acciones/updateEmpleado.php", formData);
 
     // Verificar la respuesta del backend
     if (response.status === 200) {

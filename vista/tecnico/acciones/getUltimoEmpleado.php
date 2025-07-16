@@ -1,9 +1,20 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    include("../conexion_be.php");
+    include("../config/config.php");
 
     // Realizar la consulta para obtener los detalles del empleado con el ID proporcionado
-    $sql = "SELECT * FROM tbl_empleados ORDER BY id DESC LIMIT 1";
+    $sql = "SELECT u.id_user,
+        u.username, 
+        u.pass, 
+        u.name, 
+        u.birthday, 
+        u.cedula, 
+        u.sexo, 
+        u.phone,
+        u.email,
+        u.avatar,
+        c.id_cargo,
+        c.name AS cargo FROM user u INNER JOIN cargo c ON c.id_cargo=u.id_cargo WHERE u.id_rol=3 ORDER BY u.id_user DESC LIMIT 1";
     $resultado = $conexion->query($sql);
 
     // Verificar si la consulta se ejecutó correctamente

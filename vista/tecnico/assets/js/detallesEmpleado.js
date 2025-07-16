@@ -14,7 +14,7 @@ async function verDetallesEmpleado(idEmpleado) {
     }
 
     // Buscar la Modal de Detalles
-    const response = await fetch("../php/modales/modalDetalles.php");
+    const response = await fetch("modales/modalDetalles.php");
     if (!response.ok) {
       throw new Error("Error al cargar la modal de detalles del empleado");
     }
@@ -40,42 +40,37 @@ async function verDetallesEmpleado(idEmpleado) {
   }
 }
 
+function calcularEdad(fechaNacimiento) {
+        const hoy = new Date();
+        const nacimiento = new Date(fechaNacimiento);
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const mes = hoy.getMonth() - nacimiento.getMonth();
+
+        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+          edad--;
+        }
+
+        return edad;
+      }
 /**
  * Función para cargar y mostrar los detalles del empleado en la modal
  */
 async function cargarDetalleEmpleado(idEmpleado) {
   try {
     const response = await axios.get(
-      `../php/empleados/detallesEmpleado.php?id=${idEmpleado}`
+      `acciones/detallesEmpleado.php?id=${idEmpleado}`
     );
     if (response.status === 200) {
       console.log(response.data);
-      const { nombre, fecha_nacimiento, cedula, sexo, telefono, descripcion, avatar } =
+      const { name, username, birthday, cedula, sexo, phone, avatar, cargo} =
         response.data;
-      const avatarURL = avatar ? `${avatar}` : null;
+      const avatarURL = avatar ? `acciones/fotos_empleados/${avatar}` : null;
       const avatarExistente = avatarURL
         ? await verificarExistenciaImagen(avatarURL)
         : false;
       const avatarHTML = avatarExistente
         ? `<img src="${avatarURL}" alt="Avatar" style="width: 100px; height: 100px; display:block;">`
         : "No disponible";
-
-
-      // Calcular edad
-      function calcularEdad(fecha_nacimiento) {
-        const hoy = new Date();
-        const nacimiento = new Date(fecha_nacimiento);
-        let edad = hoy.getFullYear() - nacimiento.getFullYear();
-        const mes = hoy.getMonth() - nacimiento.getMonth();
-
-        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-            edad--;
-        }
-
-        return edad;
-      }
-
-      const edad = calcularEdad(fecha_nacimiento);
 
       // Limpiar el contenido existente de la lista ul
 
@@ -85,10 +80,13 @@ async function cargarDetalleEmpleado(idEmpleado) {
 
       ulDetalleEmpleado.innerHTML = ` 
         <li class="list-group-item"><b>Nombre:</b> 
-          ${nombre ? nombre : "No disponible"}
+          ${name ? name : "No disponible"}
+        </li>
+        <li class="list-group-item"><b>Username:</b> 
+          ${username ? username : "No disponible"}
         </li>
         <li class="list-group-item"><b>Edad:</b> 
-          ${edad ? edad : "No disponible"}
+          ${birthday ? calcularEdad(birthday) : "No disponible"}
         </li>
         <li class="list-group-item"><b>Cédula:</b> 
           ${cedula ? cedula : "No disponible"}
@@ -97,10 +95,10 @@ async function cargarDetalleEmpleado(idEmpleado) {
          ${sexo ? sexo : "No disponible"}
         </li>
         <li class="list-group-item"><b>Teléfono:</b> ${
-          telefono ? telefono : "No disponible"
+          phone ? phone : "No disponible"
         }</li>
         <li class="list-group-item"><b>Cargo:</b> 
-          ${descripcion ? descripcion : "No disponible"}
+          ${cargo ? cargo : "No disponible"}
         </li>
          <li class="list-group-item"><b>Avatar:</b> ${avatarHTML}</li>
       `;

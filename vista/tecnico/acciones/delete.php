@@ -1,6 +1,6 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include("../conexion_be.php");
+    include("../config/config.php");
 
     // Leer el cuerpo de la solicitud JSON
     $json_data = file_get_contents("php://input");

@@ -1,12 +1,24 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    include("../conexion_be.php");
+    include("../config/config.php");
 
     // Obtener el ID de empleado de la solicitud GET y asegurarse de que sea un entero
     $IdEmpleado = (int)$_GET['id'];
 
     // Realizar la consulta para obtener los detalles del empleado con el ID proporcionado
-    $sql = "SELECT * FROM tecnico t INNER JOIN usuarios u ON t.id_tecnico = $IdEmpleado INNER JOIN especialidad e ON t.especialidad_id = e.especialidad_id LIMIT 1";
+    $sql = "SELECT
+        u.id_user,
+        u.username, 
+        u.pass, 
+        u.name, 
+        u.birthday, 
+        u.cedula, 
+        u.sexo, 
+        u.phone,
+        u.email,
+        u.avatar,
+        c.id_cargo,
+        c.name AS cargo FROM user u INNER JOIN cargo c ON c.id_cargo=u.id_cargo WHERE u.id_user=$IdEmpleado ORDER BY u.id_user DESC LIMIT 1";
     $resultado = $conexion->query($sql);
 
     // Verificar si la consulta se ejecutó correctamente

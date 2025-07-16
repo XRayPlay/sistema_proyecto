@@ -1,15 +1,22 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include("../conexion_be.php");
+    include("../config/config.php");
 
     $id = trim($_POST['id']); // Asegúrate de recibir el ID del empleado que se actualizará
     $nombre = trim($_POST['nombre']);
+    $username = trim($_POST['username']);
     $pass = trim($_POST['pass']);
-    $fecha_nacimiento = trim($_POST['birthday']);
     $cedula = trim($_POST['cedula']);
     $sexo = trim($_POST['sexo']);
-    $telefono = trim($_POST['telefono']);
+    $phone = trim($_POST['telefono']);
+    $email = trim($_POST['email']);
+    $birthday = trim($_POST['birthday']);
+    $address = "Departamento general";
+    $last_connection = date("Y-m-d");
+    $floor = "PB";
     $cargo = trim($_POST['cargo']);
+    $username = trim($_POST['username']);
+    $dirLocal = "fotos_empleados";
 
     $avatar = null;
 
@@ -31,18 +38,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Actualiza los datos en la base de datos
-    $sql = "UPDATE tbl_empleados 
-            SET nombre='$nombre', edad='$edad', cedula='$cedula', sexo='$sexo', telefono='$telefono', cargo='$cargo'";
+    $sql = "UPDATE user SET username='$username',pass='$pass',name='',cedula='',sexo='',phone='',email='',birthday='',address='',avatar=''";
 
     // Si hay un nuevo avatar, actualiza su valor
     if ($avatar !== null) {
         $sql .= ", avatar='$avatar'";
     }
 
-    $sql .= " WHERE id='$id'";
+    $sql .= ",last_connection='$',id_floor='$',id_cargo='$',id_rol='$',id_status_user='$' WHERE id='$id'";
 
     if ($conexion->query($sql) === TRUE) {
-        header("location:../../vista/inicio.php");
+        header("location:../");
     } else {
         echo "Error al actualizar el registro: " . $conexion->error;
     }

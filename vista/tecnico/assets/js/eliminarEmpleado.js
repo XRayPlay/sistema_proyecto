@@ -13,7 +13,7 @@ async function cargarModalConfirmacion() {
     }
 
     // Realizar una solicitud GET usando Fetch para obtener el contenido de la modal
-    const response = await fetch("../php/modales/modalDelete.php");
+    const response = await fetch("modales/modalDelete.php");
 
     if (!response.ok) {
       throw new Error("Error al cargar la modal de confirmación");
@@ -62,7 +62,7 @@ async function eliminarEmpleado(idEmpleado, avatarEmpleado) {
         var avatarEmpleado = this.getAttribute("data-avatar");
 
         try {
-          const response = await axios.post("../php/empleados/delete.php", {
+          const response = await axios.post("acciones/delete.php", {
             id: idEmpleado,
             avatar: avatarEmpleado,
           });

@@ -1,98 +1,10 @@
 <?php
-    require_once "../php/clases.php";
-
-    
-    session_start();
-
-    if(!isset($_SESSION['usuario'])){
-      include('../php/cerrar_sesion.php');
-      session_destroy();
-      die();
-  }
-
-  $c= new conectar();
-  $conexion=$c->conexion();
-  $sql = "SELECT * FROM tecnico t INNER JOIN usuarios u ON t.usuario_id=u.idusuarios";
-  $result = mysqli_query($conexion, $sql);
-
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gestion - MINEC</title>
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/fontawesome-free/css/all.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-  <!-- Tempusdominus Bootstrap 4 -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
-  <!-- iCheck -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-  <!-- JQVMap -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/jqvmap/jqvmap.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/dist/css/adminlte.min.css">
-  <!-- overlayScrollbars -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
-  <!-- Daterange picker -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/daterangepicker/daterangepicker.css">
-  <!-- summernote -->
-  <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/summernote/summernote-bs4.min.css">
+          include('../pages/header.php');
+        ?>
 
   <link rel="stylesheet" href="../public/css/tecnico_disponible.css">
-</head>
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
+  <link rel="stylesheet" href="../public/css/lista_tecnico.css">
 
-  <!-- Preloader -->
-  <div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
-  </div>
-
-  <!-- Navbar -->
-  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-    <!-- Left navbar links -->
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-        </li>
-        
-      </ul>
-
-    
-    </ul>
-  </nav>
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
-  <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
-    <a href="inicio.php" class="brand-link">
-      <img src="../resources/image/lo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">Soporte Tecnico</span>
-    </a>
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <!-- Sidebar user panel (optional) -->
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="../resources/image/usuario.png" class="img-circle elevation-2" alt="User Image">
-        </div>
-        <div class="info">
-          <a href="#" class="d-block">
-            <?php
-
-          echo $_SESSION['usuario'];
-
-        ?></a>
-        </div>
-      </div>
 
         <?php
           $pagina = "cronograma";
@@ -100,164 +12,97 @@
         ?>
 
 
-          <!-- Etiqueta -->
-          <li class="nav-header">EXAMPLES</li>
 
-         
-          <li class="nav-item">
-            <a href="../php/cerrar_sesion.php" class="nav-link">
-              <i class="nav-icon far fa-circle text-danger"></i> 
-              <p>
-                Cerrar Sesion
-              </p>
-            </a>
-          </li>
-        </ul>
-      </nav>
-      <!-- /.sidebar-menu -->
-    </div>
-    <!-- /.sidebar -->
-  </aside>
-
-  <!-- Content Wrapper. Contains page content -->
-<div class="wrapper">
-
-  <div class="content-wrapper p-4">
-    <section class="content">
-      <div class="container-fluid">
-
-      <!-- Listado de Técnicos -->
-
-        <div class="content">
-          <div class="container-fluid">
-            <div class="row">
-              <?php
-              if ($result->num_rows > 0) {
-                  while($tecnico = $result->fetch_assoc()) {
-                    if ($tecnico['estado_id'] == 2){
-                        $tecnicoesta="Libre";
-                    }
-                    if ($tecnico['estado_id'] == 3){                      
-                        $tecnicoesta="Ocupado";
-                    }
-                      
-                      $estado = strtolower($tecnicoesta);
-                      echo '
-                      <div class="col-md-2">
-                        <div class="tecnico-card">
-                          <div class="tecnico-avatar ' . $estado . '">
-                            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User">
-                          </div>
-                          <div class="nombre" style="margin-top: 8px; font-weight: 500;">' . htmlspecialchars($tecnico['nombre']) . '</div>
-                          <div class="estado ' . $estado . '">' . $tecnicoesta . '</div>
-                        </div>
-                      </div>';
-                  }
-              } else {
-                  echo '<p class="text-muted">No hay técnicos registrados.</p>';
+      <!-- Listado de Técnicos en fila con scroll horizontal -->
+<div class="content">
+  <div class="container-fluid">
+    <div style="overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
+      <?php
+      if ($result->num_rows > 0) {
+          while($tecnico = $result->fetch_assoc()) {
+              if ($tecnico['id_status_user'] == 1) {
+                  $tecnicoesta = "Libre";
+              } elseif ($tecnico['id_status_user'] == 2) {
+                  $tecnicoesta = "Ocupado";
+              } elseif ($tecnico['id_status_user'] == 3) {
+                  $tecnicoesta = "Ausente";
               }
-              $conexion->close();
-              ?>
-            </div>
-          </div>
+
+              $estado = strtolower($tecnicoesta);
+
+              echo '
+              <div class="d-inline-block" style="width: 140px; margin-right: 10px;">
+                <div class="tecnico-card text-center">
+                  <div class="tecnico-avatar ' . $estado . '">
+                    <img src="tecnico/acciones/fotos_empleados/' . $tecnico['avatar'] . '" alt="User" style="width: 100%; height: auto; border-radius: 50%;">
+                  </div>
+                  <div class="nombre mt-2 font-weight-bold text-truncate tecnico-nombre" title="' . htmlspecialchars($tecnico['name']) . '">' . htmlspecialchars($tecnico['name']) . '</div>
+
+                  <div class="estado ' . $estado . '">' . $tecnicoesta . '</div>
+                </div>
+              </div>';
+          }
+      } else {
+          echo '<p class="text-muted">No hay técnicos registrados.</p>';
+      }
+      $conexion->close();
+      ?>
+    </div>
+  </div>
+</div>
+
+
+        <div class="row">
+  <!-- Gráfico Equipos Reparados -->
+  <div class="col-md-6">
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">Equipos Reparados</h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
         </div>
-
-        <!-- <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Listado de Técnicos</h3>
-            <a href="listado_empleados.php" class="btn btn-primary float-right">Gestionar Empleados</a>
-          </div>
-          <div class="card-body">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="tecnicosTable"></tbody>
-            </table>
-          </div>
-        </div>-->
-
-        <!-- Gráfico Equipos Reparados -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Equipos Reparados</h3>
-          </div>
-          <div class="card-body">
-            <canvas id="equiposChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Gráfico Rendimiento Técnicos -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Rendimiento de Técnicos</h3>
-          </div>
-          <div class="card-body">
-            <canvas id="rendimientoChart"></canvas>
-          </div>
-        </div>
-
-        
-
       </div>
-    </section>
+      <div class="card-body">
+        <canvas id="equiposChart" height="150"></canvas>
+      </div>
+    </div>
   </div>
 
-</div>
-  <!-- /.content-wrapper -->
-  <footer class="main-footer">
-    <strong>Copyright &copy; 2025-2026 <a href="#">Una empresa inolvidable XD</a>.</strong>
-  
-    <div class="float-right d-none d-sm-inline-block">
-      <b>Version</b> 1.0.0
+  <!-- Gráfico Rendimiento Técnicos -->
+  <div class="col-md-6">
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title">Rendimiento de Técnicos</h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="rendimientoChart" height="150"></canvas>
+      </div>
     </div>
-  </footer>
-
-  <!-- Control Sidebar -->
-  <aside class="control-sidebar control-sidebar-dark">
-    <!-- Control sidebar content goes here -->
-  </aside>
-  <!-- /.control-sidebar -->
+  </div>
 </div>
-<!-- ./wrapper -->
-<script src="../public/js/script_cronograma.js"></script>
+
+
+        
+<?php
+          include('../pages/footer.php');
+        ?>
+
+  <script src="../public/js/script_cronograma.js"></script>
 <script src="../public/js/chart.js"></script>
-<!-- jQuery -->
-<script src="../plantilla/AdminLTE/plugins/jquery/jquery.min.js"></script>
-<!-- jQuery UI 1.11.4 -->
-<script src="../plantilla/AdminLTE/plugins/jquery-ui/jquery-ui.min.js"></script>
-<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-<script>
-  $.widget.bridge('uibutton', $.ui.button)
-</script>
-<!-- Bootstrap 4 -->
-<script src="../plantilla/AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!-- ChartJS -->
-<script src="../plantilla/AdminLTE/plugins/chart.js/Chart.min.js"></script>
-<!-- Sparkline -->
-<script src="../plantilla/AdminLTE/plugins/sparklines/sparkline.js"></script>
-<!-- JQVMap -->
-<script src="../plantilla/AdminLTE/plugins/jqvmap/jquery.vmap.min.js"></script>
-<script src="../plantilla/AdminLTE/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
-<!-- jQuery Knob Chart -->
-<script src="../plantilla/AdminLTE/plugins/jquery-knob/jquery.knob.min.js"></script>
-<!-- daterangepicker -->
-<script src="../plantilla/AdminLTE/plugins/moment/moment.min.js"></script>
-<script src="../plantilla/AdminLTE/plugins/daterangepicker/daterangepicker.js"></script>
-<!-- Tempusdominus Bootstrap 4 -->
-<script src="../plantilla/AdminLTE/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
-<!-- Summernote -->
-<script src="../plantilla/AdminLTE/plugins/summernote/summernote-bs4.min.js"></script>
-<!-- overlayScrollbars -->
-<script src="../plantilla/AdminLTE/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
-<!-- AdminLTE App -->
-<script src="../plantilla/AdminLTE/dist/js/adminlte.js"></script>
-<!-- AdminLTE for demo purposes -->
-<script src="../plantilla/AdminLTE/dist/js/demo.js"></script>
-<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-<script src="../plantilla/AdminLTE/dist/js/pages/dashboard.js"></script>
+
+
+
+<?php
+          include('../pages/scripts.php');
+        ?>
+
+
 </body>
 </html>

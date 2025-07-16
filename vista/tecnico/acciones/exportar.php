@@ -1,5 +1,5 @@
 <?php
-include("../conexion_be.php");
+include("../config/config.php");
 
 $fecha_actual = date("Y-m-d");
 $filename = "empleados_" . $fecha_actual . ".csv";

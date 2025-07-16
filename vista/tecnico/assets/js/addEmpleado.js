@@ -13,7 +13,7 @@ async function modalRegistrarEmpleado() {
       existingModal.remove(); // Eliminar la modal existente
     }
 
-    const response = await fetch("../php/modales/modalAdd.php");
+    const response = await fetch("modales/modalAdd.php");
 
     if (!response.ok) {
       throw new Error("Error al cargar la modal");
@@ -51,7 +51,7 @@ async function registrarEmpleado(event) {
     const formData = new FormData(formulario);
 
     // Enviar los datos del formulario al backend usando Axios
-    const response = await axios.post("../php/empleados/acciones.php", formData);
+    const response = await axios.post("acciones/acciones.php", formData);
 
     // Verificar la respuesta del backend
     if (response.status === 200) {
