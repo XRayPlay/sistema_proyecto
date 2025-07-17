@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $birthday = trim($_POST['birthday']);
     $address = "Departamento general";
     $last_connection = date("Y-m-d");
-    $floor = "PB";
+    $floor = 1;
     $cargo = trim($_POST['cargo']);
     $username = trim($_POST['username']);
     $dirLocal = "fotos_empleados";
@@ -38,14 +38,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Actualiza los datos en la base de datos
-    $sql = "UPDATE user SET username='$username',pass='$pass',name='',cedula='',sexo='',phone='',email='',birthday='',address='',avatar=''";
+    $sql = "UPDATE user SET username='$username',pass='$pass',name='$nombre',cedula='$cedula',sexo='$sexo',phone='$phone',email='$email',birthday='$birthday',address='$address'";
 
     // Si hay un nuevo avatar, actualiza su valor
-    if ($avatar !== null) {
+    if ($avatar != null) {
         $sql .= ", avatar='$avatar'";
     }
 
-    $sql .= ",last_connection='$',id_floor='$',id_cargo='$',id_rol='$',id_status_user='$' WHERE id='$id'";
+    $sql .= ", id_floor='$floor',id_cargo='$cargo' WHERE id_user='$id'";
 
     if ($conexion->query($sql) === TRUE) {
         header("location:../");

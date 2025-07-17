@@ -5,6 +5,20 @@ window.actualizarEmpleadoEdit = async function (idEmpleado) {
       `acciones/getEmpleado.php?id=${idEmpleado}`
     );
     if (response.status === 200) {
+
+      function calcularEdad(fechaNacimiento) {
+        const hoy = new Date();
+        const nacimiento = new Date(fechaNacimiento);
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const mes = hoy.getMonth() - nacimiento.getMonth();
+
+        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+          edad--;
+        }
+
+        return edad;
+      }
+
       const infoEmpleado = response.data; // Obtener los datos del empleado desde la respuesta
 
       let tr = document.querySelector(`#empleado_${idEmpleado}`);
@@ -12,10 +26,10 @@ window.actualizarEmpleadoEdit = async function (idEmpleado) {
       tablaHTML += `
           <tr id="empleado_${infoEmpleado.id_user}">
             <th class="dt-type-numeric sorting_1" scope="row">${
-              infoEmpleado.id_user
+              infoEmpleado.id_user-1
             }</th>
             <td>${infoEmpleado.name}</td>
-            <td>${infoEmpleado.birthday}</td>
+            <td>${calcularEdad(infoEmpleado.birthday)}</td>
             <td>${infoEmpleado.cedula}</td>
             <td>${infoEmpleado.cargo}</td>
             <td>

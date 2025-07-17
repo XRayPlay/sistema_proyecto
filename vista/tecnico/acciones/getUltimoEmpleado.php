@@ -3,7 +3,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     include("../config/config.php");
 
     // Realizar la consulta para obtener los detalles del empleado con el ID proporcionado
-    $sql = "SELECT u.id_user,
+    $sql = "SELECT 
+        u.id_user,
         u.username, 
         u.pass, 
         u.name, 

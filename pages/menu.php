@@ -28,7 +28,7 @@
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="inicio.php" class="brand-link">
-      <img src="../resources/image/lo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="<?= ($pagina == 'gestion_tecnico') ? '../../' : '../' ?>resources/image/lo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Soporte Tecnico</span>
     </a>
 
@@ -37,7 +37,20 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="../resources/image/usuario.png" class="img-circle elevation-2" alt="User Image">  <!-- AGREGAR IMAGEN DE USUARIO DESDE BASE DE DATOS-->
+                          <?php
+        if($resultimage->num_rows > 0){
+          foreach($resultimage as $row){
+            $imgg=$row['avatar'];
+          ?>
+          <img src="<?= ($pagina == 'gestion_tecnico') ? 'acciones/fotos_empleados/' : 'tecnico/acciones/fotos_empleados/' ?><?php echo $imgg;?>" class="img-circle elevation-2" alt="User Image">
+                    <?php
+          }
+        }else{
+          ?>
+          <img src="<?= ($pagina == 'gestion_tecnico') ? '../../' : '../' ?>resources/image/sin_foto.png" class="img-circle elevation-2" alt="User Image">
+      <?php 
+        }
+      ?>
         </div>
         <div class="info">
           <a href="#" class="d-block">

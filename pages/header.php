@@ -9,9 +9,11 @@
       session_destroy();
       die();
   }
-
+  $userr=$_SESSION['usuario'];
   $c= new conectar();
   $conexion=$c->conexion();
+  $imagesql="SELECT avatar FROM user WHERE username='$userr' LIMIT 1";
+  $resultimage=$conexion->query($imagesql);
   $sql = "SELECT * FROM user WHERE id_rol=3";
   $result = mysqli_query($conexion, $sql);
 

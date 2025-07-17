@@ -14,14 +14,14 @@
         <tbody>
             <?php
             foreach ($empleados as $empleado) { 
-                $id_user = $empleado['id_user'] - 1;
+                $id_user = $empleado['id_user'];
                 $birthday = $empleado['birthday'];
                 $calculo = new usuario();
                 $edad = $calculo->calcularEdad($birthday);?>
                 
 
                 <tr id="empleado_<?php echo $id_user; ?>">
-                    <th scope='row'><?php echo $id_user; ?></th>
+                    <th scope='row'><?php $id_resta_user=$id_user-1; echo $id_resta_user; ?></th>
                     <td><?php echo $empleado['name']; ?></td>
                     <td> <?php echo $edad; ?></td>
                     <td><?php echo $empleado['cedula']; ?></td>

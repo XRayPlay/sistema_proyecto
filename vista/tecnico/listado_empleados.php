@@ -1,12 +1,17 @@
 <?php    
     session_start();
+    $userr=$_SESSION['usuario'];
 
-    if(!isset($_SESSION['usuario'])){
+    if(!isset($userr)){
       include('../php/cerrar_sesion.php');
       session_destroy();
       die();
   }
+
   include("../../php/clases.php");
+  include("config/config.php");
+  $imagesql="SELECT avatar FROM user WHERE username='$userr' LIMIT 1";
+  $resultimage=$conexion->query($imagesql);
 ?>
 <!doctype html>
 <html lang="es">
@@ -58,7 +63,7 @@
         ?>
 
         <?php
-        include("config/config.php");
+        
         include("acciones/acciones.php");
 
         $empleados = obtenerEmpleados($conexion);

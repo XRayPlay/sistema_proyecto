@@ -25,7 +25,7 @@ window.insertEmpleadoTable = async function () {
       tr.id = `empleado_${infoEmpleado.id_user}`;
       tr.innerHTML = `
         <th class="dt-type-numeric sorting_1" scope="row">${
-          infoEmpleado.id_user
+          infoEmpleado.id_user-1
         }</th>
         <td>${infoEmpleado.name}</td>
         <td>${calcularEdad(infoEmpleado.birthday)}</td>
