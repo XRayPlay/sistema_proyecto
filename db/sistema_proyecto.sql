@@ -194,7 +194,7 @@ CREATE TABLE `user` (
   `username` varchar(20) NOT NULL,
   `pass` varchar(20) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `cedula` bigint(8) NOT NULL,
+  `cedula` bigint(9) NOT NULL,
   `sexo` varchar(10) NOT NULL,
   `phone` bigint(11) NOT NULL,
   `email` varchar(100) NOT NULL,

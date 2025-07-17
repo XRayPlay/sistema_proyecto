@@ -4,11 +4,10 @@
     
     session_start();
 
-    if(!isset($_SESSION['usuario'])){
-      include('../php/cerrar_sesion.php');
-      session_destroy();
-      die();
-  }
+    if (!isset($_SESSION['usuario']) && empty($_SESSION['usuario'])) {
+        header("Location: ../php/cerrar_sesion.php");
+        exit(); // ¡Importante! Detiene el script para evitar que siga cargando el HTML
+    }
   $userr=$_SESSION['usuario'];
   $c= new conectar();
   $conexion=$c->conexion();

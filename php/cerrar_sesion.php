@@ -6,7 +6,7 @@
         echo'
             <script>
             alert("No ha iniciado sesion");
-            window.location = "../vista/login.php";
+            window.location = "../";
             </script>';
         exit();
     }else{
@@ -15,6 +15,6 @@
     $date=date('Y-m-d H:i:s');
     $sql= "UPDATE `login_user` SET `last_connect`='$date' WHERE user='$usuario";
     session_destroy();
-    header("location: ../vista/login.php");
+    header("location: ../");
     }
 ?>

@@ -7,25 +7,54 @@
 
             $c= new conectar();
             $conexion=$c->conexion();
-            $query = "SELECT * FROM user WHERE username='$data[0]' AND pass='$data[1]'";
+
+            $query = "SELECT id_user FROM user WHERE";
+
+                // Verifica si es un correo o un nombre de usuario
+            if (filter_var($data[0], FILTER_VALIDATE_EMAIL)) {
+                $query .= " pass='$data[1]' AND email='$data[0]'";
+            } else {
+                $query .= " username='$data[0]' AND pass='$data[1]'";
+            }
+
             $validar_login = mysqli_query($conexion, $query);
-            $rol=mysqli_fetch_array($validar_login);
 
             if(mysqli_num_rows($validar_login) > 0){
-                    $last_connect=date("yyyy-mm-dd");
-                    $query = "UPDATE user SET last_connection ='$last_connect' WHERE username='$data[0]' AND pass='$data[1]'";
+                    $last_connect=date("Y-m-d");
+                    $query = "UPDATE user SET last_connection ='$last_connect' WHERE";
+
+                    if (filter_var($data[0], FILTER_VALIDATE_EMAIL)) {
+                        $query .= " pass='$data[1]' AND email='$data[0]'";
+                    } else {
+                        $query .= " username='$data[0]' AND pass='$data[1]'";
+                    }
+
                     $ejecutar = mysqli_query($conexion, $query);
+
+
+
+                    
                     if($ejecutar){
-                        $_SESSION['usuario'] = $data[0];
-                        header("location: ../vista/inicio.php");
-                        exit();
+                        $query ="SELECT name FROM user WHERE";
+                        if (filter_var($data[0], FILTER_VALIDATE_EMAIL)) {
+                            $query .= " pass='$data[1]' AND email='$data[0]'";
+                        } else {
+                            $query .= " username='$data[0]' AND pass='$data[1]'";
+                        }
+
+                        $result=$conexion->query($query);                        
+                        foreach($result AS $row){
+                            $_SESSION['usuario'] = $row['name'];
+                            header("location: ../vista/inicio.php");
+                            exit();
+                        }
                     }
 
             }else{
                 echo'
                     <script>
                     alert("Usuario no existe verifique los datos introducidos");
-                    window.location = "../vista/login.php";
+                    window.location = "../";
                     </script>';
                 exit();
             }
@@ -50,7 +79,7 @@
             if(mysqli_num_rows($verificar_usuario) > 0){
                 echo'<script>
                     alert("Este usuario ya se encuentra registrado");
-                    window.location = "../index.html";
+                    window.location = "../";
                     </script>';
                 exit();
             } else {
@@ -59,13 +88,13 @@
                 if($ejecutar == 1){
                     echo'<script>
                     alert("Se Registro los datos con exito");
-                    window.location = "../index.html";
+                    window.location = "../";
                     </script>';
                     exit();
                 }else{
                     echo'<script>
                     alert("Fallo el Registro");
-                    window.location = "../index.html";
+                    window.location = "../";
                     </script>';
                     exit();
                 }

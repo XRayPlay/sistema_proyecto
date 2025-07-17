@@ -95,7 +95,7 @@
         ?>
 
   <script src="../public/js/script_cronograma.js"></script>
-<script src="../public/js/chart.js"></script>
+  <script src="../public/js/chart.js"></script>
 
 
 

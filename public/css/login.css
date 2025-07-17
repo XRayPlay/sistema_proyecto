@@ -1,209 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
+}
 body{
-  margin: 0;
-  padding: 0;
-  font-family: 'Courier New', Courier, monospace;
-  background-image:  url(../../resources/image/fon.png);
-  background-size: cover;
-  height: 100vh;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(247, 248, 248);
+}
+.container{
+    width: 800px;
+    height: 500px;
+    display: flex;
+    position: relative;
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgb(0, 0,0,0.3);
+}
+.container-form{
+    width: 100%;
+    overflow: hidden;
+}
+.container-form form{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.5s ease-in;
+}
+.container-form h2{
+    font-size: 30px;
+    margin-bottom: 20px;
+}
+.container-form span{
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+.container-input{
+    width: 300px;
+    height: 40px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 0 15px;
+    background-color: #eeee;
+}
+.container-input input{
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+}
+.container-form a{
+    color: black;
+    font-size: 14px;
+    margin-bottom: 20px;
+    margin-top: 5px;
+}
+.button{
+    width: 170px;
+    height: 45px;
+    font-size: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    background-color: rgb(9, 182, 110);
+    color: white;
+}
+/*animacion*/
+.sign-up{
+    transform: translateX(-100%);
+}
+.container.toggle .sign-in{
+    transform: translateX(100%);
+}
+.container.toggle .sign-up{
+    transform: translateX(0);
+}
+/*welcome*/
+.container-welcome{
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transform: translateX(100%);
+    background-color: rgb(133, 192, 142);
+    transition: transform 0.5s ease-in-out, border-radius 0.5s ease-in-out;
+    overflow: hidden;
+    border-radius: 50% 0 0 50%;
 }
 
-
-
-.titulo {
-  margin-top: 10px;
-  color: rgb(0, 0, 0);
-}
-
-.img {
-  position: absolute;
-  width: 200px;
-  top: 5%;
-  left: 50%;
-  transform: translate(-50%, -15%);
-}
-
-.formulario{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 400px;
-  background: rgb(255, 255, 255, 0.8);
-  border-radius: 10px;
-
-}
-
-.formulario h1{
-  text-align: center;
-  padding: 0 0 20px 0;
-  border-bottom: 1px solid silver;
-}
-
-.formulario form{
-  padding: 0 40px;
-  box-sizing: border-box;
-}
-
-form .username{
-  position: relative;
-  border-bottom: 2px solid #adadad;
-  margin: 30px 0;
-}
-
-form .username{
-  position: relative;
-  border-bottom: 2px solid #adadad;
-  margin: 30px 0;
-}
-
-.username input{
-  width: 100%;
-  padding: 0 5px;
-  height: 40px;
-  font-size: 16 px;
-  border: none;
-  background: none;
-  outline: none;
-}
-
-.username label{
-  position: absolute;
-  top: 1%;
-  left: 5px;
-  color: #adadad;
-  transform: translateY(-50%);
-  font-size: 16px;
-  pointer-events: none;
-}
-
-.errorform{
-  color: red;
-  font-size: 16px;
-  margin-bottom: 0;
-  top: 1%;
-  display: none;
-}
-
-.errorform-activo{
+#logo_login,
+#logo_register {
+  width: 80px;
+  height: auto;
+  margin-bottom: 10px;
   display: block;
-}
-.username span::before{
-  content: '';
-  position: absolute;
-  top: 40px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #6C3483;
-  transition: .5s;
-}
-
-.username input:focus ~ label,
-.username input:focus ~ label{
-  top: -5px;
-  color: #6C3483;
-}
-
-.username input:focus ~ span::before,
-.username input:focus ~ span::before{
-  width: 100%;
-}
-
-
-
-
-form .contrasena{
   position: relative;
-  border-bottom: 2px solid #adadad;
-  margin: 30px 0;
-}
-
-form .contrasena{
-  position: relative;
-  border-bottom: 2px solid #adadad;
-  margin: 30px 0;
-}
-
-.contrasena input{
-  width: 100%;
-  padding: 0 5px;
-  height: 40px;
-  font-size: 16 px;
-  border: none;
-  background: none;
-  outline: none;
-}
-
-.contrasena label{
-  position: absolute;
-  top: 1%;
-  left: 5px;
-  color: #adadad;
-  transform: translateY(-50%);
-  font-size: 16px;
-  pointer-events: none;
-}
-
-.contrasena span::before{
-  content: '';
-  position: absolute;
-  top: 40px;
+  top: 0;
   left: 0;
-  width: 100%;
-  height: 2px;
-  background: #6C3483;
-  transition: .5s;
+  transform: none;
 }
 
-.contrasena input:focus ~ label,
-.contrasena input:focus ~ label{
-  top: -5px;
-  color: #6C3483;
+.container.toggle .container-welcome{
+    transform: translateX(0);
+    border-radius: 0 50% 50% 0;
+    background: rgb(101, 180, 141);
+}
+.container-welcome .welcome{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 0 50px;
+    color: white;
+    transition: transform 0.5s ease-in-out;
+}
+.welcome-sign-in{
+    transform: translateX(100%);
+}
+.container-welcome h3{
+    font-size: 40px;
+}
+.container-welcome p{
+    font-size: 14px;
+    text-align: center;
+}
+.container-welcome .button{
+    border: 2px solid white;
+    background-color: transparent;
+}
+.container.toggle .welcome-sign-in{
+    transform: translateX(0);
+}
+.container.toggle .welcome-sign-up{
+    transform: translateX(-100%);
 }
 
-.contrasena input:focus ~ span::before,
-.contrasena input:focus ~ span::before{
-  width: 100%;
-}
-.recordar{
-  margin: -5px 0 20px 5px;
-  color: blue;
-  cursor: pointer;
+.error-message {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 4px;
 }
 
-.recordar:hover{
-  text-decoration: underline;
-}
-
-input[type="submit"]{
-  width: 100%;
-  height: 50px;
-  border: 1px solid;
-  background: #6C3483;
-  border-radius: 25px;
-  font-size: 18px;
-  color: white;
-  cursor: pointer;
+/* Estilo para campos con error */
+.input-error {
+  border: 1px solid red !important;
   outline: none;
+  box-shadow: 0 0 5px red;
 }
 
-input[type="submit"]:hover{
-  border-color: purple;
-  transition: .5s;
+/* Opcional: resalta también el ícono */
+.container-input ion-icon.error-icon {
+  color: red;
 }
 
-.registrarse{
-  margin: 30px 0;
-  text-align: center;
-  font-size: 16px;
-  color: black;
+
+/* Estilo base mejorado para campos con error */
+.input-error {
+  border: 1.5px solid rgb(220, 53, 69) !important; /* rojo Bootstrap elegante */
+  outline: none;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.4);
+  animation: shake 0.2s ease-in-out 2;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
 }
 
-.registrarse a{
-  color: blue;
-  text-decoration: none;
+/* Ícono en rojo */
+.container-input ion-icon.error-icon {
+  color: rgb(220, 53, 69);
+  transition: color 0.3s ease;
 }
 
-.registrarse a:hover{
-  text-decoration: underline;
+/* Mensaje de error más claro */
+.error-message {
+  color: rgb(220, 53, 69);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 4px;
+  margin-left: 6px;
+  width: 100%;
+  animation: fadein 0.3s ease;
+}
+
+/* Animación de vibración */
+@keyframes shake {
+  0% { transform: translateX(0px); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0px); }
+}
+
+/* Animación de aparición */
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

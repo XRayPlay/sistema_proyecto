@@ -44,3 +44,10 @@ thead tr th {
 tr td {
   text-align: start !important;
 }
+
+
+  .error-text {
+    font-size: 0.875em;
+    color: #dc3545;
+    margin-top: 0.25rem;
+  }
