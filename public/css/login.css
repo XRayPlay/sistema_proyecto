@@ -13,7 +13,7 @@ body{
     align-items: center;
     background-color: rgb(247, 248, 248);
 }
-.container{
+.container{ /* AJUSTAR ESTE CONTENEDOR SI SE COLOCA MAS INPUTS AL FORMULARIO LOGIN*/
     width: 800px;
     height: 500px;
     display: flex;

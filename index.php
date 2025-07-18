@@ -32,6 +32,8 @@
             <input type="password" placeholder="Contraseña" name="password">
             <div class="error-message" id="error-login-password"></div>
         </div>
+        <div class="g-recaptcha" data-sitekey="6Ld78YYrAAAAANb0hiCKqwgDh7P5ATIQReBBqVNp" id="captcha-login"></div>
+        <div id="captcha-error" class="error-message"></div>
             <a href="#">¿Olvidaste tu contraseña?</a>
             <button class="button">INICIAR SESION</button>
              </form> 
@@ -59,6 +61,8 @@
                 <input type="password" placeholder="Contraseña" name="password">
                 <div class="error-message" id="error-registro-password"></div>
             </div>
+            <div class="g-recaptcha" data-sitekey="6Ld78YYrAAAAANb0hiCKqwgDh7P5ATIQReBBqVNp" id="captcha-login"></div>
+            <div id="captcha-error" class="error-message"></div>
             <button class="button">REGISTRARSE</button>
             </form> 
         </div>
@@ -80,7 +84,7 @@
 
     </div>
 
-    
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="public/js/login.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>

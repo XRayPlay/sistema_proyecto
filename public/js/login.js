@@ -99,3 +99,44 @@ document.addEventListener("DOMContentLoaded", function () {
     agregarValidacionEnVivo(form);
   });
 });
+
+window.onload = function () {
+  // Detecta cuando el CAPTCHA cambia (usuario lo resuelve)
+  window.validateCaptcha = async function () {
+    const response = grecaptcha.getResponse(); // obtiene el token
+    if (!response) {
+      document.getElementById('captcha-error').innerText = "Por favor resuelve el captcha.";
+      return false;
+    }
+
+    try {
+      const res = await fetch('php/validar_captcha.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `captcha=${response}`
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        document.getElementById('captcha-error').innerText = "Captcha inválido. Inténtalo de nuevo.";
+        grecaptcha.reset(); // reinicia el captcha
+        return false;
+      } else {
+        document.getElementById('captcha-error').innerText = "";
+        return true;
+      }
+
+    } catch (err) {
+      document.getElementById('captcha-error').innerText = "Error al validar el captcha.";
+      return false;
+    }
+  };
+};
+
+document.querySelector('.sign-in').addEventListener('submit', async function (e) {
+  const valido = await validateCaptcha();
+  if (!valido) e.preventDefault();
+});
