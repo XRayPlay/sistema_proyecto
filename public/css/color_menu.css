@@ -1,0 +1,62 @@
+/* FONDO Y LETRAS DEL MENU EN GENERAL */
+.custom-sidebar {
+  background-color: #becdd6 !important; /* Gris claro */
+  color: #030000 !important;              /* Texto oscuro */
+}
+
+/* Asegura que el texto del menú también sea oscuro */
+.custom-sidebar .nav-link,
+.custom-sidebar .nav-header,
+.custom-sidebar .brand-text,
+.custom-sidebar .user-panel a {
+  color: #000000 !important;
+}
+
+/* Cambiar el color de los íconos */
+.custom-sidebar .nav-icon,
+.custom-sidebar .brand-link i,
+.custom-sidebar .user-panel i {
+  color: #3d3d3d !important;
+}
+
+/* Fondo cuando está activo */
+.custom-sidebar .nav-link.active {
+  background-color: #09244d !important;
+  color: #f5f4f4 !important;
+}
+
+/* Hover */
+.custom-sidebar .nav-link:hover {
+  background-color: #0b428a !important;
+  color: #ffffff !important;
+}
+
+
+
+/* COLOR DE OPCION CERRAR SESION */
+.logout-link {
+  background-color: #dc3545 !important; /* rojo Bootstrap */
+  color: white !important;
+}
+
+.logout-link p,
+.logout-link i {
+  color: white !important;
+}
+
+.logout-link:hover {
+  background-color: #c82333 !important; /* rojo más oscuro al hacer hover */
+  color: #fff !important;
+}
+
+
+
+/* COLOR DE FONDO DEL LOGO Y NOMBRE DE PAGINA */
+.back-empress{
+  background-color: #204a88 !important; 
+  color: #fff !important;
+}
+
+.back-empress p{
+  color: #fff !important;
+}

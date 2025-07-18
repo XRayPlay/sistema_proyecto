@@ -44,3 +44,4 @@
   <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/daterangepicker/daterangepicker.css">
   <!-- summernote -->
   <link rel="stylesheet" href="../plantilla/AdminLTE/plugins/summernote/summernote-bs4.min.css">
+  <link rel="stylesheet" href="../public/css/color_menu.css">

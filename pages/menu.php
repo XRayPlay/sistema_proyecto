@@ -25,11 +25,11 @@
   <!-- /.navbar -->
 
   <!-- Main Sidebar Container -->
-  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <aside class="main-sidebar custom-sidebar elevation-4">
     <!-- Brand Logo -->
-    <a href="inicio.php" class="brand-link">
+    <a href="inicio.php" class="brand-link back-empress">
       <img src="<?= ($pagina == 'gestion_tecnico') ? '../../' : '../' ?>resources/image/lo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">Soporte Tecnico</span>
+      <span class="brand-text font-weight-light"><p>Soporte Tecnico</p></span>
     </a>
 
     <!-- Sidebar -->
@@ -90,7 +90,7 @@
             </a>
           </li>
 
-        <!-- comienzo de menu expandible -->
+        <!-- comienzo de menu expandible 
           <li class="nav-item menu<?= ($pagina1 == 'reportes') ? '-open' : '' ?>">
             <a href="#" class="nav-link <?= ($pagina1 == 'reportes') ? 'active' : '' ?>">
               <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -120,7 +120,7 @@
               </li>
             </ul>
           </li>
-        <!-- Fin de menu expandible -->
+        Fin de menu expandible -->
 
         
                     <!-- Etiqueta -->
@@ -128,7 +128,7 @@
 
          
           <li class="nav-item">
-            <a href="<?= ($pagina == 'gestion_tecnico') ? '../../php/cerrar_sesion.php' : '../php/cerrar_sesion.php' ?>" class="nav-link">
+            <a href="<?= ($pagina == 'gestion_tecnico') ? '../../php/cerrar_sesion.php' : '../php/cerrar_sesion.php' ?>" class="nav-link logout-link">
               <i class="nav-icon far fa-circle text-danger"></i> 
               <p>
                 Cerrar Sesion
