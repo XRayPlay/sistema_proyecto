@@ -6,7 +6,7 @@
         echo'
             <script>
             alert("No ha iniciado sesion");
-            window.location = "../";
+            window.location = "../login.php";
             </script>';
         exit();
     }else{

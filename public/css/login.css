@@ -1,211 +1,593 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-*{
+/* Variables para colores clave */
+:root {
+    --primary-color: #2a6eff; /* Azul principal (para botones) */
+    --secondary-color: #f0f2f5; /* Gris claro para fondo */
+    --text-color: #333;
+    --border-color: #e0e0e0;
+    --modal-bg-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro para el modal */
+
+    /* Colores de los roles */
+    --role-admin: #a76dff;
+    --role-analyst: #6da7ff;
+    --role-technician: #6dffb8;
+    --role-user: #ff9b6d;
+}
+
+/* Estilos generales */
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: "Montserrat", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
-body{
-    width: 100%;
-    height: 100vh;
+
+#incidentForm {
+    display: flex; 
+    flex-direction: column; 
+    /* El formulario debe ocupar el 100% de la altura del modal-content */
+    height: 100%; 
+    /* El formulario debe ocupar el 100% del ancho para que sus hijos se centren bien */
+    width: 100%; 
+}
+
+
+/* Estilo para mensajes de error de validación */
+.error-message {
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px;
+    background-color: #ffeaea; /* Fondo rojizo claro */
+    border: 1px solid red;
+    border-radius: 4px;
+}
+
+/* ... (Resto de estilos sin cambios) ... */
+
+body {
+    background-image: url('../../resources/image/index_fondo.jpg');
+      background-repeat: no-repeat;
+  /* Centra la imagen en el fondo */
+  background-position: center;
+  /* Ajusta el tamaño de la imagen para cubrir el fondo */
+  background-size: cover;
+  /* Mantiene la imagen fija al hacer scroll */
+  background-attachment: fixed;
+    color: var(--text-color);
+    min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgb(247, 248, 248);
+    flex-direction: column; /* Permite que el footer se mantenga abajo */
+    overflow-x: hidden; /* Evita scroll horizontal */
 }
-.container{ /* AJUSTAR ESTE CONTENEDOR SI SE COLOCA MAS INPUTS AL FORMULARIO LOGIN*/
-    width: 800px;
-    height: 500px;
-    display: flex;
-    position: relative;
-    background-color: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 0 10px rgb(0, 0,0,0.3);
+
+/* --- Estilos para la Retroalimentación de Validación en Tiempo Real --- */
+
+/* Estilo para borde Rojo: Cuando el campo no cumple la validación */
+.form-group input.is-invalid,
+.form-group select.is-invalid,
+.id-input-group .id-nationality-select.is-invalid {
+    border-color: #ff4d4f !important; /* Rojo fuerte */
+    box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.2) !important;
 }
-.container-form{
-    width: 100%;
-    overflow: hidden;
+
+/* Estilo para borde Verde: Cuando el campo cumple la validación */
+.form-group input.is-valid,
+.form-group select.is-valid,
+.id-input-group .id-nationality-select.is-valid {
+    border-color: #52c41a !important; /* Verde fuerte */
+    box-shadow: 0 0 0 3px rgba(82, 196, 26, 0.2) !important;
 }
-.container-form form{
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.5s ease-in;
+
+/* Asegura que el foco (focus) no sobrescriba el estado de error/éxito */
+.form-group input:focus {
+    /* Mantén el estilo original de focus (azul) para la usabilidad, 
+       pero las clases is-invalid/is-valid tendrán prioridad debido a !important */
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(42, 110, 255, 0.2);
 }
-.container-form h2{
-    font-size: 30px;
-    margin-bottom: 20px;
-}
-.container-form span{
-    font-size: 12px;
-    margin-bottom: 15px;
-}
-.container-input{
+
+img{
     width: 300px;
-    height: 40px;
-    margin-bottom: 10px;
+}
+
+/* --- Barra de Navegación (Navbar) --- */
+.navbar {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.logo-text {
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.system-name {
+    font-size: 14px;
+    color: #666;
+    margin-left: 10px;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* NUEVO: Estilo para el botón de Incidencia */
+.btn-incident {
+    background-color: transparent;
+    border: 2px solid #52c41a; /* Verde para Incidencia */
+    color: #52c41a;
+}
+
+.btn-incident:hover {
+    background-color: rgba(82, 196, 26, 0.1);
+}
+
+.btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 15px;
-    background-color: #eeee;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.container-input input{
-    border: none;
-    outline: none;
-    width: 100%;
-    height: 100%;
-    background-color: inherit;
+
+.btn-login {
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
 }
-.container-form a{
-    color: black;
-    font-size: 14px;
-    margin-bottom: 20px;
-    margin-top: 5px;
+
+.btn-login:hover {
+    background-color: rgba(42, 110, 255, 0.1);
 }
-.button{
-    width: 170px;
-    height: 45px;
-    font-size: 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    background-color: rgb(9, 182, 110);
+
+.btn-primary { /* Estilo para el botón 'Ingresar'/'Registrar' dentro del modal */
+    background-color: var(--primary-color);
     color: white;
-}
-/*animacion*/
-.sign-up{
-    transform: translateX(-100%);
-}
-.container.toggle .sign-in{
-    transform: translateX(100%);
-}
-.container.toggle .sign-up{
-    transform: translateX(0);
-}
-/*welcome*/
-.container-welcome{
-    position: absolute;
-    width: 50%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    transform: translateX(100%);
-    background-color: rgb(133, 192, 142);
-    transition: transform 0.5s ease-in-out, border-radius 0.5s ease-in-out;
-    overflow: hidden;
-    border-radius: 50% 0 0 50%;
+    border: 2px solid var(--primary-color);
 }
 
-#logo_login,
-#logo_register {
-  width: 80px;
-  height: auto;
-  margin-bottom: 10px;
-  display: block;
-  position: relative;
-  top: 0;
-  left: 0;
-  transform: none;
+.btn-primary:hover {
+    background-color: #1a5eff;
 }
 
-.container.toggle .container-welcome{
-    transform: translateX(0);
-    border-radius: 0 50% 50% 0;
-    background: rgb(101, 180, 141);
+.btn-cancel { /* Estilo para el botón 'Cancelar' dentro del modal */
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
 }
-.container-welcome .welcome{
-    position: absolute;
+
+.btn-cancel:hover {
+    background-color: var(--secondary-color);
+}
+
+.btn-cancel,
+.btn-primary { 
+    /* Esto asegura que el botón solo tome el espacio necesario para su contenido */
+    width: auto; 
+}
+
+/* --- Contenido Principal --- */
+.main-content {
+    flex-grow: 1; /* Ocupa el espacio restante */
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    padding: 0 50px;
-    color: white;
-    transition: transform 0.5s ease-in-out;
-}
-.welcome-sign-in{
-    transform: translateX(100%);
-}
-.container-welcome h3{
-    font-size: 40px;
-}
-.container-welcome p{
-    font-size: 14px;
+    padding: 50px 20px;
     text-align: center;
 }
-.container-welcome .button{
-    border: 2px solid white;
-    background-color: transparent;
-}
-.container.toggle .welcome-sign-in{
-    transform: translateX(0);
-}
-.container.toggle .welcome-sign-up{
-    transform: translateX(-100%);
+
+.welcome-section {
+    max-width: 600px;
+    margin-bottom: 40px;
 }
 
-.error-message {
-  color: red;
-  font-size: 0.9em;
-  margin-top: 4px;
+.desktop-icon {
+    width: 120px;
+    height: 120px;
+    background-color: white; /* Fondo del círculo blanco */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 0 0 10px var(--primary-color); /* Anillo azul */
 }
 
-/* Estilo para campos con error */
-.input-error {
-  border: 1px solid red !important;
-  outline: none;
-  box-shadow: 0 0 5px red;
+.desktop-icon i {
+    font-size: 60px;
+    color: var(--primary-color);
 }
 
-/* Opcional: resalta también el ícono */
-.container-input ion-icon.error-icon {
-  color: red;
+h1 {
+    color: rgb(255, 255, 255);
+    background-color: rgba(0, 0, 0, 0.5);
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    border-radius: 10px;
+}
+
+.subtitle {
+    font-size: 20px;
+    color: #dddbdb;
+    margin-bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
+
+.description {
+    font-size: 16px;
+    color: #dfdede;
+    line-height: 1.6;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
+
+/* --- Sección de Roles --- */
+.roles-section {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--border-color);
+}
+
+.roles-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.role-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.role-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.role-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 14px;
+}
+
+.role-icon i {
+    opacity: 0.9;
+}
+
+/* Estilos de color para cada rol */
+.admin { background-color: var(--role-admin); }
+.analyst { background-color: var(--role-analyst); }
+.technician { background-color: var(--role-technician); }
+.user { background-color: var(--role-user); }
+
+.role-item p {
+    margin: 0;
+    font-size: 16px;
+    color: #181818;
+}
+
+.role-item strong {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* --- Chat Flotante (Footer) --- */
+.footer-chat {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+}
+
+.chat-btn {
+    background-color: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    font-size: 14px;
+    /* Hereda estilos de .btn, pero se sobrescribe el color y posición */
+    border: none;
+    cursor: pointer;
+}
+
+.chat-btn i {
+    margin-right: 5px;
+}
+
+.chat-btn:hover {
+    background-color: #111;
+}
+
+/* --- Estilos para los Modales --- */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed; /* Permanece fijo en la pantalla */
+    z-index: 1001; /* Z-index alto para que esté por encima de todo */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--modal-bg-color); /* Fondo oscuro semi-transparente */
+    justify-content: center; /* Centra horizontalmente el contenido del modal */
+    align-items: center; /* Centra verticalmente el contenido del modal */
+    backdrop-filter: blur(3px); /* Efecto de desenfoque al fondo */
+}
+
+.modal.active {
+    display: flex; /* Mostrar el modal cuando tenga la clase 'active' */
+}
+
+.modal-content {
+    display: flex; 
+    flex-direction: column;
+    max-height: 90vh;
+    background-color: white;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 600px; /* Ancho máximo para los modales */
+    animation: fadeInScale 0.3s ease-out; /* Animación de aparición */
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #333;
+    text-decoration: none;
+}
+
+.modal-body {
+    margin-bottom: 0px;
+    padding: 20px 30px;
+    
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: none;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #444;
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group input[type="date"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 16px;
+    color: var(--text-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="tel"]:focus,
+.form-group input[type="date"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42, 110, 255, 0.2);
+}
+
+.form-group input::placeholder {
+    color: #999;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row .half-width {
+    flex: 1; /* Cada elemento ocupa la mitad del ancho disponible */
+}
+
+/* Nuevos estilos específicos para el modal de incidencia */
+.form-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 20px 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Estilo para el campo de descripción (textarea) */
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 16px;
+    color: var(--text-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical; /* Permite redimensionar solo verticalmente */
+}
+
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42, 110, 255, 0.2);
+}
+
+/* Retroalimentación de validación para textarea */
+.form-group textarea.is-invalid {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.2) !important;
+}
+
+.form-group textarea.is-valid {
+    border-color: #52c41a !important;
+    box-shadow: 0 0 0 3px rgba(82, 196, 26, 0.2) !important;
+}
+
+/* Estilos específicos para el input de Cédula con select */
+.id-input-group {
+    display: flex;
+    gap: 5px; /* Espacio entre el select y el input */
+}
+
+.id-nationality-select {
+    width: 70px; /* Ancho fijo para el selector de nacionalidad */
+    padding: 12px 8px; /* Ajuste de padding para el select */
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 16px;
+    color: var(--text-color);
+    background-color: white; /* Asegura el fondo blanco */
+    appearance: none; /* Elimina estilos por defecto del select */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.1%208.1-3.8%204.9-3.9%2011.6-.1%2016.6l128%20160c4.1%205.1%2010.5%208.1%2017.2%208.1s13-3%2017.2-8.1l128-160c3.7-5%203.6-11.7-.2-16.6z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+}
+
+.id-input-group input[type="text"] {
+    flex-grow: 1; /* Ocupa el espacio restante */
+    padding: 12px 15px;
 }
 
 
-/* Estilo base mejorado para campos con error */
-.input-error {
-  border: 1.5px solid rgb(220, 53, 69) !important; /* rojo Bootstrap elegante */
-  outline: none;
-  box-shadow: 0 0 8px rgba(220, 53, 69, 0.4);
-  animation: shake 0.2s ease-in-out 2;
-  transition: border 0.3s ease, box-shadow 0.3s ease;
+.modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 0px;
+    flex-shrink: 0;
 }
 
-/* Ícono en rojo */
-.container-input ion-icon.error-icon {
-  color: rgb(220, 53, 69);
-  transition: color 0.3s ease;
-}
 
-/* Mensaje de error más claro */
-.error-message {
-  color: rgb(220, 53, 69);
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-top: 4px;
-  margin-left: 6px;
-  width: 100%;
-  animation: fadein 0.3s ease;
-}
-
-/* Animación de vibración */
-@keyframes shake {
-  0% { transform: translateX(0px); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-4px); }
-  100% { transform: translateX(0px); }
-}
-
-/* Animación de aparición */
-@keyframes fadein {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Media Query para pantallas más pequeñas */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 20px;
+    }
+    .auth-buttons {
+        width: 100%;
+        justify-content: space-around;
+    }
+    .btn {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+    }
+    .system-name {
+        display: none; /* Ocultar en móviles para ahorrar espacio */
+    }
+    .main-content {
+        padding: 30px 15px;
+    }
+    .form-row {
+        flex-direction: column; /* Apila los campos en pantallas pequeñas */
+        gap: 0; /* Elimina el espacio entre ellos si se apilan */
+    }
+    .modal-content {
+        max-height: 95vh; /* 95% de la altura de la ventana */
+        max-width: 95%; 
+        padding: 20px;
+    }
+    .form-group {
+        margin-bottom: 12px; /* Reducir ligeramente el margen para liberar espacio vertical */
+    }
+    
+    /* 👉 NUEVO: Hacer que los botones se expandan en móviles para un mejor tacto */
+    .modal-footer {
+        flex-direction: column-reverse; /* Pone 'Crear Incidencia' arriba de 'Cancelar' */
+    }
+    .modal-footer .btn {
+        width: 100%; /* Botones de ancho completo */
+        justify-content: center;
+    }
 }

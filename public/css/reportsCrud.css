@@ -1,0 +1,46 @@
+.estado-abierto { background-color: #ffce00; color: #000; }
+.estado-progreso { background-color: #00bfff; color: rgb(0, 0, 0); }
+.estado-cerrado { background-color: #28a745; color: white; }
+.btn-reasignar { background-color: orange; color: white; border: none; }
+
+
+.estado-asignado {
+  background-color: #007bff; /* Azul */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.estado-reasignado {
+  background-color: #fd7e14; /* Naranja */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.estado-pendiente {
+  background-color: #445f18; /* Rojo */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.estado-cerrado {
+  background-color: #28a745; /* Verde */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.cargo_departamento{
+  background-color: #5ab6db; /* Verde */
+  color: rgb(0, 0, 0);
+  padding: 20px 25px;
+  border-radius: 50px;
+  font-size: 16px;
+
+}

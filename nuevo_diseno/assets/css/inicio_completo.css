@@ -1,0 +1,526 @@
+        :root {
+            --primary-color: #1e3a8a;
+            --primary-dark: #1e40af;
+            --secondary-color: #64748b;
+            --success-color: #2563eb;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --light-bg: #eff6ff;
+            --dark-bg: #1e3a8a;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        /* Top Navigation Bar */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            z-index: 1001;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar-brand i {
+            color: #93c5fd;
+            font-size: 2rem;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar-top {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #93c5fd, #60a5fa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name-top {
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .user-role-top {
+            color: #93c5fd;
+            font-size: 0.75rem;
+        }
+
+        /* Sidebar Moderno */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--dark-bg) 0%, #1e40af 100%);
+            color: white;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            height: calc(100vh - 70px);
+            z-index: 1000;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-subtitle {
+            color: #93c5fd;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-nav {
+            padding: 1.5rem 0;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.875rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            border-radius: 0 12px 12px 0;
+            margin-right: 1rem;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(147, 197, 253, 0.1);
+            transform: translateX(8px);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            color: #93c5fd;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 70px;
+            padding: 2rem;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Header Moderno */
+        .page-header {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(30, 58, 138, 0.1);
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--dark-bg);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--secondary-color);
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        /* Mini Tarjetas de Técnicos */
+        .tecnicos-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+        .tecnicos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tecnico-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem 1rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(30, 58, 138, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .tecnico-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
+        }
+
+        .tecnico-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 auto 12px;
+        }
+
+        .tecnico-nombre {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark-bg);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .tecnico-estado {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0;
+        }
+
+        .estado-libre {
+            background: #eff6ff;
+            color: var(--success-color);
+            border: 1px solid #93c5fd;
+        }
+
+        .estado-ocupado {
+            background: #fef2f2;
+            color: var(--danger-color);
+            border: 1px solid #fecaca;
+        }
+
+
+
+        /* Layout de Filtro y Estadísticas */
+        .filter-stats-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr; /* Panel de filtros más ancho */
+            gap: 2.5rem; /* Mayor separación entre filtros y gráficas */
+            margin-bottom: 1rem;
+        }
+
+        /* Panel de Filtros */
+        .filter-panel {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem; /* Aumentado para hacer la tarjeta más grande */
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(30, 58, 138, 0.1);
+            width: 400px; /* Aumentado para que coincida con el grid */
+        }
+
+        .filter-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+
+
+        .filter-title i {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.8rem; /* Aumentado para mejor espaciado */
+        }
+        
+        /* Layout de filtros en 2 columnas */
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem; /* Aumentado para mejor separación */
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-bg);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(30, 58, 138, 0.2);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .btn-filter {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);
+        }
+
+
+
+        /* Panel de Gráficas */
+        .stats-panel {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem; /* Reducido de 2rem a 1.5rem */
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(30, 58, 138, 0.1);
+            width: 100%; /* Ocupar todo el ancho restante */
+        }
+
+        .stats-title {
+            font-size: 1rem; /* Tamaño estándar para el título */
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin: 0.5rem; /* Margen mínimo */
+            padding: 0.75rem 1rem; /* Padding más generoso */
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(30, 58, 138, 0.05); /* Fondo sutil para el título */
+            border-radius: 8px 8px 0 0; /* Bordes redondeados solo arriba */
+        }
+
+        .stats-title i {
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            margin: 0;
+            height: calc(150% - 50px); /* Altura restante después del título */
+            position: relative;
+            flex: 1; /* Ocupar el espacio restante */
+        }
+        
+        /* Layout de gráficas una arriba de la otra */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Una columna - gráficas verticales */
+            gap: 1.5rem; /* Gap entre gráficas */
+        }
+
+        /* Tarjeta individual para cada gráfica */
+        .chart-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 0; /* Sin padding - las tarjetas serán del tamaño exacto de las gráficas */
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(30, 58, 138, 0.1);
+            transition: all 0.3s ease;
+            height: 350px; /* Aumentado significativamente de 180px a 350px */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.15);
+        }
+
+        .chart-subtitle {
+            font-size: 0.9rem; /* Reducido de 1rem */
+            font-weight: 600;
+            color: var(--dark-bg);
+            margin-bottom: 0.75rem; /* Reducido de 1rem */
+            text-align: center;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: 100% !important;
+        }
+
+        /* Indicador de carga */
+        .loading-stats {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner-border {
+            color: var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-navbar {
+                padding: 0 1rem;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                top: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-top: 70px;
+                padding: 1rem;
+            }
+            
+            .filter-stats-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr; /* Una columna en móviles */
+                gap: 1rem; /* Menor gap en móviles */
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr; /* Una columna en móviles */
+            }
+            
+            .tecnicos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
