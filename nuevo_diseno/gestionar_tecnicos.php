@@ -116,6 +116,12 @@ try {
                     <form id="formTecnico">
                         <input type="hidden" id="tecnico_id" name="tecnico_id">
                         <div class="row">
+
+
+
+
+
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nombre" class="form-label">Nombre</label>
@@ -156,16 +162,49 @@ try {
                                 </div>
                             </div>                            
                         </div>
-                        <div class="row">                            
+                        <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="birthday" class="form-label">Fecha de Nacimiento</label>
+                                        <input type="date" class="form-control" id="birthday" name="birthday">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="sexo" class="form-label">Sexo</label>
+                                        <select class="form-select" id="sexo" name="sexo" required>
+                                            <option value="">Seleccionar sexo</option>
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Femenino">Femenino</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="avatar" class="form-label">Foto de Perfil (Avatar)</label>
+                                    <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+                                    <small class="form-text text-muted">Solo se permiten imágenes (JPG, PNG, GIF).</small>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="especialidad" class="form-label">Especialidad</label>
                                     <select class="form-select" id="especialidad" name="especialidad" required>
                                         <option value="">Seleccionar especialidad</option>
-                                        <option value="Sistema">Sistema</option>
-                                        <option value="Soporte">Soporte</option>
-                                        <option value="Redes">Redes</option>
+                                        <option value="1">Soporte</option>
+                                        <option value="2">Sistema</option>
+                                        <option value="3">Redes</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Dirección</label>
+                                    <textarea class="form-control" id="address" name="address" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -432,22 +471,23 @@ async function abrirModalTecnico(modo, tecnico = null) {
         document.getElementById('modalTitulo').textContent = 'Editar Técnico';
         document.querySelector('#modalTecnico .btn-primary').textContent = 'Actualizar Técnico';
         
-        // La contraseña es opcional al editar
-        passwordInput.required = false; 
-        confirmPasswordInput.required = false; 
-        // Ocultar campos de contraseña al editar para indicar que no son obligatorios
-        passwordInput.closest('.col-md-6').style.display = 'block'; // Opcional, puedes ocultarlos o dejarlos
-        confirmPasswordInput.closest('.col-md-6').style.display = 'block';
-        
+        // ... (Contraseñas opcionales) ...
+
         // Llenar el formulario
         document.getElementById('tecnico_id').value = tecnico.id;
         document.getElementById('nombre').value = tecnico.nombre || ''; 
         document.getElementById('apellido').value = tecnico.apellido || ''; 
         document.getElementById('email').value = tecnico.email;
         document.getElementById('telefono').value = tecnico.telefono;
-        document.getElementById('nacionalidad').value = tecnico.nacionalidad; // Asumo que este campo existe en el objeto tecnico
-        document.getElementById('cedula').value = tecnico.cedula; // Asumo que este campo existe en el objeto tecnico
+        document.getElementById('nacionalidad').value = tecnico.nacionalidad;
+        document.getElementById('cedula').value = tecnico.cedula; 
         document.getElementById('especialidad').value = tecnico.especialidad;
+
+        // **NUEVOS CAMPOS**
+        document.getElementById('birthday').value = tecnico.birthday || '';
+        document.getElementById('sexo').value = tecnico.sexo || '';
+        document.getElementById('address').value = tecnico.address || '';
+        // Nota: El campo 'file' (avatar) no se puede prellenar por seguridad.
     }
     
     modalTecnico.show();
@@ -550,24 +590,28 @@ async function verDetallesTecnico(id) {
 }
 
 function mostrarDetallesTecnico(tecnico) {
-    // ... (El cuerpo de la función se mantiene igual, ya está correcto) ...
-        const contenido = `
-            <table class="table table-borderless">
-                <tr><td><strong>ID:</strong></td><td>#${tecnico.id}</td></tr>
-                <tr><td><strong>Nombre:</strong></td><td>${tecnico.nombre} ${tecnico.apellido}</td></tr>
-                <tr><td><strong>Cédula:</strong></td><td>${tecnico.cedula} (${tecnico.nacionalidad})</td></tr>
-                <tr><td><strong>Email:</strong></td><td>${tecnico.email}</td></tr>
-                <tr><td><strong>Teléfono:</strong></td><td>${tecnico.telefono}</td></tr>
-                <tr><td><strong>Especialidad:</strong></td><td>${tecnico.especialidad}</td></tr>
-                <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td></tr>
-                <tr><td><strong>Fecha de Registro:</strong></td><td>${formatearFecha(tecnico.fecha_registro)}</td></tr>
-            </table>
-        `;
-        
-        document.getElementById('detallesContenido').innerHTML = contenido;
-        modalDetalles.show();
+    const contenido = `
+        <table class="table table-borderless">
+            <tr><td><strong>Avatar:</strong></td><td>${tecnico.avatar ? `<img src="../path/to/avatars/${tecnico.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%;">` : 'No asignado'}</td></tr>
+            <tr><td><strong>ID:</strong></td><td>#${tecnico.id}</td></tr>
+            <tr><td><strong>Nombre:</strong></td><td>${tecnico.nombre} ${tecnico.apellido}</td></tr>
+            <tr><td><strong>Cédula:</strong></td><td>${tecnico.nacionalidad === 'venezolano' ? 'V' : ''}${tecnico.nacionalidad === 'extranjero' ? 'E' : ''}-${tecnico.cedula}</td></tr>
+            
+            <tr><td><strong>F. Nacimiento:</strong></td><td>${tecnico.birthday || 'No especificado'}</td></tr>
+            <tr><td><strong>Sexo:</strong></td><td>${tecnico.sexo || 'No especificado'}</td></tr>
+            <tr><td><strong>Dirección:</strong></td><td>${tecnico.address || 'No especificado'}</td></tr>
+            
+            <tr><td><strong>Email:</strong></td><td>${tecnico.email}</td></tr>
+            <tr><td><strong>Teléfono:</strong></td><td>${tecnico.telefono}</td></tr>
+            <tr><td><strong>Especialidad:</strong></td><td>${tecnico.especialidad}</td></tr>
+            <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td></tr>
+            <tr><td><strong>Fecha de Registro:</strong></td><td>${formatearFecha(tecnico.fecha_registro)}</td></tr>
+        </table>
+    `;
+    
+    document.getElementById('detallesContenido').innerHTML = contenido;
+    modalDetalles.show();
 }
-
 // Función para editar técnico (se mantiene igual)
 async function editarTecnico(id) {
     // ... (El cuerpo de la función se mantiene igual, ya está correcto) ...
@@ -815,11 +859,6 @@ function mostrarExito(mensaje) {
             alertDiv.remove();
         }, 5000);
 }
-    
-    // Logs de inicialización (se mantienen igual)
-    console.log('✅ Sidebar moderno con degradados azules oscuros');
-    console.log('✅ Funcionalidad CRUD completa conectada a la base de datos');
-    console.log('✅ Diseño idéntico al panel de administrador');
 </script>
 </body>
 </html>

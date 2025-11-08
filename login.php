@@ -19,8 +19,8 @@
   <body>
     <header class="navbar">
       <div class="logo-container">
-        <i><img src="resources/image/logoMinecCompleto.png" alt=""></i>
-        <span class="logo-text">MINEC</span>
+        <i><img src="resources/image/logoMinec.jpg" alt=""></i>
+        <span class="logo-text"></span>
         <span class="system-name">Sistema de Gestión de Incidencias</span>
       </div>
       <div class="auth-buttons">
@@ -38,7 +38,7 @@
         <div class="desktop-icon">
           <i class="fas fa-desktop"></i>
         </div>
-        <h1>SISTEMA DE GESTIÓN DE INCIDENCIAS CAUS</h1>
+        <h1>SISTEMA DE GESTIÓN DE INCIDENCIAS CAU</h1>
         <p class="subtitle">Centro de Atención al Usuario</p>
         <p class="description">
           Plataforma integral para la gestión eficiente de incidencias tecnológicas. Inicie sesión para
@@ -70,12 +70,10 @@
     </main>
 
     <footer class="footer-chat">
-      <button class="chat-btn">
-        <i class="fas fa-comments"></i> Talk with Us
-      </button>
+      <p class="copyright_footar">&copy;Copyright 2025 JJMNS. Todos los derechos reservados.</p>
     </footer>
 
-            <div id="loginModal" class="modal">
+  <div id="loginModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h2>Iniciar Sesión</h2>

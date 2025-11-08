@@ -30,19 +30,15 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Analistas - Sistema MINEC</title>
     
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="assets/css/panel_tecnico.css">
 </head>
-<body>    
-    <!-- Header -->
+<body>      
     <header class="header">
         <div class="header-content">
             <div class="logo">
@@ -63,9 +59,7 @@ try {
         include('../page/menu.php');
     ?>
 
-    <!-- Main Content -->
     <main class="main-content">
-        <!-- Page Header -->
         <div class="page-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -79,7 +73,6 @@ try {
             </div>
         </div>
 
-        <!-- Table Card -->
         <div class="table-card">
             <h3 class="table-title">Lista de Analistas</h3>
             <div class="table-responsive">
@@ -96,15 +89,13 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Los datos se cargarán aquí -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
     </main>
 
 
-    <!-- Modal para Crear/Editar Analista -->
     <div class="modal fade" id="modalAnalista" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -154,9 +145,36 @@ try {
                                     <label for="cedula" class="form-label">Cedula</label>
                                     <input maxlength="8" type="tel" class="form-control" id="cedula" name="cedula" required>
                                 </div>
-                            </div>                            
-                        </div>
-                        <div class="row">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="birthday" class="form-label">Fecha de Nacimiento</label>
+                                    <input type="date" class="form-control" id="birthday" name="birthday" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sexo" class="form-label">Sexo</label>
+                                    <select class="form-control" id="sexo" name="sexo" required>
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Femenino</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Dirección</label>
+                                    <input maxlength="255" type="text" class="form-control" id="address" name="address" required>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="avatar" class="form-label">URL del Avatar (Opcional)</label>
+                                    <input maxlength="255" type="file" class="form-control" id="avatar" name="avatar">
+                                    <small class="form-text text-muted">Introduce la URL de la imagen del analista.</small>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Contraseña</label>
@@ -180,7 +198,6 @@ try {
         </div>
     </div>
 
-    <!-- Modal para Ver Detalles -->
     <div class="modal fade" id="modalDetalles" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -189,13 +206,11 @@ try {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="detallesContenido">
-                    <!-- Los detalles se cargarán aquí -->
-                </div>
+                    </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -259,10 +274,6 @@ try {
             // Campos que solo deben permitir números
             document.getElementById('telefono').addEventListener('keypress', soloNumeros);
             document.getElementById('cedula').addEventListener('keypress', soloNumeros);
-
-            // Nota: Ya no es necesario aplicar la restricción de longitud máxima vía JS
-            // porque se añadió el atributo 'maxlength' al HTML, que hace la misma función
-            // de impedir la escritura cuando se alcanza el límite.
         }
 
         // ===================================
@@ -285,6 +296,8 @@ try {
             const cedula = document.getElementById('cedula').value.trim();
             const password = document.getElementById('password').value;
             const confirmarPassword = document.getElementById('confirmar_password').value;
+            const birthday = document.getElementById('birthday').value;
+            const address = document.getElementById('address').value.trim();
             
             // Expresión regular para validar formato de email simple
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -301,7 +314,6 @@ try {
 
             // Validación de Email
             if (email.length > 50) {
-                // Esto no debería pasar si maxlength funciona, pero se incluye por seguridad
                 errores.push('El Email no puede exceder los 50 caracteres.');
             }
             if (!emailRegex.test(email)) {
@@ -321,6 +333,17 @@ try {
             } else if (isNaN(cedula)) {
                  errores.push('La Cédula solo debe contener números.');
             }
+            
+            // Validación de Fecha de Nacimiento
+            if (!birthday) {
+                errores.push('La Fecha de Nacimiento es obligatoria.');
+            }
+
+            // Validación de Dirección
+            if (address.length < 5 || address.length > 255) {
+                errores.push('La Dirección debe tener entre 5 y 255 caracteres.');
+            }
+
 
             // Validación de Contraseñas (solo para Creación o si se llenan en Edición)
             if (!isEdicion || (isEdicion && password.length > 0)) {
@@ -338,17 +361,21 @@ try {
                 // Caso de edición: si dejan la principal vacía pero llenan la de confirmar
                 errores.push('Si desea cambiar la contraseña, debe llenar ambos campos.');
             }
-            const modalErrores = document.getElementById('modalErrores');
+
+            // NOTA: Para mostrar los errores en la modal, la modal debe contener un elemento con id='modalErrores'
+            // Ya que este elemento no existe en tu HTML, la validación se imprime en consola y el proceso se detiene.
+            // Para ser funcional, recomiendo añadir este div en el modal-body:
+            // <div id="modalErrores" class="alert alert-danger" style="display:none;"></div>
+            
+            // --- Manejo de errores simplificado (ya que no existe el div modalErrores en el HTML) ---
             if (errores.length > 0) {
-                // Mostrar errores
-                modalErrores.innerHTML = '<ul>' + errores.map(err => `<li>${err}</li>`).join('') + '</ul>';
-                modalErrores.style.display = 'block';
+                console.error('Errores de validación:', errores);
+                // Si la modalErrores no existe, mostramos una alerta simple
+                const mensajeError = errores.join('\n');
+                alert("Errores de Validación:\n" + mensajeError); 
                 return false; // El formulario NO es válido
             }
 
-            // Ocultar errores si es válido
-            modalErrores.style.display = 'none';
-            modalErrores.innerHTML = '';
             return true; // El formulario es válido
         }
 
@@ -375,11 +402,14 @@ try {
                 tbody.innerHTML = '';
                 
                 if (data.success && data.analistas && data.analistas.length > 0) {
+                    // Guardar los datos en una variable global para fácil acceso en editar/ver detalles
+                    analistas = data.analistas; 
+                    
                     data.analistas.forEach(analista => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${analista.id}</td>
-                            <td>${analista.name}</td>
+                            <td>${analista.name} ${analista.apellido}</td>
                             <td>${analista.email}</td>
                             <td>${analista.telefono || 'N/A'}</td>
                             <td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td>
@@ -417,41 +447,39 @@ try {
         }
 
         // Función para ver detalles
-        async function verDetallesAnalista(id) {
-            try {
-                const formData = new FormData();
-                formData.append('action', 'obtener_por_id');
-                formData.append('id', id);
-                
-                const response = await fetch('../php/panel_usuarios_crud.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.analista) {
-                    const analista = data.analista;
-                    mostrarDetallesAnalista(analista);
-                } else {
-                    mostrarError('No se pudo obtener la información del analista');
-                }
-            } catch (error) {
-                console.error('Error al obtener detalles:', error);
-                mostrarError('Error al obtener detalles: ' + error.message);
+        async function verDetallesAnalista(ids) {
+            // Buscamos el analista en la variable global (para evitar otra consulta AJAX si es posible)
+            const analista = analistas.find(a => a.id == ids);
+            
+            if (!analista) {
+                mostrarError('No se pudo obtener la información del analista');
+                return;
             }
+            
+            mostrarDetallesAnalista(analista);
         }
 
         function mostrarDetallesAnalista(analista) {
             const contenido = `
-                <table class="table table-borderless">
-                    <tr><td><strong>ID:</strong></td><td>#${analista.id}</td></tr>
-                    <tr><td><strong>Nombre:</strong></td><td>${analista.name}</td></tr>
-                    <tr><td><strong>Email:</strong></td><td>${analista.email}</td></tr>
-                    <tr><td><strong>Teléfono:</strong></td><td>${analista.telefono || 'N/A'}</td></tr>
-                    <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td></tr>
-                    <tr><td><strong>Fecha de Registro:</strong></td><td>${formatearFecha(analista.created_at)}</td></tr>
-                </table>
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img src="${analista.avatar || 'assets/images/default-avatar.png'}" alt="Avatar" class="img-fluid rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table table-borderless table-sm">
+                            <tr><td><strong>ID:</strong></td><td>#${analista.id}</td></tr>
+                            <tr><td><strong>Nombre Completo:</strong></td><td>${analista.name} ${analista.apellido}</td></tr>
+                            <tr><td><strong>Cédula:</strong></td><td>${analista.nacionalidad === 'venezolano' ? 'V' : ''}${analista.nacionalidad === 'extranjero' ? 'E' : ''}-${analista.cedula}</td></tr>
+                            <tr><td><strong>Email:</strong></td><td>${analista.email}</td></tr>
+                            <tr><td><strong>Teléfono:</strong></td><td>${analista.telefono || 'N/A'}</td></tr>
+                            <tr><td><strong>Sexo:</strong></td><td>${analista.sexo === 'M' ? 'Masculino' : 'Femenino'}</td></tr>
+                            <tr><td><strong>Fecha Nac.:</strong></td><td>${formatearFechaCorta(analista.birthday)}</td></tr>
+                            <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td></tr>
+                            <tr><td colspan="2"><strong>Dirección:</strong></td></tr>
+                            <tr><td colspan="2">${analista.address || 'No especificada'}</td></tr>
+                        </table>
+                    </div>
+                </div>
             `;
             
             document.getElementById('detallesContenido').innerHTML = contenido;
@@ -459,50 +487,47 @@ try {
         }
 
         // Función para editar analista
-        async function editarAnalista(id) {
-            try {
-                const formData = new FormData();
-                formData.append('action', 'obtener_por_id');
-                formData.append('id', id);
-                
-                const response = await fetch('../php/panel_usuarios_crud.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.analista) {
-                    const analista = data.analista;
-                    
-                    // Llenar el formulario
-                    document.getElementById('analista_id').value = analista.id;
-                    document.getElementById('nombre').value = analista.name;
-                    document.getElementById('apellido').value = analista.apellido;
-                    document.getElementById('nacionalidad').value = analista.nacionalidad;
-                    document.getElementById('cedula').value = analista.cedula;
-                    document.getElementById('email').value = analista.email;
-                    document.getElementById('telefono').value = analista.telefono || '';
-                    document.getElementById('password').value = '';
-                    document.getElementById('password').required = false;
-                    
-                    // Cambiar el modal
-                    document.getElementById('modalTitulo').textContent = 'Editar Analista';
-                    document.querySelector('#modalAnalista .btn-primary').textContent = 'Actualizar Analista';
-                    modoEdicion = true;
-                    
-                    new bootstrap.Modal(document.getElementById('modalAnalista')).show();
-                } else {
-                    mostrarError('No se pudo obtener la información del analista');
-                }
-            } catch (error) {
-                console.error('Error al obtener analista:', error);
-                mostrarError('Error al obtener analista: ' + error.message);
+        function editarAnalista(ids) {
+            // Buscamos el analista en la variable global
+            const analista = analistas.find(a => a.id == ids);
+
+            if (!analista) {
+                mostrarError('No se pudo obtener la información del analista para edición');
+                return;
             }
+            
+            // Llenar el formulario
+            document.getElementById('analista_id').value = analista.id;
+            document.getElementById('nombre').value = analista.name;
+            document.getElementById('apellido').value = analista.apellido;
+            document.getElementById('nacionalidad').value = analista.nacionalidad;
+            document.getElementById('cedula').value = analista.cedula;
+            document.getElementById('email').value = analista.email;
+            document.getElementById('telefono').value = analista.telefono || ''; // Usar 'phone'
+            
+            // *** CAMPOS NUEVOS ***
+            document.getElementById('birthday').value = analista.birthday || ''; // Formato YYYY-MM-DD
+            document.getElementById('sexo').value = analista.sexo || 'M';
+            document.getElementById('address').value = analista.address || '';
+            document.getElementById('avatar').value = analista.avatar || '';
+            // *********************
+
+            // Campos de Contraseña
+            document.getElementById('password').value = '';
+            document.getElementById('confirmar_password').value = '';
+            document.getElementById('password').required = false; // Contraseña opcional en edición
+            document.getElementById('confirmar_password').required = false;
+            
+            // Cambiar el modal
+            document.getElementById('modalTitulo').textContent = 'Editar Analista';
+            document.querySelector('#modalAnalista .btn-primary').textContent = 'Actualizar Analista';
+            modoEdicion = true;
+            
+            new bootstrap.Modal(document.getElementById('modalAnalista')).show();
         }
 
         // Función para eliminar analista
-        async function eliminarAnalista(id) {
+        async function eliminarAnalista(ids) {
             if (!confirm('¿Estás seguro de que deseas eliminar este analista?')) {
                 return;
             }
@@ -510,7 +535,7 @@ try {
             try {
                 const formData = new FormData();
                 formData.append('action', 'eliminar');
-                formData.append('id', id);
+                formData.append('id', ids);
                 
                 const response = await fetch('../php/panel_usuarios_crud.php', {
                     method: 'POST',
@@ -533,6 +558,11 @@ try {
 
         // Función para guardar analista
         async function guardarAnalista() {
+            // 1. Validar el formulario
+            if (!validarFormularioAnalista()) {
+                return; // Detener si la validación falla
+            }
+            
             const form = document.getElementById('formAnalista');
             const formData = new FormData(form);
             
@@ -553,11 +583,14 @@ try {
                 if (data.success) {
                     mostrarExito(modoEdicion ? 'Analista actualizado exitosamente' : 'Analista creado exitosamente');
                     bootstrap.Modal.getInstance(document.getElementById('modalAnalista')).hide();
+                    
+                    // Resetear el estado del formulario después de cerrar la modal
                     form.reset();
                     modoEdicion = false;
                     document.getElementById('modalTitulo').textContent = 'Crear Analista';
                     document.querySelector('#modalAnalista .btn-primary').textContent = 'Crear Analista';
                     document.getElementById('password').required = true;
+                    
                     cargarAnalistas();
                 } else {
                     mostrarError(data.message || 'Error al guardar analista');
@@ -568,7 +601,7 @@ try {
             }
         }
 
-        // Función para formatear fecha
+        // Función para formatear fecha y hora
         function formatearFecha(fecha) {
             if (!fecha) return 'N/A';
             const date = new Date(fecha);
@@ -578,6 +611,17 @@ try {
                 day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit'
+            });
+        }
+        
+        // Función para formatear solo fecha (para detalles)
+        function formatearFechaCorta(fecha) {
+            if (!fecha) return 'N/A';
+            const date = new Date(fecha);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             });
         }
 
@@ -622,6 +666,7 @@ try {
             document.getElementById('modalTitulo').textContent = 'Crear Analista';
             document.querySelector('#modalAnalista .btn-primary').textContent = 'Crear Analista';
             document.getElementById('password').required = true;
+            document.getElementById('confirmar_password').required = true; // Asegurar que sea requerido en creación
         });
 
         // Logs de inicialización

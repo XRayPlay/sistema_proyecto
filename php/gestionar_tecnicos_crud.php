@@ -64,21 +64,33 @@ try {
 }
 
 function crearTecnico($conexion) {
-    $nombre = mysqli_real_escape_string($conexion, $_POST['nombre']);
-    $apellido = mysqli_real_escape_string($conexion, $_POST['apellido']);
-    $nacionalidad = mysqli_real_escape_string($conexion, $_POST['nacionalidad']);
-    $cedula = mysqli_real_escape_string($conexion, $_POST['cedula']);
-    $especialidad = mysqli_real_escape_string($conexion, $_POST['especialidad']);
-    $email = mysqli_real_escape_string($conexion, $_POST['email']);
-    $telefono = mysqli_real_escape_string($conexion, $_POST['telefono']);
-    $password = mysqli_real_escape_string($conexion, $_POST['password']);
+    // Definición de valores fijos para el Técnico
+    $id_rol = 3;
+    $id_status_user = 1; // Activo
+    $sexo = 'No especificado';
+    $birthday = '1990-01-01';
+    $address = 'No especificado';
+    $avatar = 'default.jpg';
+    $id_floor = 1; // Asumiendo un valor por defecto
+    $id_cargo = 1; // Asumiendo un valor por defecto
+
+    // Campos que vienen del formulario (ya sanitizados con mysqli_real_escape_string)
+    $nombre = mysqli_real_escape_string($conexion, $_POST['nombre'] ?? '');
+    $apellido = mysqli_real_escape_string($conexion, $_POST['apellido'] ?? '');
+    $nacionalidad = mysqli_real_escape_string($conexion, $_POST['nacionalidad'] ?? '');
+    $cedula_post = mysqli_real_escape_string($conexion, $_POST['cedula'] ?? ''); // Cédula del POST
+    // $especialidad se ignora en la tabla user, pero se mantiene para la validación
+    $especialidad = mysqli_real_escape_string($conexion, $_POST['especialidad'] ?? ''); 
+    $email = mysqli_real_escape_string($conexion, $_POST['email'] ?? '');
+    $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
+    $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
     
     // Validar campos requeridos
-    if (empty($nombre) || empty($apellido) || empty($nacionalidad) || empty($cedula) || empty($especialidad) || empty($email) || empty($telefono)) {
+    if (empty($nombre) || empty($apellido) || empty($nacionalidad) || empty($cedula_post) || empty($especialidad) || empty($email) || empty($telefono) || empty($password)) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
         return;
     }
-    
+
     // Verificar si el email ya existe
     $query_check = "SELECT id_user FROM user WHERE email = ?";
     $stmt_check = mysqli_prepare($conexion, $query_check);
@@ -90,30 +102,77 @@ function crearTecnico($conexion) {
         echo json_encode(['success' => false, 'message' => 'El email ya está registrado']);
         return;
     }
-    
-    // Generar cédula automática (puedes ajustar esta lógica)
-    $cedula = rand(10000000, 99999999);
-    
-    // Generar username basado en el email (parte antes del @)
+
+    // Generar username basado en el email
     $username = explode('@', $email)[0];
-    $username = substr($username, 0, 20); // Limitar a 20 caracteres como máximo
+    $username = substr($username, 0, 20); // Limitar a 20 caracteres
+
+    // --- MANEJO DE CONTRASEÑA (ADVERTENCIA DE SEGURIDAD MANTENIDA) ---
+    $password_hash = hash('sha256', $password); 
+    $password_hash = substr($password_hash, 0, 20); // Truncar a 20 para DB
+    // ----------------------------------------------------------------
+
+    // CONSULTA SQL CORREGIDA: Incluye todos los campos de la tabla 'user' relevantes y 'CURDATE()' para 'last_connection'
+    $query = "INSERT INTO user (
+        username, pass, name, apellido, nacionalidad, cedula, sexo, phone, email, birthday, address, avatar, 
+        last_connection, id_floor, id_cargo, id_rol, id_status_user
+    ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?
+    )";
     
-    // Insertar nuevo técnico en la tabla user
-    $query = "INSERT INTO user (name, apellido, nacionalidad, email, phone, cedula, pass, id_rol, id_status_user, username) VALUES (?, ?, ?, ?, ?, 3, 1, ?)";
     $stmt = mysqli_prepare($conexion, $query);
-    $password_hash = hash('sha256', $password); // Usar SHA256 que genera 64 caracteres
-    $password_hash = substr($password_hash, 0, 20); // Truncar a 20 caracteres para la base de datos
-    mysqli_stmt_bind_param($stmt, 'ssssss', $nombre, $email, $telefono, $cedula, $password_hash, $username);
+
+    if (!$stmt) {
+        error_log("Error preparando consulta: " . mysqli_error($conexion));
+        echo json_encode(['success' => false, 'message' => 'Error preparando consulta: ' . mysqli_error($conexion)]);
+        return;
+    }
     
+    // Tipos de datos: ssssssssssiisis
+    // 1. name, 2. apellido, 3. nacionalidad, 4. cedula, 5. sexo, 6. phone, 7. email, 8. birthday, 9. address, 10. avatar, 
+    // 11. id_floor, 12. id_cargo, 13. id_rol, 14. id_status_user, 15. username, 16. pass
+    // Usando 's' para phone y cedula para mayor flexibilidad
+    
+    $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssssiiisss', 
+        $username, 
+        $password_hash,
+        $nombre, 
+        $apellido, 
+        $nacionalidad, 
+        $cedula_post, 
+        $sexo, 
+        $telefono, 
+        $email, 
+        $birthday, 
+        $address, 
+        $avatar, 
+        $id_floor, 
+        $id_cargo, 
+        $id_rol, 
+        $id_status_user
+        
+    );
+
+    if (!$bind_result) {
+        error_log("Error vinculando parámetros: " . mysqli_stmt_error($stmt));
+        echo json_encode(['success' => false, 'message' => 'Error vinculando parámetros: ' . mysqli_stmt_error($stmt)]);
+        return;
+    }
+
     if (mysqli_stmt_execute($stmt)) {
         $id_tecnico = mysqli_insert_id($conexion);
+        mysqli_stmt_close($stmt);
         echo json_encode([
             'success' => true, 
             'message' => 'Técnico creado exitosamente',
             'id' => $id_tecnico
         ]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Error al crear técnico: ' . mysqli_error($conexion)]);
+        $error = mysqli_error($conexion);
+        $stmt_error = mysqli_stmt_error($stmt);
+        error_log("Error al crear técnico: " . $error . " | Statement: " . $stmt_error);
+        mysqli_stmt_close($stmt);
+        echo json_encode(['success' => false, 'message' => 'Error al crear técnico: ' . $error]);
     }
 }
 
@@ -224,14 +283,20 @@ function obtenerTecnicoPorId($conexion) {
         echo json_encode(['success' => false, 'message' => 'ID de técnico no válido']);
         return;
     }
-    
-    $query = "SELECT id_user as id, name as nombre, apellido, nacionalidad, email, phone as telefono, cedula, 
-                     CASE WHEN id_status_user = 1 THEN 'Activo' ELSE 'Inactivo' END as estado,
-                     'Soporte Técnico' as especialidad,
+    // Consulta: obtener técnico por su ID y asegurarse de que sea rol técnico (id_rol = 3)
+    $query = "SELECT id_user as id, name as nombre, apellido, nacionalidad, cedula, email, birthday, address, phone as telefono,
+                     CASE WHEN id_status_user = 1 THEN 'Activo' ELSE 'Inactivo' END as estado, id_cargo as especialidad,
                      last_connection as fecha_registro
-              FROM user 
-              WHERE id_user = ? AND id_rol = 3";
+              FROM user
+              WHERE id_user = ? AND id_rol = 3
+              LIMIT 1";
+
     $stmt = mysqli_prepare($conexion, $query);
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'Error preparando consulta: ' . mysqli_error($conexion)]);
+        return;
+    }
+
     mysqli_stmt_bind_param($stmt, 'i', $id);
     mysqli_stmt_execute($stmt);
     $resultado = mysqli_stmt_get_result($stmt);
@@ -254,6 +319,8 @@ function obtenerTecnicoPorId($conexion) {
                 'cedula' => $tecnico['cedula'],
                 'especialidad' => $tecnico['especialidad'],
                 'email' => $tecnico['email'],
+                'birthday' => $tecnico['birthday'],
+                'address' => $tecnico['address'],
                 'telefono' => $tecnico['telefono'],
                 'estado' => $tecnico['estado'],
                 'fecha_registro' => $tecnico['fecha_registro']
