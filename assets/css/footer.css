@@ -1,0 +1,63 @@
+/* Footer fijo que se superpone al contenido sin alterar el flujo de la página */
+:root {
+  --footer-height: 56px; /* altura reservada para el footer */
+}
+
+.footer-chat {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  /* No cubrir la barra lateral: dejar espacio a la izquierda igual al ancho del sidebar */
+  left: 280px;
+  width: calc(100% - 280px);
+  z-index: 900; /* Debajo del sidebar (sidebar suele tener z-index ~1000) */
+  background: rgba(255,255,255,0.95); /* fondo ligeramente opaco */
+  color: #374151; /* gris oscuro para el texto */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Texto alineado a la derecha dentro del área de contenido */
+  padding: 0.6rem 1rem;
+  min-height: var(--footer-height);
+  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.08);
+  font-size: 0.875rem;
+  pointer-events: auto; /* permitir interacción si fuera necesario */
+}
+
+.footer-chat a { color: inherit; text-decoration: underline; }
+
+/* Evitar que el footer tape controles que necesiten acceso total: si necesitas
+   espacio permanente en la parte inferior, añade padding-bottom al contenedor
+   principal en los archivos donde quieras reservar espacio. */
+
+/* Responsive: en pantallas pequeñas reducir padding y tamaño de fuente */
+/* Reservar espacio en la parte inferior del contenido para que el footer no lo cubra.
+   Aplicar a los selectores más comunes usados en las páginas del proyecto. */
+.main-content,
+body .main-content,
+.page-content,
+main,
+.app-container .main-content,
+.container,
+.content,
+.content-card,
+.table-card {
+  padding-bottom: var(--footer-height) !important;
+}
+
+@media (max-width: 992px) {
+  /* En pantallas más pequeñas el sidebar suele colapsar: permitir que el footer use todo el ancho */
+  .footer-chat { left: 0; width: 100%; padding: 0.5rem 0.6rem; font-size: 0.8rem; justify-content: center; }
+  /* Reducir el padding reservado en pantallas pequeñas */
+  .main-content,
+  body .main-content,
+  .page-content,
+  main,
+  .app-container .main-content,
+  .container,
+  .content,
+  .content-card,
+  .table-card {
+    padding-bottom: calc(var(--footer-height) + 8px) !important;
+  }
+}
+

@@ -683,5 +683,6 @@ try {
         console.log('✅ Funcionalidad CRUD completa conectada a la base de datos');
         console.log('✅ Diseño idéntico al panel de administrador');
     </script>
-</body>
-</html>
+        <?php include_once('../page/footer.php'); ?>
+    </body>
+    </html>

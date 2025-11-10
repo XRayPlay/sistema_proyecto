@@ -54,7 +54,7 @@ function validateName(value) {
 }
 
 function validateUsername(value) {
-    return value.length >= 4 && value.length <= 15 && !value.includes(' ');
+    return value.length >= 3 && value.length <= 50 && !value.includes(' ');
 }
 
 function validateEmail(value) {
@@ -70,7 +70,7 @@ function validateIdNumber(value) {
 }
 
 function validatePassword(value) {
-    return value.length >= 8 && value.length <= 15;
+    return value.length >= 7 && value.length <= 15;
 }
 
 function validatePhone(value) {
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!validateUsername(username)) return showError('El Usuario es inválido.', loginFields.username, loginErrorDiv);
         applyValidationClass(loginFields.username, true);
 
-        if (!validatePassword(password)) return showError('La Contraseña debe tener entre 8 y 15 caracteres.', loginFields.password, loginErrorDiv);
+        if (!validatePassword(password)) return showError('La Contraseña debe tener entre 7 y 15 caracteres.', loginFields.password, loginErrorDiv);
         applyValidationClass(loginFields.password, true);
         
         // 3. Preparar FormData
@@ -468,9 +468,25 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             body: formData
         })
-        .then(response => {
+        .then(async response => {
             if (response.redirected) {
-                window.location.href = response.url;
+                const redirectUrl = response.url || '';
+                // Si el servidor redirige a una página de 'usuario' genérica, comprobar rol en sesión
+                if (/panel_usuario|dashboard_usuario|panel_usuario.php/i.test(redirectUrl)) {
+                    try {
+                        const roleRes = await fetch('php/get_user_role.php');
+                        const roleData = await roleRes.json();
+                        if (roleData.success && roleData.id_rol == 4) {
+                            // Forzar redirect a gestionar_incidencias para analistas
+                            window.location.href = '/sistema_proyecto/nuevo_diseno/gestionar_incidencias.php';
+                            return;
+                        }
+                    } catch (err) {
+                        console.error('Error al comprobar rol del usuario:', err);
+                    }
+                }
+                // Por defecto seguir la redirección indicada por el servidor
+                window.location.href = redirectUrl;
                 return;
             }
             return response.text(); 

@@ -902,5 +902,6 @@ function mostrarExito(mensaje) {
         }, 5000);
 }
 </script>
+    <?php include_once('../page/footer.php'); ?>
 </body>
 </html>

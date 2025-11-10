@@ -840,5 +840,6 @@ if (empty($datos_departamento)) {
         // Actualizar cada 5 minutos (opcional)
         setInterval(actualizarEstadisticas, 300000);
     </script>
-</body>
-</html>
+        <?php include_once('../page/footer.php'); ?>
+    </body>
+    </html>

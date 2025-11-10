@@ -914,8 +914,8 @@ mysqli_close($conexion);
                             <div class="form-group">
                                 <label class="form-label">Comentarios del Técnico *</label>
                                 <textarea class="form-control form-textarea" id="comentarios_tecnico" name="comentarios_tecnico" 
-                                          placeholder="Describa detalladamente los cambios realizados, soluciones implementadas, o estado actual de la incidencia. Mínimo 200 caracteres." 
-                                          required minlength="200"></textarea>
+                                          placeholder="Describa las acciones realizadas o estado actual de la incidencia. 50–150 caracteres." 
+                                          required minlength="50" maxlength="150"></textarea>
                                 <div class="word-count" id="wordCount">0 caracteres</div>
                             </div>
                             
@@ -978,12 +978,71 @@ mysqli_close($conexion);
 
 
         // Funciones del modal de cambiar estado
-        function abrirModalCambiarEstado(id, tipo, estado) {
+        async function abrirModalCambiarEstado(id, tipo, estado) {
+            // Mostrar modal e indicador de carga mientras se obtiene la información real desde el servidor
             document.getElementById('incidencia_id').value = id;
-            document.getElementById('tipo_incidencia').value = tipo;
-            document.getElementById('estado_actual').value = estado;
+            document.getElementById('tipo_incidencia').value = tipo || '';
+            document.getElementById('estado_actual').value = 'Cargando...';
+            document.getElementById('comentarios_tecnico').value = '';
+            document.getElementById('wordCount').textContent = 'Cargando...';
             document.getElementById('modalCambiarEstado').classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            try {
+                const res = await fetch(`../../php/obtener_detalles_incidencia_tecnico.php?id=${id}`);
+                const data = await res.json();
+                if (data.success && data.incidencia) {
+                    const inc = data.incidencia;
+                    // Rellenar campos con los datos reales de la base
+                    document.getElementById('tipo_incidencia').value = inc.tipo_incidencia || tipo || '';
+
+                    // Determinar estado legible: preferir estado_formateado si viene, si no mapear manualmente
+                    let estadoValor = '';
+                    if (inc.estado_formateado) {
+                        estadoValor = inc.estado_formateado;
+                    } else if (inc.estado) {
+                        switch (inc.estado) {
+                            case 'pendiente': estadoValor = 'Pendiente'; break;
+                            case 'asignada': estadoValor = 'Asignada'; break;
+                            case 'en_proceso': estadoValor = 'En Proceso'; break;
+                            case 'resuelta': estadoValor = 'Resuelta'; break;
+                            case 'cerrada': estadoValor = 'Cerrada'; break;
+                            default: estadoValor = inc.estado;
+                        }
+                    }
+
+                    document.getElementById('estado_actual').value = estadoValor;
+
+                    // Preseleccionar el select de nuevo estado con el valor actual si coincide con una de las opciones
+                    const nuevoSelect = document.getElementById('nuevo_estado');
+                    if (inc.estado) {
+                        const opt = Array.from(nuevoSelect.options).find(o => o.value === inc.estado);
+                        if (opt) {
+                            nuevoSelect.value = inc.estado;
+                        } else {
+                            // si no hay opción exacta, dejar la primera vacía
+                            nuevoSelect.value = '';
+                        }
+                    }
+
+                    // Si ya hay comentarios del técnico, mostrarlos para edición / referencia
+                    document.getElementById('comentarios_tecnico').value = inc.comentarios_tecnico || '';
+                    const count = (inc.comentarios_tecnico || '').length;
+                    document.getElementById('wordCount').textContent = count + ' caracteres';
+                    const btnGuardar = document.getElementById('btnGuardarEstado');
+                    btnGuardar.disabled = count < parseInt(document.getElementById('comentarios_tecnico').getAttribute('minlength') || 0);
+                } else {
+                    // Si no devuelve datos válidos, limpiar e indicar
+                    document.getElementById('estado_actual').value = estado || '';
+                    document.getElementById('comentarios_tecnico').value = '';
+                    document.getElementById('wordCount').textContent = '0 caracteres';
+                }
+            } catch (err) {
+                console.error('Error al obtener detalles de la incidencia:', err);
+                document.getElementById('estado_actual').value = estado || '';
+                document.getElementById('comentarios_tecnico').value = '';
+                document.getElementById('wordCount').textContent = '0 caracteres';
+            }
         }
 
         function cerrarModalCambiarEstado() {
@@ -1001,24 +1060,30 @@ mysqli_close($conexion);
             }
         });
 
-        // Contador de caracteres
+        // Contador de caracteres (límite 50-150)
         document.getElementById('comentarios_tecnico').addEventListener('input', function() {
             const text = this.value;
             const charCount = text.length;
             const wordCountElement = document.getElementById('wordCount');
+            const min = parseInt(this.getAttribute('minlength') || '50', 10);
+            const max = parseInt(this.getAttribute('maxlength') || '150', 10);
             
             wordCountElement.textContent = charCount + ' caracteres';
             wordCountElement.className = 'word-count';
-            
-            if (charCount < 200) {
+
+            if (charCount < min) {
                 wordCountElement.classList.add('error');
-            } else if (charCount < 250) {
+            } else if (charCount > max) {
+                wordCountElement.classList.add('error');
+                // Además indicar overflow
+                wordCountElement.textContent = charCount + ' caracteres (máx. ' + max + ')';
+            } else if (charCount < min + 20) {
                 wordCountElement.classList.add('warning');
             }
-            
-            // Habilitar/deshabilitar botón de guardar
+
+            // Habilitar/deshabilitar botón de guardar solo cuando esté dentro del rango permitido
             const btnGuardar = document.getElementById('btnGuardarEstado');
-            btnGuardar.disabled = charCount < 200;
+            btnGuardar.disabled = !(charCount >= min && charCount <= max);
         });
 
         // Función para ver detalles de incidencia
@@ -1173,8 +1238,9 @@ mysqli_close($conexion);
             });
         }
     </script>
-</body>
-</html>
+        <?php include_once('../../page/footer.php'); ?>
+    </body>
+    </html>
 
 
 

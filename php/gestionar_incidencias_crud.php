@@ -12,8 +12,9 @@ if (!isset($_SESSION['usuario'])) {
 require_once "permisos.php";
 require_once "clases.php";
 
-// Solo Admin y Director pueden acceder
-if (!esAdmin() && !esDirector()) {
+// Permitir acceso a Admin, Director y Analista para algunas operaciones (lectura).
+// Acciones de creación/actualización/eliminación seguirán requiriendo Admin/Director.
+if (!esAdmin() && !esDirector() && !esAnalista()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
     exit();
@@ -31,6 +32,12 @@ try {
     
     switch ($action) {
         case 'crear':
+            // Crear solo para Admin/Director
+            if (!esAdmin() && !esDirector()) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear incidencias']);
+                return;
+            }
             crearIncidencia($conexion);
             break;
         case 'obtener':
@@ -40,9 +47,21 @@ try {
             obtenerIncidenciaPorId($conexion);
             break;
         case 'actualizar':
+            // Actualizar permitido para Admin/Director y Analista (analista puede corregir datos)
+            if (!esAdmin() && !esDirector() && !esAnalista()) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tiene permisos para actualizar incidencias']);
+                return;
+            }
             actualizarIncidencia($conexion);
             break;
         case 'eliminar':
+            // Eliminar solo para Admin/Director
+            if (!esAdmin() && !esDirector()) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tiene permisos para eliminar incidencias']);
+                return;
+            }
             eliminarIncidencia($conexion);
             break;
         case 'obtener_tipos':
@@ -74,7 +93,8 @@ function crearIncidencia($conexion) {
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
     $solicitante_direccion = $_POST['solicitante_direccion'] ?? ''; // Nuevo
     $solicitante_extension = $_POST['solicitante_extension'] ?? '';
-    $departamento = $_POST['departamento'] ?? '';
+    // 'departamento' fue eliminado del formulario frontend; usamos solicitante_direccion como fallback
+    $departamento = $_POST['departamento'] ?? ($_POST['solicitante_direccion'] ?? '');
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
     // Normalizar el valor del técnico: el frontend a veces envía la cédula,
     // otras veces el id_user. Queremos almacenar el id_user en la tabla incidencias.
@@ -102,7 +122,7 @@ function crearIncidencia($conexion) {
     // Validar campos requeridos
     if (empty($tipo_incidencia) || empty($descripcion) || empty($solicitante_nombre) || 
         empty($solicitante_cedula) || empty($solicitante_email) || empty($solicitante_telefono) || 
-        empty($departamento)) {
+        empty($solicitante_direccion)) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos requeridos deben ser completados']);
         return;
     }
@@ -302,7 +322,9 @@ function actualizarIncidencia($conexion) {
     $solicitante_email = mysqli_real_escape_string($conexion, $_POST['solicitante_email'] ?? '');
     $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono'] ?? '');
     $solicitante_extension = mysqli_real_escape_string($conexion, $_POST['solicitante_extension'] ?? '');
-    $departamento = mysqli_real_escape_string($conexion, $_POST['departamento'] ?? '');
+    $solicitante_direccion = mysqli_real_escape_string($conexion, $_POST['solicitante_direccion'] ?? '');
+    // 'departamento' puede venir vacío si fue eliminado del formulario; usar solicitante_direccion como fallback
+    $departamento = mysqli_real_escape_string($conexion, $_POST['departamento'] ?? ($_POST['solicitante_direccion'] ?? ''));
     // Manejar técnico asignado (puede ser id_user o cédula). El select en frontend envía id_user.
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
     $tecnico_id = null;
@@ -329,7 +351,7 @@ function actualizarIncidencia($conexion) {
     // Validar campos requeridos
     if (empty($tipo_incidencia) || empty($descripcion) || empty($solicitante_nombre) || 
         empty($solicitante_cedula) || empty($solicitante_email) || empty($solicitante_telefono) || 
-        empty($departamento)) {
+        empty($solicitante_direccion)) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos requeridos deben ser completados']);
         return;
     }

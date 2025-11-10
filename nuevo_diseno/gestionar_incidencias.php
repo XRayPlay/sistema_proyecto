@@ -10,7 +10,7 @@ require_once "../php/clases.php";
 require_once "../php/conexion_be.php";
 
 // Verificar permisos de administrador o director
-if (!esAdmin() && !esDirector()) {
+if (!esAdmin() && !esDirector() && !esAnalista()) {
     header("Location: ../index.php");
     exit();
 }
@@ -156,10 +156,7 @@ try {
                                 <label for="solicitante_direccion" class="form-label">Dirección</label>
                                 <input type="text" class="form-control modern-input" id="solicitante_direccion" name="solicitante_direccion" readonly>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="departamento" class="form-label required-field">Ubicación del usuario</label>
-                                <input type="text" class="form-control modern-input" id="departamento" name="departamento" required readonly>
-                            </div>
+                            <!-- 'departamento' eliminado: usamos 'solicitante_direccion' como ubicación -->
                         </div>
                     </div>
 
@@ -421,7 +418,7 @@ async function buscarUsuarioPorCedula() {
     const cedula = document.getElementById('solicitante_cedula').value.trim();
     
     // 1. Limpiar y establecer campos como NO readonly si no se encuentra
-    const camposSolicitante = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion', 'departamento'];
+    const camposSolicitante = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
 
     function resetearCampos(esEncontrado) {
         camposSolicitante.forEach(id => {
@@ -472,7 +469,6 @@ async function buscarUsuarioPorCedula() {
                 document.getElementById('solicitante_telefono').value = usuario.telefono || '';
                 // En get_user_data.php el campo de ubicación se llama 'ubicacion'
                 document.getElementById('solicitante_direccion').value = usuario.ubicacion || '';
-                document.getElementById('departamento').value = usuario.ubicacion || '';
 
                 // Poner campos como readonly para evitar edición accidental
                 resetearCampos(true);
@@ -513,7 +509,7 @@ async function buscarUsuarioPorCedula() {
 
         // Validar que los campos que deben llenarse automáticamente no estén vacíos en modo creación
         if (!modoEdicion) {
-             const camposRequeridosBusqueda = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'departamento'];
+             const camposRequeridosBusqueda = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_direccion'];
              for (const campoId of camposRequeridosBusqueda) {
                  if (!formData.get(campoId)) {
                      mostrarError('Por favor, busque un usuario válido ingresando la Cédula.');
@@ -532,6 +528,8 @@ async function buscarUsuarioPorCedula() {
         // Ya se eliminó solicitante_extension en el HTML, no es necesario quitarlo aquí.
 
         try {
+            // Asegurar que el backend reciba 'departamento' aunque lo eliminamos del formulario
+            formData.set('departamento', document.getElementById('solicitante_direccion').value || '');
             const response = await fetch('../php/gestionar_incidencias_crud.php', {
                 method: 'POST',
                 body: formData
@@ -595,8 +593,7 @@ async function buscarUsuarioPorCedula() {
                 document.getElementById('solicitante_apellido').value = incidencia.solicitante_apellido || '';
                 document.getElementById('solicitante_email').value = incidencia.solicitante_email;
                 document.getElementById('solicitante_telefono').value = incidencia.solicitante_telefono || '';
-                document.getElementById('solicitante_direccion').value = incidencia.solicitante_direccion || '';
-                document.getElementById('departamento').value = incidencia.departamento;
+                document.getElementById('solicitante_direccion').value = incidencia.solicitante_direccion || incidencia.departamento || '';
 
                 // Detalles de la Incidencia
                 document.getElementById('descripcion').value = incidencia.descripcion;
@@ -624,7 +621,7 @@ async function buscarUsuarioPorCedula() {
                 modoEdicion = true;
 
                 // Poner campos del solicitante como solo lectura para preservar historial
-                const camposSolicitante = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion', 'departamento'];
+                const camposSolicitante = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
                 camposSolicitante.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
@@ -890,7 +887,7 @@ async function buscarUsuarioPorCedula() {
         if (selectTecnico) selectTecnico.value = '';
 
         // Restaurar los estados iniciales de los campos del solicitante (readonly por defecto excepto la cédula)
-        const camposSolicitanteRestore = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion', 'departamento'];
+        const camposSolicitanteRestore = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
         camposSolicitanteRestore.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -906,5 +903,6 @@ async function buscarUsuarioPorCedula() {
 
     
 </script>
+    <?php include_once('../page/footer.php'); ?>
 </body>
 </html>

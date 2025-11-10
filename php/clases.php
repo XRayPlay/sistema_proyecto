@@ -78,13 +78,24 @@
                         // --- 3. LÓGICA DE REDIRECCIÓN CORREGIDA (Causa del error inicial) ---
                         // Se asume el rol 5 es Admin/Director y el 3 es Técnico.
                         // REDIRECCIÓN AUTOMÁTICA SEGÚN EL ROL
+                            // Registrar información de redirección para depuración
+                            error_log("[LOGIN] usuario_id={$user_id} id_rol={$row['id_rol']}");
                             if ($row['id_rol'] == 3) {
-                                // TÉCNICO - Redirigir al panel principal de técnicos
-                                header("location: ../nuevo_diseno/tecnicos/dashboard_tecnico.php");
-                            } else {
-                                // ADMINISTRADOR/DIRECTOR - Redirigir al panel principal
-                                header("location: ../nuevo_diseno/inicio_completo.php");
-                            }
+                                    // TÉCNICO - Redirigir al panel principal de técnicos (ruta absoluta)
+                                    $target = '/sistema_proyecto/nuevo_diseno/tecnicos/dashboard_tecnico.php';
+                                    error_log("[LOGIN] redirigiendo a: $target");
+                                    header("Location: $target");
+                                } elseif ($row['id_rol'] == 4) {
+                                    // ANALISTA - Redirigir directamente a la gestión de incidencias (ruta absoluta)
+                                    $target = '/sistema_proyecto/nuevo_diseno/gestionar_incidencias.php';
+                                    error_log("[LOGIN] redirigiendo a: $target");
+                                    header("Location: $target");
+                                } else {
+                                    // ADMINISTRADOR/DIRECTOR - Redirigir al panel principal (ruta absoluta)
+                                    $target = '/sistema_proyecto/nuevo_diseno/inicio_completo.php';
+                                    error_log("[LOGIN] redirigiendo a: $target");
+                                    header("Location: $target");
+                                }
                         }  else {
                         // OTROS ROLES (Usuario regular, etc.)
                         // Puedes redirigir a una página general o la página de técnicos si es el rol por defecto

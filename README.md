@@ -1,3 +1,92 @@
+# Sistema de Gestión de Incidencias (MINEC)
+
+Proyecto PHP procedural + MySQL para la gestión de incidencias (CAU). Interfaz sencilla con distintos roles (Admin, Director, Técnico, Analista, Usuario) y CRUD para incidencias, técnicos y analistas.
+
+## Contenido
+- `login.php` — Página de inicio de sesión y modal para crear incidencias.
+- `nuevo_diseno/` — Interfaces modernas (gestión, paneles, vistas por rol).
+- `php/` — Endpoints y lógica del servidor (CRUD, login, export, utilidades).
+- `public/` — CSS y JS públicos.
+- `assets/`, `resources/` — Librerías y recursos (FontAwesome, imágenes).
+- `sistema_proyecto.sql` — Volcado de la base de datos.
+
+## Requisitos
+- Windows / Linux / macOS con servidor web (XAMPP, WAMP, LAMP) con PHP >= 7.4 (recomendado PHP 8.x).
+- Extensiones PHP: mysqli, mbstring, fileinfo, zip (necesaria para PhpSpreadsheet), xml.
+- MySQL/MariaDB.
+- Composer (opcional, para habilitar exportación .xlsx con PhpSpreadsheet).
+
+## Instalación rápida (local con XAMPP)
+1. Clona o copia el proyecto dentro de la carpeta pública de tu servidor (ej. `C:\xampp\htdocs\sistema_proyecto`).
+2. Importa la base de datos desde `sistema_proyecto.sql` usando phpMyAdmin o MySQL CLI.
+3. Ajusta la configuración de conexión en `php/conexion_be.php` o `php/config.php` según el proyecto (host, usuario, password, nombre BD).
+4. Asegúrate de que `session.save_path` y permisos de carpetas `public/uploads/avatars` permitan escritura.
+5. Reinicia Apache desde el panel de XAMPP.
+
+## Endpoints principales
+- `php/login_usuario_be.php` — Procesa el login (acepta `usuario` o cédula + `password`).
+- `php/panel_usuarios_crud.php` — CRUD para analistas (crear/editar/eliminar/obtener).
+- `php/gestionar_incidencias_crud.php` — CRUD para incidencias (crear/obtener/actualizar/eliminar) con controles por rol.
+- `php/actualizar_mi_cuenta.php` — Endpoint para que el usuario logueado vea y actualice su perfil (GET/POST).
+- `php/exportar_incidencias_excel.php`, `php/exportar_todas_incidencias_excel.php` — Exportación: intentan usar PhpSpreadsheet para `.xlsx`, si no existe hacen fallback a CSV UTF-8 con BOM.
+
+## Roles y comportamiento importante
+- id_rol = 1 : Admin — acceso completo, puede editar su propio perfil desde `nuevo_diseno/mi_perfil.php`.
+- id_rol = 2 : Director.
+- id_rol = 3 : Técnico.
+- id_rol = 4 : Analista — al iniciar sesión se redirige a `nuevo_diseno/gestionar_incidencias.php`; menú limitado a "Gestión de Incidencias".
+
+## Validaciones implementadas
+- Frontend: validaciones en `public/js/login.js` y formularios (longitudes, patrones). Login username ahora acepta 3–50 caracteres, sin espacios.
+- Backend: validaciones server-side en los endpoints (ej. creación/edición de usuarios, validaciones de campos obligatorios y rangos).
+
+## Habilitar exportación a .xlsx (opcional)
+Si quieres que el sistema genere archivos .xlsx nativos de Excel en lugar de CSV:
+
+1. Instala PHP CLI y añade la ruta de `php.exe` al PATH (Windows): normalmente `C:\xampp\php`.
+2. Instala Composer (Windows: Composer-Setup) y asegúrate de que `composer` funcione en PowerShell/terminal.
+3. En la raíz del proyecto (donde está `composer.json` o donde quieres crear uno) ejecuta:
+
+```powershell
+cd C:\xampp\htdocs\sistema_proyecto
+composer require phpoffice/phpspreadsheet
+```
+
+4. Habilita extensiones requeridas en `php.ini` (por ejemplo `extension=zip`, `extension=xml`) y reinicia Apache.
+5. El código detecta el autoloader `vendor/autoload.php` y usará PhpSpreadsheet si está presente.
+
+Si no instalas PhpSpreadsheet, el sistema seguirá exportando en CSV con BOM (UTF-8) para evitar problemas de acentos.
+
+## Configuración de correo (si aplica)
+Actualmente el sistema tiene endpoints que pueden enviar correos (recuperar contraseña). Configura `php.ini` (sendmail_path) o usa un servicio SMTP desde código si quieres correo funcional.
+
+## Seguridad y notas importantes
+- Contraseñas heredadas usan hashes antiguos por compatibilidad; se recomienda plan de migración a `password_hash`/`password_verify`.
+- Asegúrate de usar HTTPS en producción y revisar `display_errors` (debe estar OFF) y `log_errors` activado.
+- Revisa permisos en carpetas públicas (evitar subir ejecutables como `.php`).
+
+## Problemas comunes y soluciones
+- Error `composer not recognized` → instala Composer y añade a PATH.
+- Error `php not recognized` → añade `C:\xampp\php` al PATH y reinicia la terminal.
+- Export .xlsx genera clases desconocidas → ejecutar `composer require phpoffice/phpspreadsheet`.
+
+## Cómo probar rápidamente
+1. Importa la base de datos.
+2. Crea usuarios de prueba (o usa `php/crear_admin_director.php`).
+3. Accede a `http://localhost/sistema_proyecto/login.php`.
+4. Inicia como Admin, prueba `Mi Perfil`, crear/editar analistas, crear incidencias.
+
+## Contribuir / Extensiones recomendadas
+- Separar la lógica en controladores/ORM si se pretende escalar.
+- Migrar a Composer para manejar dependencias y PSR-4.
+
+---
+Si quieres, puedo:
+- Mover el CSS inline del menú a `assets/css/index.css`.
+- Añadir instrucciones detalladas para despliegue en producción.
+- Generar una guía de migración a password_hash.
+
+Fecha: 10 de noviembre de 2025
 # 🏢 Sistema de Gestión de Incidencias - MINEC
 
 ## 📋 Descripción del Proyecto

@@ -16,17 +16,18 @@ if (isset($_SESSION['usuario']) && !empty($_SESSION['usuario'])) {
             case 1: // Administrador
             case 2: // Director
                 header("Location: nuevo_diseno/inicio_completo.php");
-                break;
+                exit();
             case 3: // Técnico
                 header("Location: nuevo_diseno/tecnicos/dashboard_tecnico.php");
-                break;
-            case 4: // Usuario
-                header("Location: nuevo_diseno/usuarios/dashboard_usuario.php");
-                break;
+                exit();
+            case 4: // Analista
+                // Rol 4 en este sistema corresponde a Analista
+                header("Location: nuevo_diseno/gestionar_incidencias.php");
+                exit();
             default:
                 // Si no se reconoce el rol, ir al login
                 header("Location: login.php");
-                break;
+                exit();
         }
     }
 } else {

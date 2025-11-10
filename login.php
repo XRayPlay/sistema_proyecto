@@ -85,7 +85,7 @@
         <div class="form-group">
           <label for="login-username">Usuario</label>
           <input type="text" id="login-username" placeholder="Ingrese su usuario" 
-            maxlength="15" onkeypress="return isAlphaNumericKey(event, true)">
+            maxlength="50" onkeypress="return isAlphaNumericKey(event, true)">
         </div>
         <div class="form-group">
           <label for="login-password">Contraseña</label>
