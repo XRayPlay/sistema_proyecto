@@ -125,25 +125,25 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nombre" class="form-label">Nombre</label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" minlength="3" maxlength="50" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="apellido" class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" id="apellido" name="apellido" required>
+                                    <input type="text" class="form-control" id="apellido" name="apellido" minlength="3" maxlength="50" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
+                                    <input type="email" class="form-control" id="email" name="email" minlength="13" maxlength="50" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="tel" class="form-control" id="telefono" name="telefono" required>
+                                    <input type="tel" class="form-control" id="telefono" name="telefono" minlength="10" maxlength="11" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -158,14 +158,14 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="cedula" class="form-label">Cedula</label>
-                                    <input type="tel" class="form-control" id="cedula" name="cedula" required>
+                                    <input type="tel" class="form-control" id="cedula" name="cedula" minlength="7" maxlength="8" required>
                                 </div>
                             </div>                            
                         </div>
                         <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="birthday" class="form-label">Fecha de Nacimiento</label>
-                                        <input type="date" class="form-control" id="birthday" name="birthday">
+                                        <input type="date" class="form-control" id="birthday" name="birthday" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -175,7 +175,6 @@ try {
                                             <option value="">Seleccionar sexo</option>
                                             <option value="Masculino">Masculino</option>
                                             <option value="Femenino">Femenino</option>
-                                            <option value="Otro">Otro</option>
                                         </select>
                                     </div>
                                 </div>
@@ -204,7 +203,7 @@ try {
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label for="address" class="form-label">Dirección</label>
-                                    <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                                        <textarea class="form-control" id="address" name="address" rows="2" minlength="20" maxlength="100" required></textarea>
                                 </div>
                             </div>
                         </div>
@@ -212,13 +211,13 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Contraseña</label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <input type="password" class="form-control" id="password" name="password" minlength="7" maxlength="15" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="confirmar_password" class="form-label">Confirmar Contraseña</label>
-                                    <input type="password" class="form-control" id="confirmar_password" name="confirmar_password" required>
+                                    <input type="password" class="form-control" id="confirmar_password" name="confirmar_password" minlength="7" maxlength="15" required>
                                 </div>
                             </div>
                         </div>
@@ -268,83 +267,61 @@ try {
 <script>
 
     document.addEventListener('DOMContentLoaded', () => {
-    // 1. Aplicar la restricción de límite máximo de caracteres
-    const applyMaxLengthRestriction = (id, maxLength) => {
-        const input = document.getElementById(id);
-        if (input) {
-            // Establece el atributo 'maxlength' en el elemento (buena práctica de accesibilidad)
-            input.setAttribute('maxlength', maxLength);
+        // 1. Aplicar la restricción de límite máximo de caracteres en los inputs relevantes
+        const applyMaxLengthRestriction = (id, maxLength) => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.setAttribute('maxlength', maxLength);
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length > maxLength) {
+                        e.target.value = e.target.value.substring(0, maxLength);
+                    }
+                });
+            }
+        };
 
-            // También se agrega la lógica en el evento 'input' para una mayor compatibilidad
-            input.addEventListener('input', (e) => {
-                if (e.target.value.length > maxLength) {
-                    e.target.value = e.target.value.substring(0, maxLength);
-                }
+        // Aplicar límites máximos (según tu solicitud)
+        applyMaxLengthRestriction('nombre', 50);
+        applyMaxLengthRestriction('apellido', 50);
+        applyMaxLengthRestriction('email', 50);
+        applyMaxLengthRestriction('password', 15);
+        applyMaxLengthRestriction('confirmar_password', 15);
+        applyMaxLengthRestriction('telefono', 13); // El máximo es 11
+        applyMaxLengthRestriction('cedula', 8);   // El máximo es 8
+        applyMaxLengthRestriction('address', 100);
+        // Establecer rango de fecha de nacimiento: mínimo 80 años, máximo 18 años
+        const birthdayInput = document.getElementById('birthday');
+        if (birthdayInput) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            // Fecha máxima (cumple 18 años como máximo)
+            const maxYear = year - 18;
+            const maxDate = `${maxYear}-${month}-${day}`;
+            // Fecha mínima (cumple 80 años como mínimo)
+            const minYear = year - 80;
+            const minDate = `${minYear}-${month}-${day}`;
+            birthdayInput.setAttribute('min', minDate);
+            birthdayInput.setAttribute('max', maxDate);
+        }
+
+        // Máscara y formato visual para el teléfono: sólo dígitos y espacios cada 3 caracteres
+        const telefonoInput = document.getElementById('telefono');
+        if (telefonoInput) {
+            telefonoInput.addEventListener('input', (e) => {
+                // Mantener sólo dígitos y truncar a 11
+                let digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                // Formatear en grupos de hasta 3: '123 456 789'
+                const groups = digits.match(/.{1,3}/g);
+                e.target.value = groups ? groups.join(' ') : digits;
+            });
+            // Al perder el foco, quitar espacios al inicio/fin
+            telefonoInput.addEventListener('blur', (e) => {
+                e.target.value = e.target.value.trim();
             });
         }
-    };
-
-    // Aplicar límites máximos (según tu solicitud)
-    applyMaxLengthRestriction('nombreApellido', 50);
-    applyMaxLengthRestriction('email', 50);
-    applyMaxLengthRestriction('password', 15);
-    applyMaxLengthRestriction('confirmPassword', 15);
-    applyMaxLengthRestriction('telefono', 11); // El máximo es 11
-    applyMaxLengthRestriction('cedula', 8);   // El máximo es 8
-
-    // 2. Función de Validación al Enviar el Formulario
-    const form = document.getElementById('registroForm');
-    if (form) {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault(); // Detiene el envío del formulario
-
-            const nombreApellido = document.getElementById('nombreApellido').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const telefono = document.getElementById('telefono').value;
-            const cedula = document.getElementById('cedula').value;
-
-            let errores = [];
-
-            // Validación de Nombre y Apellido (Min: 3, Max: 50)
-            if (nombreApellido.length < 3 || nombreApellido.length > 50) {
-                errores.push('Nombre y Apellido deben tener entre 3 y 50 caracteres.');
-            }
-
-            // Validación de Contraseña (Min: 7, Max: 15)
-            if (password.length < 7 || password.length > 15) {
-                errores.push('La Contraseña debe tener entre 7 y 15 caracteres.');
-            }
-
-            // Validación de Confirmar Contraseña
-            if (password !== confirmPassword) {
-                errores.push('Las contraseñas no coinciden.');
-            }
-
-            // Validación de Teléfono (Exactamente 10 o 11)
-            if (telefono.length !== 10 && telefono.length !== 11) {
-                errores.push('El Teléfono debe tener exactamente 10 u 11 caracteres.');
-            }
-
-            // Validación de Cédula (Min: 7, Max: 8)
-            if (cedula.length < 7 || cedula.length > 8) {
-                errores.push('La Cédula debe tener entre 7 y 8 caracteres.');
-            }
-            
-            // Si hay errores, mostrarlos; si no, enviar el formulario
-            const erroresDiv = document.getElementById('errores');
-            if (errores.length > 0) {
-                erroresDiv.innerHTML = '<ul>' + errores.map(err => '<li>' + err + '</li>').join('') + '</ul>';
-                erroresDiv.style.display = 'block';
-            } else {
-                erroresDiv.style.display = 'none';
-                erroresDiv.innerHTML = '';
-                alert('¡Formulario válido! Listo para enviar.');
-                // Aquí podrías agregar 'form.submit();' para enviarlo realmente
-            }
-        });
-    }
-});
+    });
     // Variables globales
     let modoEdicion = false;
     let modalTecnico;
@@ -472,6 +449,13 @@ async function abrirModalTecnico(modo, tecnico = null) {
         document.querySelector('#modalTecnico .btn-primary').textContent = 'Actualizar Técnico';
         
         // ... (Contraseñas opcionales) ...
+
+        // Las contraseñas no son obligatorias al editar: permitir dejar en blanco para no cambiarla
+        passwordInput.required = false;
+        confirmPasswordInput.required = false;
+        // Opcional: ocultar los campos de contraseña en edición si prefieres
+        // passwordInput.closest('.col-md-6').style.display = 'none';
+        // confirmPasswordInput.closest('.col-md-6').style.display = 'none';
 
         // Llenar el formulario
         document.getElementById('tecnico_id').value = tecnico.id;
@@ -680,23 +664,81 @@ async function guardarTecnico() {
         mostrarError('Por favor, rellena todos los campos obligatorios.');
         return;
     }
-
-    // Obtener valores de contraseña
+    // Validaciones de longitud mín/máx específicas
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const cedula = document.getElementById('cedula').value.trim();
+    const address = document.getElementById('address').value.trim();
+    const birthday = document.getElementById('birthday').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmar_password').value;
 
-    // Validar que las contraseñas coincidan si se están proporcionando
+    if (nombre.length < 3 || nombre.length > 50) {
+        mostrarError('El nombre debe tener entre 3 y 50 caracteres.');
+        form.classList.add('was-validated');
+        return;
+    }
+    if (apellido.length < 3 || apellido.length > 50) {
+        mostrarError('El apellido debe tener entre 3 y 50 caracteres.');
+        form.classList.add('was-validated');
+        return;
+    }
+    // Teléfono: entre 10 y 11 caracteres
+    const telefonoVal = document.getElementById('telefono').value.trim();
+    if (telefonoVal.length < 10 || telefonoVal.length > 11) {
+        mostrarError('El teléfono debe tener entre 10 y 11 caracteres.');
+        form.classList.add('was-validated');
+        return;
+    }
+    if (email.length < 13 || email.length > 50) {
+        mostrarError('El email debe tener entre 13 y 50 caracteres.');
+        form.classList.add('was-validated');
+        return;
+    }
+    if (cedula.length < 7 || cedula.length > 8) {
+        mostrarError('La cédula debe tener entre 7 y 8 caracteres.');
+        form.classList.add('was-validated');
+        return;
+    }
+    if (address.length < 20 || address.length > 100) {
+        mostrarError('La dirección debe tener entre 20 y 100 caracteres.');
+        form.classList.add('was-validated');
+        return;
+    }
+    if (!birthday) {
+        mostrarError('La fecha de nacimiento es obligatoria.');
+        form.classList.add('was-validated');
+        return;
+    }
+    // Validar que la birthday esté dentro del rango permitido (min/max atributos)
+    const birthdayEl = document.getElementById('birthday');
+    if (birthdayEl) {
+        const min = birthdayEl.min; // YYYY-MM-DD
+        const max = birthdayEl.max;
+        if (birthday < min || birthday > max) {
+            mostrarError('La fecha de nacimiento debe estar entre ' + min + ' y ' + max + ' (edad entre 18 y 80 años).');
+            form.classList.add('was-validated');
+            return;
+        }
+    }
+
+    // Validar contraseñas
     if (password !== confirmPassword) {
         mostrarError('Las contraseñas no coinciden.');
         return;
     }
-
-    // Validar si la contraseña se requiere o se está modificando
     if (!modoEdicion || (modoEdicion && password.length > 0)) {
-        if (password.length < 6) { // Ejemplo de validación mínima
-            mostrarError('La contraseña debe tener al menos 6 caracteres.');
+        if (password.length < 7 || password.length > 15) {
+            mostrarError('La contraseña debe tener entre 7 y 15 caracteres.');
             return;
         }
+    }
+
+    // Antes de construir formData asegurarnos que el teléfono se envíe sólo con dígitos (sin espacios)
+    const telefonoEl = document.getElementById('telefono');
+    if (telefonoEl) {
+        telefonoEl.value = telefonoEl.value.replace(/\D/g, '');
     }
 
     const formData = new FormData(form);

@@ -85,21 +85,72 @@ try {
 function crearAnalista($conexion) {
     try {
         // Campos que vienen del formulario
-        $name = mysqli_real_escape_string($conexion, $_POST['nombre']);
-        $apellido = mysqli_real_escape_string($conexion, $_POST['apellido']);
-        $nacionalidad = mysqli_real_escape_string($conexion, $_POST['nacionalidad']);
-        $cedula = mysqli_real_escape_string($conexion, $_POST['cedula']);
-        $email = mysqli_real_escape_string($conexion, $_POST['email']);
-        $telefono = mysqli_real_escape_string($conexion, $_POST['telefono']);
-        $password = mysqli_real_escape_string($conexion, $_POST['password']);
-        $sexo = mysqli_real_escape_string($conexion, $_POST['password']);
-        $birthday = mysqli_real_escape_string($conexion, $_POST['password']);
-        $address = mysqli_real_escape_string($conexion, $_POST['password']);
-        $avatar = mysqli_real_escape_string($conexion, $_POST['password']);
+            $name = mysqli_real_escape_string($conexion, $_POST['nombre'] ?? '');
+            $apellido = mysqli_real_escape_string($conexion, $_POST['apellido'] ?? '');
+            $nacionalidad = mysqli_real_escape_string($conexion, $_POST['nacionalidad'] ?? 'venezolano');
+            $cedula = mysqli_real_escape_string($conexion, $_POST['cedula'] ?? '');
+            $email = mysqli_real_escape_string($conexion, $_POST['email'] ?? '');
+            $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
+            $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
+            $confirm_password = mysqli_real_escape_string($conexion, $_POST['confirmar_password'] ?? '');
+            $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'M');
+            $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '');
+            $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? '');
+            // Avatar puede venir como URL en POST o como archivo en $_FILES
+            $avatar = '';
+            if (!empty($_POST['avatar'])) {
+                $avatar = mysqli_real_escape_string($conexion, $_POST['avatar']);
+            } elseif (!empty($_FILES['avatar']) && !empty($_FILES['avatar']['tmp_name'])) {
+                // Intentar mover el archivo a una carpeta uploads/avatars
+                $uploadDir = __DIR__ . '/../public/uploads/avatars/';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+                $tmpName = $_FILES['avatar']['tmp_name'];
+                $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
+                $fileName = 'avatar_' . time() . '_' . rand(1000,9999) . '.' . $ext;
+                $dest = $uploadDir . $fileName;
+                if (@move_uploaded_file($tmpName, $dest)) {
+                    // Guardar ruta relativa
+                    $avatar = 'public/uploads/avatars/' . $fileName;
+                }
+            }
     
-        // Validar campos requeridos
-        if (empty($name) || empty($apellido) || empty($nacionalidad) || empty($cedula) || empty($email) || empty($telefono) || empty($password)) {
-            sendJsonResponse(['success' => false, 'message' => 'Todos los campos son requeridos']);
+        // Validaciones básicas (server-side)
+        if (strlen($name) < 3 || strlen($name) > 50) {
+            sendJsonResponse(['success' => false, 'message' => 'El Nombre debe tener entre 3 y 50 caracteres']);
+        }
+        if (strlen($apellido) < 3 || strlen($apellido) > 50) {
+            sendJsonResponse(['success' => false, 'message' => 'El Apellido debe tener entre 3 y 50 caracteres']);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 50) {
+            sendJsonResponse(['success' => false, 'message' => 'Email inválido o demasiado largo (máx 50)']);
+        }
+        if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
+            sendJsonResponse(['success' => false, 'message' => 'La Cédula debe tener entre 7 y 8 dígitos numéricos']);
+        }
+        if (!preg_match('/^[0-9]{10,11}$/', $telefono)) {
+            sendJsonResponse(['success' => false, 'message' => 'El Teléfono debe tener 10 u 11 dígitos numéricos']);
+        }
+        if (strlen($address) < 5 || strlen($address) > 255) {
+            sendJsonResponse(['success' => false, 'message' => 'La Dirección debe tener entre 5 y 255 caracteres']);
+        }
+        if (empty($birthday)) {
+            sendJsonResponse(['success' => false, 'message' => 'La Fecha de Nacimiento es obligatoria']);
+        }
+        // Validar edad entre 18 y 80
+        $dob = new DateTime($birthday);
+        $now = new DateTime();
+        $age = $now->diff($dob)->y;
+        if ($age < 18 || $age > 80) {
+            sendJsonResponse(['success' => false, 'message' => 'La edad debe estar entre 18 y 80 años']);
+        }
+        // Validar contraseña y confirmación
+        if (strlen($password) < 7 || strlen($password) > 15) {
+            sendJsonResponse(['success' => false, 'message' => 'La Contraseña debe tener entre 7 y 15 caracteres']);
+        }
+        if ($password !== $confirm_password) {
+            sendJsonResponse(['success' => false, 'message' => 'Las contraseñas no coinciden']);
         }
     
         // Verificar si el email ya existe
@@ -146,8 +197,9 @@ function crearAnalista($conexion) {
         $password_hash = substr($password_hash, 0, 20);
         
         // CONSTRUCCIÓN DE LA CONSULTA CORREGIDA
-        $query = "INSERT INTO user (username, pass, name, apellido, nacionalidad, cedula, sexo, phone, email, birthday, address, avatar, last_connection, id_floor, id_cargo, id_rol, id_status_user) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?)"; // 16 marcadores de posición + CURDATE()
+    // Insertar con last_connection = NOW() (no como placeholder)
+    $query = "INSERT INTO user (username, pass, name, apellido, nacionalidad, cedula, sexo, phone, email, birthday, address, avatar, last_connection, id_floor, id_cargo, id_rol, id_status_user) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)";
         
         $stmt = mysqli_prepare($conexion, $query);
         
@@ -156,42 +208,23 @@ function crearAnalista($conexion) {
             sendJsonResponse(['success' => false, 'message' => 'Error preparando consulta: ' . mysqli_error($conexion)]);
         }
         
-        // VINCULACIÓN DE PARÁMETROS CORREGIDA (16 parámetros: sssssisssssiiss)
-        // La secuencia correcta para los tipos es (name, apellido, nacionalidad, cedula, sexo, phone, email, birthday, address, avatar, id_floor, id_cargo, id_rol, id_status_user, username, pass)
-        // Tipos de datos:
-        // s - string (name)
-        // s - string (apellido)
-        // s - string (nacionalidad)
-        // s - string (cedula) - La hago 's' asumiendo que puede tener prefijos o guiones
-        // s - string (sexo)
-        // s - string (phone) - La hago 's' para evitar problemas con la conversión
-        // s - string (email)
-        // s - string (birthday)
-        // s - string (address)
-        // s - string (avatar)
-        // i - integer (id_floor)
-        // i - integer (id_cargo)
-        // i - integer (id_rol)
-        // i - integer (id_status_user)
-        // s - string (username)
-        // s - string (pass)
-        
-        $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssssssiiiiss',          
-            $username, 
+        // TIPOS: 12 strings luego 4 enteros
+        $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssssssssiiii',
+            $username,
             $password_hash,
-            $name, 
-            $apellido, 
-            $nacionalidad, 
-            $cedula, 
-            $sexo, 
-            $telefono, 
-            $email, 
-            $birthday, 
-            $address, 
-            $avatar, 
-            $id_floor, 
-            $id_cargo, 
-            $id_rol, 
+            $name,
+            $apellido,
+            $nacionalidad,
+            $cedula,
+            $sexo,
+            $telefono,
+            $email,
+            $birthday,
+            $address,
+            $avatar,
+            $id_floor,
+            $id_cargo,
+            $id_rol,
             $id_status_user
         );
 
@@ -259,17 +292,60 @@ function obtenerAnalistas($conexion) {
 }
 
 function editarAnalista($conexion) {
-    $id = (int)$_POST['analista_id'];
-    $name = mysqli_real_escape_string($conexion, $_POST['nombre']);
-    $email = mysqli_real_escape_string($conexion, $_POST['email']);
-    $telefono = mysqli_real_escape_string($conexion, $_POST['telefono']);
-    
-    // Validar campos requeridos
-    if (empty($name) || empty($email) || empty($telefono)) {
-        echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
+    $id = (int)($_POST['analista_id'] ?? 0);
+    $name = mysqli_real_escape_string($conexion, $_POST['nombre'] ?? '');
+    $apellido = mysqli_real_escape_string($conexion, $_POST['apellido'] ?? '');
+    $nacionalidad = mysqli_real_escape_string($conexion, $_POST['nacionalidad'] ?? 'venezolano');
+    $cedula = mysqli_real_escape_string($conexion, $_POST['cedula'] ?? '');
+    $email = mysqli_real_escape_string($conexion, $_POST['email'] ?? '');
+    $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
+    $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '');
+    $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'M');
+    $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? '');
+    $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
+    $confirm_password = mysqli_real_escape_string($conexion, $_POST['confirmar_password'] ?? '');
+
+    if ($id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'ID de analista inválido']);
         return;
     }
-    
+
+    // Validaciones básicas
+    if (strlen($name) < 3 || strlen($name) > 50) {
+        echo json_encode(['success' => false, 'message' => 'El Nombre debe tener entre 3 y 50 caracteres']);
+        return;
+    }
+    if (strlen($apellido) < 3 || strlen($apellido) > 50) {
+        echo json_encode(['success' => false, 'message' => 'El Apellido debe tener entre 3 y 50 caracteres']);
+        return;
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 50) {
+        echo json_encode(['success' => false, 'message' => 'Email inválido o demasiado largo (máx 50)']);
+        return;
+    }
+    if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
+        echo json_encode(['success' => false, 'message' => 'La Cédula debe tener entre 7 y 8 dígitos numéricos']);
+        return;
+    }
+    if (!preg_match('/^[0-9]{10,11}$/', $telefono)) {
+        echo json_encode(['success' => false, 'message' => 'El Teléfono debe tener 10 u 11 dígitos numéricos']);
+        return;
+    }
+    if (strlen($address) < 5 || strlen($address) > 255) {
+        echo json_encode(['success' => false, 'message' => 'La Dirección debe tener entre 5 y 255 caracteres']);
+        return;
+    }
+    if (empty($birthday)) {
+        echo json_encode(['success' => false, 'message' => 'La Fecha de Nacimiento es obligatoria']);
+        return;
+    }
+    $dob = new DateTime($birthday);
+    $age = (new DateTime())->diff($dob)->y;
+    if ($age < 18 || $age > 80) {
+        echo json_encode(['success' => false, 'message' => 'La edad debe estar entre 18 y 80 años']);
+        return;
+    }
+
     // Verificar si el email ya existe en otro analista
     $query_check = "SELECT id_user FROM user WHERE email = ? AND id_user != ?";
     $stmt_check = mysqli_prepare($conexion, $query_check);
@@ -281,16 +357,69 @@ function editarAnalista($conexion) {
         echo json_encode(['success' => false, 'message' => 'El email ya está registrado en otro analista']);
         return;
     }
-    
-    // Actualizar analista
-    $query = "UPDATE user SET name = ?, email = ?, phone = ? WHERE id_user = ?";
+
+    // Si se suministra contraseña, validar y actualizarla también
+    $update_fields = [];
+    $params = [];
+    $types = '';
+
+    $update_fields[] = 'name = ?'; $types .= 's'; $params[] = $name;
+    $update_fields[] = 'apellido = ?'; $types .= 's'; $params[] = $apellido;
+    $update_fields[] = 'nacionalidad = ?'; $types .= 's'; $params[] = $nacionalidad;
+    $update_fields[] = 'cedula = ?'; $types .= 's'; $params[] = $cedula;
+    $update_fields[] = 'email = ?'; $types .= 's'; $params[] = $email;
+    $update_fields[] = 'phone = ?'; $types .= 's'; $params[] = $telefono;
+    $update_fields[] = 'birthday = ?'; $types .= 's'; $params[] = $birthday;
+    $update_fields[] = 'sexo = ?'; $types .= 's'; $params[] = $sexo;
+    $update_fields[] = 'address = ?'; $types .= 's'; $params[] = $address;
+
+    if (!empty($password)) {
+        if (strlen($password) < 7 || strlen($password) > 15) {
+            echo json_encode(['success' => false, 'message' => 'La Contraseña debe tener entre 7 y 15 caracteres']);
+            return;
+        }
+        if ($password !== $confirm_password) {
+            echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden']);
+            return;
+        }
+        $pass_hash = hash('sha256', $password);
+        $pass_hash = substr($pass_hash, 0, 20);
+        $update_fields[] = 'pass = ?'; $types .= 's'; $params[] = $pass_hash;
+    }
+
+    // Construir consulta dinámica
+    $set_clause = implode(', ', $update_fields);
+    $query = "UPDATE user SET $set_clause WHERE id_user = ? AND id_rol = 4";
+
     $stmt = mysqli_prepare($conexion, $query);
-    mysqli_stmt_bind_param($stmt, 'sssi', $name, $email, $telefono, $id);
-    
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'Error preparando la consulta: ' . mysqli_error($conexion)]);
+        return;
+    }
+
+    // Bind dinámico
+    $types .= 'i'; // para el id
+    $params[] = $id;
+    // Preparar argumentos para call_user_func_array
+    $bind_names[] = $types;
+    for ($i = 0; $i < count($params); $i++) {
+        $bind_name = 'bind' . $i;
+        $$bind_name = $params[$i];
+        $bind_names[] = &$$bind_name;
+    }
+    call_user_func_array(array($stmt, 'bind_param'), $bind_names);
+
     if (mysqli_stmt_execute($stmt)) {
-        echo json_encode(['success' => true, 'message' => 'Analista actualizado exitosamente']);
+        // Devolver el analista actualizado
+        $query_select = "SELECT id_user as id, name, apellido, nacionalidad, cedula, email, phone as telefono, birthday, sexo, address, avatar, id_status_user, last_connection as created_at FROM user WHERE id_user = ?";
+        $s2 = mysqli_prepare($conexion, $query_select);
+        mysqli_stmt_bind_param($s2, 'i', $id);
+        mysqli_stmt_execute($s2);
+        $res = mysqli_stmt_get_result($s2);
+        $row = mysqli_fetch_assoc($res);
+        echo json_encode(['success' => true, 'message' => 'Analista actualizado exitosamente', 'analista' => $row]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Error al actualizar analista: ' . mysqli_error($conexion)]);
+        echo json_encode(['success' => false, 'message' => 'Error al actualizar analista: ' . mysqli_stmt_error($stmt)]);
     }
 }
 
@@ -325,7 +454,7 @@ function obtenerAnalistaPorId($conexion) {
         return;
     }
     
-    $query = "SELECT id_user as id, name, apellido, nacionalidad, cedula, email, phone as telefono, id_status_user, last_connection as created_at FROM user WHERE id_user = ? AND id_rol = 4";
+    $query = "SELECT id_user as id, name, apellido, nacionalidad, cedula, email, phone as telefono, birthday, sexo, address, avatar, id_status_user, last_connection as created_at FROM user WHERE id_user = ? AND id_rol = 4";
     $stmt = mysqli_prepare($conexion, $query);
     mysqli_stmt_bind_param($stmt, 'i', $id);
     mysqli_stmt_execute($stmt);

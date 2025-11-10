@@ -15,9 +15,9 @@ try {
     $c = new conectar();
     $conexion = $c->conexion();
     
-    // Obtener datos del formulario. $tecnico_id es la CÉDULA/ID del técnico.
+    // Obtener datos del formulario. $tecnico_id debe ser el id_user del técnico.
     $incidencia_id = (int)($_POST['incidencia_id'] ?? 0);
-    $tecnico_id = (int)($_POST['tecnico_id'] ?? 0); // Este valor es la Cédula
+    $tecnico_id = (int)($_POST['tecnico_id'] ?? 0); // id_user
     $comentario = mysqli_real_escape_string($conexion, $_POST['comentario'] ?? '');
     
     // Validar datos
@@ -41,10 +41,13 @@ try {
     }
     mysqli_stmt_close($stmt_verificar);
     
-    // **CORRECCIÓN: Buscar técnico en la tabla 'user' por cédula y rol técnico**
-    $query_tecnico = "SELECT id_user, name FROM user WHERE cedula = ? AND id_rol = 3 AND id_status_user = 1";
+    // Verificar que el técnico (id_user) existe y está activo y con rol técnico (id_rol = 3)
+    $query_tecnico = "SELECT id_user, name FROM user WHERE id_user = ? AND id_rol = 3 AND id_status_user = 1 LIMIT 1";
     $stmt_tecnico = mysqli_prepare($conexion, $query_tecnico);
-    mysqli_stmt_bind_param($stmt_tecnico, 'i', $tecnico_id); // $tecnico_id contiene la Cédula
+    if (!$stmt_tecnico) {
+        throw new Exception('Error al preparar la consulta de técnico: ' . mysqli_error($conexion));
+    }
+    mysqli_stmt_bind_param($stmt_tecnico, 'i', $tecnico_id);
     mysqli_stmt_execute($stmt_tecnico);
     $result_tecnico = mysqli_stmt_get_result($stmt_tecnico);
 
@@ -55,8 +58,8 @@ try {
     $tecnico = mysqli_fetch_assoc($result_tecnico);
     mysqli_stmt_close($stmt_tecnico);
 
-    // **CORRECCIÓN: Usar el id_user del técnico para la asignación**
-    $tecnico_final_id = $tecnico['id_user'];
+    // Usamos directamente el id_user recibido
+    $tecnico_final_id = $tecnico_id;
     
     
     // *************************************************

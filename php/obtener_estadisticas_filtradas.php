@@ -66,6 +66,18 @@ try {
         $where_conditions[] = "tecnico_asignado = ?";
         $params[] = $input['tecnico'];
     }
+
+    // Filtro por texto libre (buscar por tipo_incidencia, descripcion o solicitante_nombre)
+    if (!empty($input['q'])) {
+        $q = trim($input['q']);
+        if ($q !== '') {
+            $where_conditions[] = "(tipo_incidencia LIKE ? OR descripcion LIKE ? OR solicitante_nombre LIKE ?)";
+            $like = '%' . $q . '%';
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+        }
+    }
     
     // Construir WHERE clause
     $where_clause = "";
@@ -98,10 +110,16 @@ try {
                    LIMIT 6";
     
     // Consulta para incidencias por departamento
+    // Evitar '... FROM incidencias AND ...' cuando no hay WHERE previo
+    if (!empty($where_clause)) {
+        $departamento_clause = $where_clause . " AND departamento IS NOT NULL AND departamento != ''";
+    } else {
+        $departamento_clause = "WHERE departamento IS NOT NULL AND departamento != ''";
+    }
+
     $query_departamento = "SELECT departamento, COUNT(*) as cantidad 
                           FROM incidencias 
-                          $where_clause 
-                          AND departamento IS NOT NULL AND departamento != ''
+                          $departamento_clause 
                           GROUP BY departamento 
                           ORDER BY cantidad DESC 
                           LIMIT 8";

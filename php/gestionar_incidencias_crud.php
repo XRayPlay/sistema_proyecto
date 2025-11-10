@@ -48,6 +48,9 @@ try {
         case 'obtener_tipos':
             obtenerTiposIncidencia($conexion);
             break;
+        case 'buscarUsuario':
+            buscarUsuario($conexion);
+            break;
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);
     }
@@ -58,14 +61,43 @@ try {
 }
 
 function crearIncidencia($conexion) {
-    $tipo_incidencia = mysqli_real_escape_string($conexion, $_POST['tipo_incidencia']);
-    $descripcion = mysqli_real_escape_string($conexion, $_POST['descripcion']);
-    $solicitante_nombre = mysqli_real_escape_string($conexion, $_POST['solicitante_nombre']);
-    $solicitante_cedula = mysqli_real_escape_string($conexion, $_POST['solicitante_cedula']);
-    $solicitante_email = mysqli_real_escape_string($conexion, $_POST['solicitante_email']);
-    $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono']);
-    $solicitante_extension = mysqli_real_escape_string($conexion, $_POST['solicitante_extension'] ?? '');
-    $departamento = mysqli_real_escape_string($conexion, $_POST['departamento']);
+    // 1. Eliminar mysqli_real_escape_string - Capturar directamente
+    $tipo_incidencia = $_POST['tipo_incidencia'] ?? '';
+    $descripcion = $_POST['descripcion'] ?? '';
+    $solicitante_nombre = $_POST['solicitante_nombre'] ?? '';
+    
+    // 2. Agregar campos faltantes en la tabla incidencias
+    $solicitante_apellido = $_POST['solicitante_apellido'] ?? ''; // Nuevo
+    
+    $solicitante_cedula = $_POST['solicitante_cedula'] ?? '';
+    $solicitante_email = $_POST['solicitante_email'] ?? '';
+    $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
+    $solicitante_direccion = $_POST['solicitante_direccion'] ?? ''; // Nuevo
+    $solicitante_extension = $_POST['solicitante_extension'] ?? '';
+    $departamento = $_POST['departamento'] ?? '';
+    $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
+    // Normalizar el valor del técnico: el frontend a veces envía la cédula,
+    // otras veces el id_user. Queremos almacenar el id_user en la tabla incidencias.
+    $tecnico_id = null;
+    if (!empty($tecnico_asignado)) {
+        // Si viene un número entero, lo tomamos como id
+        if (ctype_digit(strval($tecnico_asignado))) {
+            $tecnico_id = (int)$tecnico_asignado;
+        } else {
+            // Si viene una cédula, buscar el id_user correspondiente
+            $queryUser = "SELECT id_user FROM user WHERE cedula = ? LIMIT 1";
+            $stmtUser = mysqli_prepare($conexion, $queryUser);
+            if ($stmtUser) {
+                mysqli_stmt_bind_param($stmtUser, 's', $tecnico_asignado);
+                mysqli_stmt_execute($stmtUser);
+                $resUser = mysqli_stmt_get_result($stmtUser);
+                if ($rowUser = mysqli_fetch_assoc($resUser)) {
+                    $tecnico_id = (int)$rowUser['id_user'];
+                }
+                mysqli_stmt_close($stmtUser);
+            }
+        }
+    }
     
     // Validar campos requeridos
     if (empty($tipo_incidencia) || empty($descripcion) || empty($solicitante_nombre) || 
@@ -75,14 +107,30 @@ function crearIncidencia($conexion) {
         return;
     }
     
-    // Insertar nueva incidencia
-    $query = "INSERT INTO incidencias (tipo_incidencia, descripcion, prioridad, solicitante_nombre, solicitante_cedula, 
-              solicitante_email, solicitante_telefono, solicitante_extension, 
-              departamento, estado, fecha_creacion, created_at) VALUES (?, ?, 'media', ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), NOW())";
-    $stmt = mysqli_prepare($conexion, $query);
-    mysqli_stmt_bind_param($stmt, 'ssssssss', $tipo_incidencia, $descripcion, $solicitante_nombre, 
-                          $solicitante_cedula, $solicitante_email, $solicitante_telefono, 
-                          $solicitante_extension, $departamento);
+    // Query actualizado en crearIncidencia
+    // Si no se seleccionó técnico ($tecnico_id === null) insertamos NULL en la columna tecnico_asignado,
+    // de lo contrario usamos un placeholder y lo bindemos como entero.
+    if ($tecnico_id === null) {
+        $query = "INSERT INTO incidencias (tipo_incidencia, descripcion, prioridad, solicitante_nombre, solicitante_apellido, solicitante_cedula, 
+                    solicitante_email, solicitante_telefono, solicitante_direccion, solicitante_extension, 
+                    departamento, estado, tecnico_asignado, fecha_creacion, created_at) VALUES (?, ?, 'media', ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NULL, NOW(), NOW())";
+        $stmt = mysqli_prepare($conexion, $query);
+        // Bind para los primeros 10 campos (todos strings)
+        mysqli_stmt_bind_param($stmt, 'ssssssssss', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+                                    $solicitante_apellido, $solicitante_cedula, $solicitante_email, 
+                                    $solicitante_telefono, $solicitante_direccion, $solicitante_extension, 
+                                    $departamento);
+    } else {
+        $query = "INSERT INTO incidencias (tipo_incidencia, descripcion, prioridad, solicitante_nombre, solicitante_apellido, solicitante_cedula, 
+                    solicitante_email, solicitante_telefono, solicitante_direccion, solicitante_extension, 
+                    departamento, estado, tecnico_asignado, fecha_creacion, created_at) VALUES (?, ?, 'media', ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, NOW(), NOW())";
+        $stmt = mysqli_prepare($conexion, $query);
+        // Bind: 10 strings + 1 entero (tecnico_id)
+        mysqli_stmt_bind_param($stmt, 'ssssssssssi', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+                                    $solicitante_apellido, $solicitante_cedula, $solicitante_email, 
+                                    $solicitante_telefono, $solicitante_direccion, $solicitante_extension, 
+                                    $departamento, $tecnico_id);
+    }
     
     if (mysqli_stmt_execute($stmt)) {
         $id_incidencia = mysqli_insert_id($conexion);
@@ -96,13 +144,74 @@ function crearIncidencia($conexion) {
     }
 }
 
+function buscarUsuario($conexion) {
+    // La cédula está en el campo 'cedula' en la tabla 'user'
+    $cedula = $_POST['cedula'] ?? '';
+    if (empty($cedula)) {
+        echo json_encode(['success' => false, 'message' => 'Cédula es requerida']);
+        return;
+    }
+
+    // Buscamos en la tabla 'user' por cédula
+    $query = "SELECT name, apellido, email, phone, address, id_floor 
+              FROM user 
+              WHERE cedula = ?
+              LIMIT 1";
+
+    $stmt = mysqli_prepare($conexion, $query);
+    mysqli_stmt_bind_param($stmt, 's', $cedula);
+    mysqli_stmt_execute($stmt);
+    $resultado = mysqli_stmt_get_result($stmt);
+    $usuario = mysqli_fetch_assoc($resultado);
+
+    if ($usuario) {
+        // Mapeamos los campos de la tabla 'user' a los nombres esperados en el JS
+        echo json_encode([
+            'success' => true, 
+            'usuario' => [
+                'nombre' => $usuario['name'],
+                'apellido' => $usuario['apellido'],
+                'email' => $usuario['email'],
+                'telefono' => $usuario['phone'],
+                'direccion' => $usuario['address'],
+                // Asumimos que id_floor es el departamento/ubicación para la incidencia
+                'departamento' => $usuario['id_floor'] 
+            ]
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
+    }
+    mysqli_stmt_close($stmt);
+}
+
 function obtenerIncidencias($conexion) {
-    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.fecha_creacion, 
-                     u.name as tecnico_nombre
+    // Soportar búsqueda por texto (q) en tiempo real: tipo_incidencia, descripcion o solicitante_nombre
+    $q = trim($_POST['q'] ?? '');
+    if ($q !== '') {
+        $like = '%' . $q . '%';
+        $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.fecha_creacion, 
+            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
+              FROM incidencias i 
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+              WHERE (i.tipo_incidencia LIKE ? OR i.descripcion LIKE ? OR i.solicitante_nombre LIKE ?)
+              ORDER BY i.fecha_creacion DESC";
+        $stmt = mysqli_prepare($conexion, $query);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 'sss', $like, $like, $like);
+            mysqli_stmt_execute($stmt);
+            $resultado = mysqli_stmt_get_result($stmt);
+        } else {
+            // Fallback a consulta sin filtro si falla la preparación
+            $resultado = mysqli_query($conexion, "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.fecha_creacion, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre FROM incidencias i LEFT JOIN user u ON i.tecnico_asignado = u.id_user ORDER BY i.fecha_creacion DESC");
+        }
+    } else {
+        $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.fecha_creacion, 
+            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
               ORDER BY i.fecha_creacion DESC";
-    $resultado = mysqli_query($conexion, $query);
+        $resultado = mysqli_query($conexion, $query);
+    }
     
     if (!$resultado) {
         echo json_encode(['success' => false, 'message' => 'Error al obtener incidencias: ' . mysqli_error($conexion)]);
@@ -117,6 +226,8 @@ function obtenerIncidencias($conexion) {
             'descripcion' => $row['descripcion'],
             'prioridad' => $row['prioridad'],
             'estado' => $row['estado'],
+            'tecnico_id' => $row['tecnico_id'],
+            'tecnico_cedula' => $row['tecnico_cedula'],
             'tecnico_nombre' => $row['tecnico_nombre'],
             'fecha_creacion' => $row['fecha_creacion']
         ];
@@ -133,9 +244,9 @@ function obtenerIncidenciaPorId($conexion) {
         return;
     }
     
-    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.solicitante_nombre, i.solicitante_cedula, 
-                     i.solicitante_email, i.solicitante_telefono, i.solicitante_direccion, i.solicitante_extension, 
-                     i.departamento, i.fecha_creacion, u.name as tecnico_nombre
+    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, 
+            i.solicitante_email, i.solicitante_telefono, i.solicitante_direccion, i.solicitante_extension, 
+            i.departamento, i.fecha_creacion, i.tecnico_asignado as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
               WHERE i.id = ?";
@@ -161,12 +272,16 @@ function obtenerIncidenciaPorId($conexion) {
                 'prioridad' => $incidencia['prioridad'],
                 'estado' => $incidencia['estado'],
                 'solicitante_nombre' => $incidencia['solicitante_nombre'],
+                'solicitante_apellido' => $incidencia['solicitante_apellido'],
                 'solicitante_cedula' => $incidencia['solicitante_cedula'],
                 'solicitante_email' => $incidencia['solicitante_email'],
                 'solicitante_telefono' => $incidencia['solicitante_telefono'],
                 'solicitante_direccion' => $incidencia['solicitante_direccion'],
                 'solicitante_extension' => $incidencia['solicitante_extension'],
                 'departamento' => $incidencia['departamento'],
+                // Añadimos el id y la cédula del técnico (si existe) para que el frontend pueda seleccionar el option correcto
+                'tecnico_id' => $incidencia['tecnico_id'] ?? null,
+                'tecnico_cedula' => $incidencia['tecnico_cedula'] ?? null,
                 'tecnico_nombre' => $incidencia['tecnico_nombre'],
                 'fecha_creacion' => $incidencia['fecha_creacion']
             ]
@@ -178,15 +293,39 @@ function obtenerIncidenciaPorId($conexion) {
 
 function actualizarIncidencia($conexion) {
     $id = (int)$_POST['incidencia_id'];
-    $tipo_incidencia = mysqli_real_escape_string($conexion, $_POST['tipo_incidencia']);
-    $descripcion = mysqli_real_escape_string($conexion, $_POST['descripcion']);
-    $solicitante_nombre = mysqli_real_escape_string($conexion, $_POST['solicitante_nombre']);
-    $solicitante_cedula = mysqli_real_escape_string($conexion, $_POST['solicitante_cedula']);
-    $solicitante_email = mysqli_real_escape_string($conexion, $_POST['solicitante_email']);
-    $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono']);
+    // Usar null coalescing para evitar warnings si alguna clave no viene en POST
+    $tipo_incidencia = mysqli_real_escape_string($conexion, $_POST['tipo_incidencia'] ?? '');
+    $descripcion = mysqli_real_escape_string($conexion, $_POST['descripcion'] ?? '');
+    $solicitante_nombre = mysqli_real_escape_string($conexion, $_POST['solicitante_nombre'] ?? '');
+    $solicitante_apellido = mysqli_real_escape_string($conexion, $_POST['solicitante_apellido'] ?? '');
+    $solicitante_cedula = mysqli_real_escape_string($conexion, $_POST['solicitante_cedula'] ?? '');
+    $solicitante_email = mysqli_real_escape_string($conexion, $_POST['solicitante_email'] ?? '');
+    $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono'] ?? '');
     $solicitante_extension = mysqli_real_escape_string($conexion, $_POST['solicitante_extension'] ?? '');
-    $departamento = mysqli_real_escape_string($conexion, $_POST['departamento']);
-    
+    $departamento = mysqli_real_escape_string($conexion, $_POST['departamento'] ?? '');
+    // Manejar técnico asignado (puede ser id_user o cédula). El select en frontend envía id_user.
+    $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
+    $tecnico_id = null;
+    if (!empty($tecnico_asignado)) {
+        if (ctype_digit(strval($tecnico_asignado))) {
+            $tecnico_id = (int)$tecnico_asignado;
+        } else {
+            $queryUser = "SELECT id_user FROM user WHERE cedula = ? LIMIT 1";
+            $stmtUser = mysqli_prepare($conexion, $queryUser);
+            if ($stmtUser) {
+                mysqli_stmt_bind_param($stmtUser, 's', $tecnico_asignado);
+                mysqli_stmt_execute($stmtUser);
+                $resUser = mysqli_stmt_get_result($stmtUser);
+                if ($rowUser = mysqli_fetch_assoc($resUser)) {
+                    $tecnico_id = (int)$rowUser['id_user'];
+                }
+                mysqli_stmt_close($stmtUser);
+            }
+        }
+    }
+    // Si no se encontró técnico, dejamos $tecnico_id como NULL y actualizaremos la columna a NULL
+    // (no convertir a 0 aquí)
+
     // Validar campos requeridos
     if (empty($tipo_incidencia) || empty($descripcion) || empty($solicitante_nombre) || 
         empty($solicitante_cedula) || empty($solicitante_email) || empty($solicitante_telefono) || 
@@ -194,16 +333,31 @@ function actualizarIncidencia($conexion) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos requeridos deben ser completados']);
         return;
     }
-    
-    // Actualizar incidencia
-    $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
-              solicitante_cedula = ?, solicitante_email = ?, solicitante_telefono = ?, 
-              solicitante_extension = ?, departamento = ?, updated_at = NOW() WHERE id = ?";
-    $stmt = mysqli_prepare($conexion, $query);
-    mysqli_stmt_bind_param($stmt, 'ssssssssi', $tipo_incidencia, $descripcion, $solicitante_nombre, 
-                          $solicitante_cedula, $solicitante_email, $solicitante_telefono, 
-                          $solicitante_extension, $departamento, $id);
-    
+
+
+    // Incluir tecnico_asignado en la actualización. Si $tecnico_id es NULL escribimos NULL en la columna.
+    if ($tecnico_id === null) {
+        $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
+                    solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_telefono = ?, 
+                    solicitante_direccion = ?, solicitante_extension = ?, departamento = ?, estado = 'pendiente', tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
+        $stmt = mysqli_prepare($conexion, $query);
+        // Bind: 10 strings + id (int)
+        mysqli_stmt_bind_param($stmt, 'ssssssssssi', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+                                    $solicitante_apellido, $solicitante_cedula, $solicitante_email, 
+                                    $solicitante_telefono, $solicitante_direccion, $solicitante_extension, 
+                                    $departamento, $id);
+    } else {
+        $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
+                    solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_telefono = ?, 
+                    solicitante_direccion = ?, solicitante_extension = ?, departamento = ?, estado = 'asignada', tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = mysqli_prepare($conexion, $query);
+        // Bind actualizado: 10 strings, 1 entero (tecnico_id), 1 entero (id)
+        mysqli_stmt_bind_param($stmt, 'ssssssssssii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+                                    $solicitante_apellido, $solicitante_cedula, $solicitante_email, 
+                                    $solicitante_telefono, $solicitante_direccion, $solicitante_extension, 
+                                    $departamento, $tecnico_id, $id);
+    }
+
     if (mysqli_stmt_execute($stmt)) {
         echo json_encode(['success' => true, 'message' => 'Incidencia actualizada exitosamente']);
     } else {

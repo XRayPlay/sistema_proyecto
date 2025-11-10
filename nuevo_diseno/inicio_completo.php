@@ -304,6 +304,11 @@ if (empty($datos_departamento)) {
                     </div>
                     
                             <div class="form-group">
+                                <label class="form-label">Buscar por descripción</label>
+                                <input type="text" class="form-control" id="filtro_descripcion" name="q" placeholder="Escribe texto para buscar en la descripción...">
+                            </div>
+                    
+                            <div class="form-group">
                                 <label class="form-label">Fecha Desde</label>
                                 <input type="date" class="form-control" name="fecha_desde">
                 </div>
@@ -676,6 +681,31 @@ if (empty($datos_departamento)) {
             // Actualizar las gráficas con los filtros
             actualizarGraficas(filtrosAplicados);
         });
+
+        // Búsqueda en tiempo real por descripción (campo name='q')
+        const filtroDescripcion = document.getElementById('filtro_descripcion');
+        if (filtroDescripcion) {
+            // debounce simple
+            let descTimer = null;
+            filtroDescripcion.addEventListener('input', function(e) {
+                clearTimeout(descTimer);
+                descTimer = setTimeout(() => {
+                    // Tomar todos los filtros del formulario y añadir el q (si aplica)
+                    const form = document.getElementById('filterForm');
+                    const formData = new FormData(form);
+                    const filters = Object.fromEntries(formData.entries());
+                    // Limpiar filtros vacíos
+                    const filtrosAplicados = {};
+                    Object.keys(filters).forEach(key => {
+                        if (filters[key] && String(filters[key]).trim() !== '') {
+                            filtrosAplicados[key] = filters[key];
+                        }
+                    });
+                    // Llamar a actualizarGraficas con los filtros actuales
+                    actualizarGraficas(filtrosAplicados);
+                }, 300);
+            });
+        }
 
         // Inicializar gráficas cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {

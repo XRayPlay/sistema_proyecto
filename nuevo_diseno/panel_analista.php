@@ -367,15 +367,18 @@ try {
             // Para ser funcional, recomiendo añadir este div en el modal-body:
             // <div id="modalErrores" class="alert alert-danger" style="display:none;"></div>
             
-            // --- Manejo de errores simplificado (ya que no existe el div modalErrores en el HTML) ---
+            const form = document.getElementById('formAnalista');
             if (errores.length > 0) {
                 console.error('Errores de validación:', errores);
-                // Si la modalErrores no existe, mostramos una alerta simple
                 const mensajeError = errores.join('\n');
-                alert("Errores de Validación:\n" + mensajeError); 
+                // Usar el mismo estilo visual que en gestionar_tecnicos: alerta global + was-validated
+                if (form) form.classList.add('was-validated');
+                mostrarError(mensajeError);
                 return false; // El formulario NO es válido
             }
 
+            // Si pasó la validación, quitar marca visual previa
+            if (form) form.classList.remove('was-validated');
             return true; // El formulario es válido
         }
 
@@ -562,7 +565,10 @@ try {
             if (!validarFormularioAnalista()) {
                 return; // Detener si la validación falla
             }
-            
+            // Limpiar teléfono para enviar solo dígitos
+            const telEl = document.getElementById('telefono');
+            if (telEl) telEl.value = telEl.value.replace(/\D/g, '');
+
             const form = document.getElementById('formAnalista');
             const formData = new FormData(form);
             
