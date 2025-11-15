@@ -226,7 +226,9 @@ function obtenerIncidencias($conexion) {
         }
     } else {
         $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.fecha_creacion, 
-            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
+            i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, i.solicitante_email, 
+            i.solicitante_telefono, i.solicitante_direccion, i.solicitante_extension, i.solicitante_code,
+            i.departamento, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
               ORDER BY i.fecha_creacion DESC";
@@ -246,6 +248,15 @@ function obtenerIncidencias($conexion) {
             'descripcion' => $row['descripcion'],
             'prioridad' => $row['prioridad'],
             'estado' => $row['estado'],
+            'solicitante_nombre' => $row['solicitante_nombre'],
+            'solicitante_apellido' => $row['solicitante_apellido'],
+            'solicitante_cedula' => $row['solicitante_cedula'],
+            'solicitante_email' => $row['solicitante_email'],
+            'solicitante_telefono' => $row['solicitante_telefono'],
+            'solicitante_direccion' => $row['solicitante_direccion'],
+            'solicitante_extension' => $row['solicitante_extension'],
+            'solicitante_code' => $row['solicitante_code'],
+            'departamento' => $row['departamento'],
             'tecnico_id' => $row['tecnico_id'],
             'tecnico_cedula' => $row['tecnico_cedula'],
             'tecnico_nombre' => $row['tecnico_nombre'],
@@ -264,9 +275,12 @@ function obtenerIncidenciaPorId($conexion) {
         return;
     }
     
-    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, 
-            i.solicitante_email, i.solicitante_telefono, i.solicitante_direccion, i.solicitante_extension, 
-            i.departamento, i.fecha_creacion, i.tecnico_asignado as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
+    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.prioridad, i.estado, 
+                     i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, 
+                     i.solicitante_email, i.solicitante_code, i.solicitante_telefono, 
+                     i.solicitante_direccion, i.solicitante_extension, i.departamento, 
+                     i.fecha_creacion, i.tecnico_asignado as tecnico_id, 
+                     u.cedula as tecnico_cedula, u.name as tecnico_nombre
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
               WHERE i.id = ?";
@@ -295,6 +309,7 @@ function obtenerIncidenciaPorId($conexion) {
                 'solicitante_apellido' => $incidencia['solicitante_apellido'],
                 'solicitante_cedula' => $incidencia['solicitante_cedula'],
                 'solicitante_email' => $incidencia['solicitante_email'],
+                'solicitante_code' => $incidencia['solicitante_code'] ?? '',
                 'solicitante_telefono' => $incidencia['solicitante_telefono'],
                 'solicitante_direccion' => $incidencia['solicitante_direccion'],
                 'solicitante_extension' => $incidencia['solicitante_extension'],

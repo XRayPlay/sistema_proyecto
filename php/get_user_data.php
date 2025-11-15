@@ -39,12 +39,14 @@ try {
     $sql = "SELECT 
                 solicitante_nombre, 
                 solicitante_apellido, 
-                solicitante_email, 
+                solicitante_email,
+                solicitante_code, 
                 solicitante_telefono, 
-                solicitante_direccion 
+                solicitante_direccion,
+                departamento
             FROM incidencias 
             WHERE solicitante_cedula = ?
-            ORDER BY fecha_creacion DESC
+            ORDER BY id DESC
             LIMIT 1";
     
     // Usar consultas preparadas para seguridad
@@ -69,8 +71,10 @@ try {
             'nombre' => $incidente_data['solicitante_nombre'],
             'apellido' => $incidente_data['solicitante_apellido'],
             'email' => $incidente_data['solicitante_email'],
+            'codigo_telefono' => $incidente_data['solicitante_code'],
             'telefono' => $incidente_data['solicitante_telefono'], 
-            'ubicacion' => $incidente_data['solicitante_direccion'] 
+            'ubicacion' => $incidente_data['solicitante_direccion'],
+            'departamento' => $incidente_data['departamento']
         ];
     } else {
         // Cédula NO encontrada en el historial de incidencias

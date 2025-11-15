@@ -116,34 +116,29 @@ try {
                     <form id="formTecnico">
                         <input type="hidden" id="tecnico_id" name="tecnico_id">
                         <div class="row">
-
-
-
-
-
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nombre" class="form-label">Nombre</label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre" minlength="3" maxlength="50" required>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" minlength="3"  required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="apellido" class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" id="apellido" name="apellido" minlength="3" maxlength="50" required>
+                                    <input type="text" class="form-control" id="apellido" name="apellido" minlength="3"  required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" minlength="13" maxlength="50" required>
+                                    <input type="email" class="form-control" id="email" name="email" minlength="13"  required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="tel" class="form-control" id="telefono" name="telefono" minlength="10" maxlength="11" required>
+                                    <input type="tel" class="form-control" id="telefono" name="telefono" minlength="10"  required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -158,7 +153,7 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="cedula" class="form-label">Cedula</label>
-                                    <input type="tel" class="form-control" id="cedula" name="cedula" minlength="7" maxlength="8" required>
+                                    <input type="tel" class="form-control" id="cedula" name="cedula" minlength="7" required>
                                 </div>
                             </div>                            
                         </div>
@@ -203,7 +198,7 @@ try {
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label for="address" class="form-label">Dirección</label>
-                                        <textarea class="form-control" id="address" name="address" rows="2" minlength="20" maxlength="100" required></textarea>
+                                        <textarea class="form-control" id="address" name="address" rows="2" minlength="20" " required></textarea>
                                 </div>
                             </div>
                         </div>
@@ -211,13 +206,13 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Contraseña</label>
-                                    <input type="password" class="form-control" id="password" name="password" minlength="7" maxlength="15" required>
+                                    <input type="password" class="form-control" id="password" name="password" minlength="7"  required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="confirmar_password" class="form-label">Confirmar Contraseña</label>
-                                    <input type="password" class="form-control" id="confirmar_password" name="confirmar_password" minlength="7" maxlength="15" required>
+                                    <input type="password" class="form-control" id="confirmar_password" name="confirmar_password" minlength="7"  required>
                                 </div>
                             </div>
                         </div>
@@ -286,7 +281,7 @@ try {
         applyMaxLengthRestriction('email', 50);
         applyMaxLengthRestriction('password', 15);
         applyMaxLengthRestriction('confirmar_password', 15);
-        applyMaxLengthRestriction('telefono', 13); // El máximo es 11
+        applyMaxLengthRestriction('telefono', 11); // El máximo es 11
         applyMaxLengthRestriction('cedula', 8);   // El máximo es 8
         applyMaxLengthRestriction('address', 100);
         // Establecer rango de fecha de nacimiento: mínimo 80 años, máximo 18 años
@@ -312,9 +307,6 @@ try {
             telefonoInput.addEventListener('input', (e) => {
                 // Mantener sólo dígitos y truncar a 11
                 let digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-                // Formatear en grupos de hasta 3: '123 456 789'
-                const groups = digits.match(/.{1,3}/g);
-                e.target.value = groups ? groups.join(' ') : digits;
             });
             // Al perder el foco, quitar espacios al inicio/fin
             telefonoInput.addEventListener('blur', (e) => {

@@ -23,6 +23,7 @@ $nombre = isset($_POST['nombre']) ? $conexion->real_escape_string(trim($_POST['n
 $apellido = isset($_POST['apellido']) ? $conexion->real_escape_string(trim($_POST['apellido'])) : '';
 $cedula = isset($_POST['cedula']) ? $conexion->real_escape_string(trim($_POST['cedula'])) : '';
 $email = isset($_POST['email']) ? $conexion->real_escape_string(trim($_POST['email'])) : '';
+$codigo_telefono = isset($_POST['codigo_telefono']) ? $conexion->real_escape_string(trim($_POST['codigo_telefono'])) : '';
 $telefono = isset($_POST['telefono']) ? $conexion->real_escape_string(trim($_POST['telefono'])) : '';
 $ubicacion = isset($_POST['ubicacion']) ? $conexion->real_escape_string(trim($_POST['ubicacion'])) : ''; // Dirección
 $tipo = isset($_POST['tipo']) ? $conexion->real_escape_string(trim($_POST['tipo'])) : '';
@@ -68,6 +69,7 @@ $sql_insert_incident = "INSERT INTO incidencias (
  solicitante_apellido, 
  solicitante_cedula, 
  solicitante_email, 
+ solicitante_code, 
  solicitante_telefono, 
  solicitante_direccion, 
  tipo_incidencia, 
@@ -85,6 +87,7 @@ VALUES (
  '$apellido', 
  '$cedula', 
  '$email', 
+ '$codigo_telefono', 
  '$telefono', 
  '$ubicacion', 
  '$tipo', 

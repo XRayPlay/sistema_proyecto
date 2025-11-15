@@ -30,15 +30,49 @@ function isAlphaNumericKey(event, noSpaces = false) {
     return true;
 }
 
-// --- Lógica de Aplicación de Estilos de Validación (Sin Cambios) ---
+// --- Lógica de Aplicación de Estilos de Validación (Actualizadas) ---
 
 function applyValidationClass(element, isValid) {
     if (!element) return; // Asegurar que el elemento exista
+    const errorDiv = document.getElementById('incident-error');
+    
+    // Limpiar clases anteriores
     element.classList.remove('is-valid', 'is-invalid');
+    
+    // Aplicar clase según validación
     if (isValid) {
         element.classList.add('is-valid');
+        // Ocultar mensaje de error si todos los campos son válidos
+        if (errorDiv && !document.querySelectorAll('.is-invalid').length) {
+            errorDiv.style.display = 'none';
+        }
     } else {
         element.classList.add('is-invalid');
+        // Mostrar mensaje de error específico
+        if (errorDiv) {
+            let message = 'Por favor complete correctamente este campo';
+            
+            if (element.id === 'incident-cedula') {
+                message = 'La cédula debe tener entre 7 y 8 dígitos';
+            } else if (element.id === 'incident-nombre' || element.id === 'incident-apellido') {
+                message = 'Debe tener entre 3 y 30 caracteres';
+            } else if (element.id === 'incident-email') {
+                message = 'Ingrese un correo electrónico válido';
+            } else if (element.id === 'incident-codigo-telefono') {
+                message = 'Seleccione un código de teléfono';
+            } else if (element.id === 'incident-telefono') {
+                message = 'El teléfono debe tener exactamente 7 dígitos';
+            } else if (element.id === 'incident-ubicacion') {
+                message = 'La ubicación es requerida';
+            } else if (element.id === 'incident-tipo') {
+                message = 'Seleccione un tipo de incidencia';
+            } else if (element.id === 'incident-descripcion') {
+                message = 'La descripción es requerida';
+            }
+            
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
     }
 }
 
@@ -46,11 +80,12 @@ function applyValidationClass(element, isValid) {
 
 const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const idRegex = /^\d{7,15}$/; // Acepta más dígitos para la cédula/identificación
-const phoneRegex = /^\d{7,15}$/; 
+const idRegex = /^\d{7,8}$/; // Cédula entre 7 y 8 dígitos
+const phoneRegex = /^\d{7}$/; // Teléfono exactamente 7 dígitos
+const phoneCodeRegex = /^(412|414|416|422|424|426)$/; // Códigos de teléfono válidos (sin el 0 inicial)
 
 function validateName(value) {
-    return value.length >= 2 && value.length <= 50 && nameRegex.test(value);
+    return value.length >= 3 && value.length <= 30 && nameRegex.test(value);
 }
 
 function validateUsername(value) {
@@ -74,7 +109,11 @@ function validatePassword(value) {
 }
 
 function validatePhone(value) {
-    return phoneRegex.test(value) || value === ""; // Permite vacío si no es requerido
+    return phoneRegex.test(value);
+}
+
+function validatePhoneCode(value) {
+    return phoneCodeRegex.test(value);
 }
 
 function validateRequiredText(value) {
@@ -99,7 +138,8 @@ function fillIncidentFields(data) {
     const fieldsToToggle = [
         incidentFields.nombre, 
         incidentFields.apellido, 
-        incidentFields.email, 
+        incidentFields.email,
+        incidentFields.codigoTelefono,
         incidentFields.telefono, 
         incidentFields.ubicacion
     ];
@@ -107,25 +147,46 @@ function fillIncidentFields(data) {
     if (data) {
         // Datos ENCONTRADOS en historial: Rellenar y Deshabilitar
         incidentFields.nombre.value = data.nombre || '';
-        // ... (el resto de asignaciones de valor) ...
+        incidentFields.apellido.value = data.apellido || '';
+        incidentFields.email.value = data.email || '';
+        incidentFields.codigoTelefono.value = data.codigo_telefono || '';
+        incidentFields.telefono.value = data.telefono || '';
+        incidentFields.ubicacion.value = data.ubicacion || '';
 
         // DESHABILITAR campos porque los datos vienen del sistema
         fieldsToToggle.forEach(field => {
             if (field) field.setAttribute('readonly', true);
         });
 
-        // ... (aplicar validaciones visuales) ...
+        // Aplicar validación visual
+        applyValidationClass(incidentFields.nombre, true);
+        applyValidationClass(incidentFields.apellido, true);
+        applyValidationClass(incidentFields.email, true);
+        applyValidationClass(incidentFields.codigoTelefono, validatePhoneCode(data.codigo_telefono || ''));
+        applyValidationClass(incidentFields.telefono, validatePhone(data.telefono || ''));
+        applyValidationClass(incidentFields.ubicacion, true);
         
     } else {
         // Datos NO encontrados: Limpiar y HABILITAR
-        // ... (el resto de limpieza de valor) ...
+        incidentFields.nombre.value = '';
+        incidentFields.apellido.value = '';
+        incidentFields.email.value = '';
+        incidentFields.codigoTelefono.value = '';
+        incidentFields.telefono.value = '';
+        incidentFields.ubicacion.value = '';
 
         // HABILITAR campos para que el usuario los ingrese
         fieldsToToggle.forEach(field => {
             if (field) field.removeAttribute('readonly');
         });
 
-        // ... (limpiar clases de validación) ...
+        // Limpiar clases de validación
+        applyValidationClass(incidentFields.nombre, false);
+        applyValidationClass(incidentFields.apellido, false);
+        applyValidationClass(incidentFields.email, false);
+        applyValidationClass(incidentFields.codigoTelefono, false);
+        applyValidationClass(incidentFields.telefono, false);
+        applyValidationClass(incidentFields.ubicacion, false);
     }
 }
 
@@ -157,69 +218,8 @@ function closeModal(modalElement) {
     // Limpiar el formulario de incidencia al cerrar
     if (modalElement.id === 'incidentModal') {
         document.getElementById('incidentForm').reset();
-        // Asegurarse de que los campos de solo lectura se limpien correctamente 
-        fillIncidentFields(null); 
     }
 }
-
-// ** REFERENCIAS DE CAMPOS DEL MODAL DE INCIDENCIA (Globales) **
-let incidentFields = {}; // Inicializar como objeto vacío
-
-// ** NUEVA FUNCIÓN: Rellenar Campos (para autocompletado) **
-function fillIncidentFields(data) {
-    
-    const fieldsToToggle = [
-        incidentFields.nombre, 
-        incidentFields.apellido, 
-        incidentFields.email, 
-        incidentFields.telefono, 
-        incidentFields.ubicacion
-    ];
-
-    if (data) {
-        // Usuario ENCONTRADO:
-        // Asignar valores
-        incidentFields.nombre.value = data.nombre || '';
-        incidentFields.apellido.value = data.apellido || '';
-        incidentFields.email.value = data.email || '';
-        incidentFields.telefono.value = data.telefono || '';
-        incidentFields.ubicacion.value = data.ubicacion || '';
-
-        // DESHABILITAR campos porque los datos vienen del sistema
-        fieldsToToggle.forEach(field => {
-            if (field) field.setAttribute('readonly', true);
-        });
-
-        // Aplicar validación visual
-        applyValidationClass(incidentFields.nombre, true);
-        applyValidationClass(incidentFields.apellido, true);
-        applyValidationClass(incidentFields.email, true);
-        applyValidationClass(incidentFields.telefono, validatePhone(data.telefono || ''));
-        applyValidationClass(incidentFields.ubicacion, true);
-        
-    } else {
-        // Usuario NO encontrado:
-        // Limpiar valores
-        incidentFields.nombre.value = '';
-        incidentFields.apellido.value = '';
-        incidentFields.email.value = '';
-        incidentFields.telefono.value = '';
-        incidentFields.ubicacion.value = '';
-
-        // HABILITAR campos para que el usuario los ingrese y se registre
-        fieldsToToggle.forEach(field => {
-            if (field) field.removeAttribute('readonly');
-        });
-
-        // Limpiar clases de validación para que el usuario pueda escribir
-        applyValidationClass(incidentFields.nombre, false);
-        applyValidationClass(incidentFields.apellido, false);
-        applyValidationClass(incidentFields.email, false);
-        applyValidationClass(incidentFields.telefono, true); // True si el campo es opcional
-        applyValidationClass(incidentFields.ubicacion, false);
-    }
-}
-
 
 async function fetchUserData(cedula) {
     // Si la cédula no es válida, no consultamos
@@ -302,13 +302,15 @@ function validateAndSubmitIncident(event) {
     }
     applyValidationClass(incidentFields.email, true);
 
-    // Teléfono no es estrictamente requerido, pero si tiene valor, validarlo
-    if (incidentFields.telefono.value.length > 0 && !validatePhone(incidentFields.telefono.value)) {
-         showError('El Teléfono es inválido.', incidentFields.telefono, errorDiv);
-        isValid = false;
-        return;
+    // Validar código de teléfono
+    if (!validatePhoneCode(incidentFields.codigoTelefono.value)) {
+        return showError('Seleccione un código de teléfono válido', incidentFields.codigoTelefono, errorDiv);
     }
-    applyValidationClass(incidentFields.telefono, true);
+
+    // Validar teléfono
+    if (!validatePhone(incidentFields.telefono.value)) {
+        return showError('El teléfono debe tener exactamente 7 dígitos', incidentFields.telefono, errorDiv);
+    }
 
     if (!validateRequiredText(incidentFields.ubicacion.value)) {
         showError('La Ubicación del usuario es requerida (debe autocompletarse).', incidentFields.ubicacion, errorDiv);
@@ -341,7 +343,9 @@ function validateAndSubmitIncident(event) {
         formData.append('nombre', incidentFields.nombre.value);
         formData.append('apellido', incidentFields.apellido.value);
         formData.append('email', incidentFields.email.value);
+        formData.append('codigo_telefono', incidentFields.codigoTelefono.value);
         formData.append('telefono', incidentFields.telefono.value);
+        formData.append('telefono_completo', incidentFields.codigoTelefono.value + incidentFields.telefono.value);
         formData.append('ubicacion', incidentFields.ubicacion.value);
         formData.append('tipo', incidentFields.tipo.value);
         formData.append('descripcion', incidentFields.descripcion.value);
@@ -393,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nombre: document.getElementById('incident-nombre'),
         apellido: document.getElementById('incident-apellido'),
         email: document.getElementById('incident-email'),
+        codigoTelefono: document.getElementById('incident-codigo-telefono'),
         telefono: document.getElementById('incident-telefono'),
         ubicacion: document.getElementById('incident-ubicacion'),
         tipo: document.getElementById('incident-tipo'),
@@ -431,8 +436,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- VALIDACIÓN EN TIEMPO REAL (Listener de Login) (Sin Cambios) ---
+    // --- VALIDACIÓN EN TIEMPO REAL (Login e Incidencia) ---
     
+    // Validación en tiempo real para login
     Object.keys(loginFields).forEach(key => {
         const field = loginFields[key];
         if (field) {
@@ -441,6 +447,70 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // Validación en tiempo real para formulario de incidencia
+    if (incidentFields.cedula) {
+        incidentFields.cedula.addEventListener('input', () => {
+            const isValid = validateIdNumber(incidentFields.cedula.value);
+            applyValidationClass(incidentFields.cedula, isValid);
+        });
+    }
+
+    if (incidentFields.nombre) {
+        incidentFields.nombre.addEventListener('input', () => {
+            const isValid = validateName(incidentFields.nombre.value);
+            applyValidationClass(incidentFields.nombre, isValid);
+        });
+    }
+
+    if (incidentFields.apellido) {
+        incidentFields.apellido.addEventListener('input', () => {
+            const isValid = validateName(incidentFields.apellido.value);
+            applyValidationClass(incidentFields.apellido, isValid);
+        });
+    }
+
+    if (incidentFields.email) {
+        incidentFields.email.addEventListener('input', () => {
+            const isValid = validateEmail(incidentFields.email.value);
+            applyValidationClass(incidentFields.email, isValid);
+        });
+    }
+
+    if (incidentFields.codigoTelefono) {
+        incidentFields.codigoTelefono.addEventListener('change', () => {
+            const isValid = validatePhoneCode(incidentFields.codigoTelefono.value);
+            applyValidationClass(incidentFields.codigoTelefono, isValid);
+        });
+    }
+
+    if (incidentFields.telefono) {
+        incidentFields.telefono.addEventListener('input', () => {
+            const isValid = validatePhone(incidentFields.telefono.value);
+            applyValidationClass(incidentFields.telefono, isValid);
+        });
+    }
+
+    if (incidentFields.ubicacion) {
+        incidentFields.ubicacion.addEventListener('input', () => {
+            const isValid = validateRequiredText(incidentFields.ubicacion.value);
+            applyValidationClass(incidentFields.ubicacion, isValid);
+        });
+    }
+
+    if (incidentFields.tipo) {
+        incidentFields.tipo.addEventListener('change', () => {
+            const isValid = validateSelect(incidentFields.tipo.value);
+            applyValidationClass(incidentFields.tipo, isValid);
+        });
+    }
+
+    if (incidentFields.descripcion) {
+        incidentFields.descripcion.addEventListener('input', () => {
+            const isValid = validateRequiredText(incidentFields.descripcion.value);
+            applyValidationClass(incidentFields.descripcion, isValid);
+        });
+    }
     
     // --- FUNCIÓN DE ENVÍO DE DATOS POR FETCH (Login) (Sin Cambios) ---
 

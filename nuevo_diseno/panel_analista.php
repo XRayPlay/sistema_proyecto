@@ -296,7 +296,6 @@ try {
             const cedula = document.getElementById('cedula').value.trim();
             const password = document.getElementById('password').value;
             const confirmarPassword = document.getElementById('confirmar_password').value;
-            const birthday = document.getElementById('birthday').value;
             const address = document.getElementById('address').value.trim();
             
             // Expresión regular para validar formato de email simple
@@ -334,10 +333,21 @@ try {
                  errores.push('La Cédula solo debe contener números.');
             }
             
-            // Validación de Fecha de Nacimiento
-            if (!birthday) {
-                errores.push('La Fecha de Nacimiento es obligatoria.');
-            }
+            const birthdayInput = document.getElementById('birthday');
+        if (birthdayInput) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            // Fecha máxima (cumple 18 años como máximo)
+            const maxYear = year - 18;
+            const maxDate = `${maxYear}-${month}-${day}`;
+            // Fecha mínima (cumple 80 años como mínimo)
+            const minYear = year - 80;
+            const minDate = `${minYear}-${month}-${day}`;
+            birthdayInput.setAttribute('min', minDate);
+            birthdayInput.setAttribute('max', maxDate);
+        }
 
             // Validación de Dirección
             if (address.length < 5 || address.length > 255) {

@@ -78,13 +78,7 @@ if ($resultado_usuarios) {
     $total_usuarios = $row['usuarios'];
 }
 
-$query_tecnicos_activos = "SELECT COUNT(*) as tecnicos FROM tecnicos WHERE estado = 'Activo'";
-$resultado_tecnicos_activos = mysqli_query($conexion, $query_tecnicos_activos);
-$tecnicos_activos = 0;
-if ($resultado_tecnicos_activos) {
-    $row = mysqli_fetch_assoc($resultado_tecnicos_activos);
-    $tecnicos_activos = $row['tecnicos'];
-}
+
 
 // Obtener datos para gráfica de incidencias por fecha (últimos 7 días)
 $query_incidencias_fecha = "SELECT DATE(fecha_creacion) as fecha, COUNT(*) as cantidad 

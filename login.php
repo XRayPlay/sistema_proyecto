@@ -114,17 +114,17 @@
                     <div class="form-row">
                         <div class="form-group half-width">
                             <label for="incident-cedula">Cédula *</label>
-                            <input type="text" id="incident-cedula" placeholder="Ingrese la cédula" maxlength="15" onkeypress="return isNumberKey(event)" required>
+                            <input type="text" id="incident-cedula" placeholder="Ingrese la cédula" minlength="7" maxlength="8" onkeypress="return isNumberKey(event)" required>
                         </div>
                         <div class="form-group half-width">
                             <label for="incident-nombre">Nombre *</label>
-                            <input type="text" id="incident-nombre" placeholder="Nombre completo" maxlength="50" onkeypress="return isCharKey(event)" required readonly>
+                            <input type="text" id="incident-nombre" placeholder="Nombre completo" minlength="3" maxlength="30" onkeypress="return isCharKey(event)" required readonly>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group half-width">
                             <label for="incident-apellido">Apellido *</label>
-                            <input type="text" id="incident-apellido" placeholder="Apellido completo" maxlength="50" onkeypress="return isCharKey(event)" required readonly>
+                            <input type="text" id="incident-apellido" placeholder="Apellido completo" minlength="3" maxlength="30" onkeypress="return isCharKey(event)" required readonly>
                         </div>
                         <div class="form-group half-width">
                             <label for="incident-email">Correo Electrónico *</label>
@@ -132,9 +132,22 @@
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group half-width">
-                            <label for="incident-telefono">Teléfono</label>
-                            <input type="tel" id="incident-telefono" placeholder="Número de teléfono" maxlength="15" onkeypress="return isNumberKey(event)" readonly>
+                        <div class="form-row">
+                            <div class="form-group half-width">
+                                <label for="incident-codigo-telefono">Código de Teléfono *</label>
+                                <select id="incident-codigo-telefono" class="half-width" required>
+                                    <option value="">Seleccione</option>
+                                    <option value="412">0412</option>
+                                    <option value="414">0414</option>
+                                    <option value="416">0416</option>
+                                    <option value="424">0424</option>
+                                    <option value="426">0426</option>
+                                </select>
+                            </div>
+                            <div class="form-group half-width">
+                                <label for="incident-telefono">Teléfono *</label>
+                                <input type="tel" id="incident-telefono" placeholder="Número de teléfono" pattern="[0-9]{7}" minlength="7" maxlength="7" onkeypress="return isNumberKey(event)" required>
+                            </div>
                         </div>
                         <div class="form-group half-width">
                             <label for="incident-ubicacion">Ubicación del usuario *</label>

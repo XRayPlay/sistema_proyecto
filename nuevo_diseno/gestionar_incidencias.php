@@ -5,6 +5,22 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
+// Inicializar variable de mensaje de error
+$error_message = '';
+$success_message = '';
+
+// Verificar si hay un mensaje de error en la sesión
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
+
+// Verificar si hay un mensaje de éxito en la sesión
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
 require_once "../php/permisos.php";
 require_once "../php/clases.php";
 require_once "../php/conexion_be.php";
@@ -108,7 +124,7 @@ try {
     </main>
 
     <!-- Modal para Crear/Editar Incidencia -->
-    <div class="modal fade" id="modalIncidencia" tabindex="-1">
+<div class="modal fade" id="modalIncidencia" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content modern-modal">
             <div class="modal-header modern-header">
@@ -126,37 +142,79 @@ try {
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="solicitante_cedula" class="form-label required-field">Cédula</label>
-                                <div class="d-flex align-items-center">
-                                    <input type="text" class="form-control modern-input" id="solicitante_cedula" name="solicitante_cedula" required>
-                                    <div id="buscarSpinner" class="spinner-border spinner-border-sm text-primary ms-2" role="status" style="display:none">
-                                        <span class="visually-hidden">Buscando...</span>
-                                    </div>
+                                <div class="input-group has-validation">
+                                    <input type="text" class="form-control modern-input" id="solicitante_cedula" name="solicitante_cedula" 
+                                           pattern="\d{7,8}" title="La cédula debe tener entre 7 y 8 dígitos" 
+                                           minlength="7" maxlength="8" required
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, ''); validarCampo(this);">
+                                    <div class="invalid-feedback">La cédula debe tener entre 7 y 8 dígitos</div>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="buscarUsuarioPorCedula()">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
                                 </div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="solicitante_nombre" class="form-label required-field">Nombre</label>
-                                <input type="text" class="form-control modern-input" id="solicitante_nombre" name="solicitante_nombre" readonly required>
+                                <input type="text" class="form-control modern-input" id="solicitante_nombre" name="solicitante_nombre" 
+                                       minlength="3" maxlength="30" 
+                                       pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" 
+                                       title="Solo se permiten letras y espacios (3-30 caracteres)" 
+                                       oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, ''); validarCampo(this);" 
+                                       onblur="validarCampo(this)"
+                                       readonly required>
+                                <div class="invalid-feedback">El nombre debe contener solo letras y espacios (3-30 caracteres)</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="solicitante_apellido" class="form-label required-field">Apellido</label>
-                                <input type="text" class="form-control modern-input" id="solicitante_apellido" name="solicitante_apellido" readonly required>
+                                <input type="text" class="form-control modern-input" id="solicitante_apellido" name="solicitante_apellido" 
+                                       minlength="3" maxlength="30" 
+                                       pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" 
+                                       title="Solo se permiten letras y espacios (3-30 caracteres)" 
+                                       oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, '')" 
+                                       readonly required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="solicitante_email" class="form-label required-field">Correo Electrónico</label>
                                 <input type="email" class="form-control modern-input" id="solicitante_email" name="solicitante_email" readonly required>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="solicitante_codigo_telefono" class="form-label">Código</label>
+                                <select class="form-control modern-input" id="solicitante_codigo_telefono" name="solicitante_codigo_telefono" required>
+                                    <option value="">Seleccione</option>
+                                    <option value="412">0412</option>
+                                    <option value="414">0414</option>
+                                    <option value="416">0416</option>
+                                    <option value="422">0422</option>
+                                    <option value="424">0424</option>
+                                    <option value="426">0426</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
                                 <label for="solicitante_telefono" class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control modern-input" id="solicitante_telefono" name="solicitante_telefono" readonly>
+                                <input type="tel" class="form-control modern-input" id="solicitante_telefono" name="solicitante_telefono" 
+                                       pattern="[0-9]{7}" minlength="7" maxlength="7" 
+                                       title="El teléfono debe tener exactamente 7 dígitos"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, ''); validarCampo(this);" 
+                                       onblur="validarCampo(this)"
+                                       required>
+                                <div class="invalid-feedback">El teléfono debe tener exactamente 7 dígitos</div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="solicitante_direccion" class="form-label">Dirección</label>
-                                <input type="text" class="form-control modern-input" id="solicitante_direccion" name="solicitante_direccion" readonly>
+                                <input type="text" class="form-control modern-input" id="solicitante_direccion" name="solicitante_direccion" required>
                             </div>
-                            <!-- 'departamento' eliminado: usamos 'solicitante_direccion' como ubicación -->
+                            <div class="col-md-6 mb-3">
+                                <label for="departamento" class="form-label">Departamento</label>
+                                <select class="form-control modern-input" id="departamento" name="departamento" required>
+                                    <option value="">Seleccione un departamento</option>
+                                    <option value="Sistema">Sistema</option>
+                                    <option value="Soporte">Soporte</option>
+                                    <option value="Redes">Redes</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -176,8 +234,17 @@ try {
                         </div>
                         <div class="mb-3">
                             <label for="descripcion" class="form-label required-field">Descripción Detallada</label>
-                            <textarea minlength="30" maxlength="150" class="form-control modern-input" id="descripcion" name="descripcion" rows="6" 
-                                placeholder="Describa detalladamente el problema o solicitud que tiene. Incluya información como: tipo de problema, departamento afectado, urgencia, etc." required></textarea>
+                            <textarea class="form-control modern-input" id="descripcion" name="descripcion" rows="6" 
+                                minlength="10" maxlength="100"
+                                placeholder="Describa detalladamente el problema o solicitud (10-100 caracteres). Incluya información como: tipo de problema, departamento afectado, urgencia, etc." 
+                                oninput="if(this.value.length > 100) this.value = this.value.slice(0, 100); contador.textContent = `${this.value.length}/100 caracteres`; validarCampo(this);"
+                                onblur="validarCampo(this)"
+                                required></textarea>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted" id="contadorCaracteres">0/100 caracteres</small>
+                                <small class="text-muted">Mínimo 10 caracteres</small>
+                            </div>
+                            <div class="invalid-feedback">La descripción debe tener entre 10 y 100 caracteres</div>
                         </div>
                     </div>
 
@@ -256,6 +323,20 @@ try {
         cargarIncidencias();
         cargarTecnicosParaAsignacion(); // Función renombrada para mayor claridad
         cargarTiposIncidencia();
+        
+        // Inicializar contador de caracteres para la descripción
+        const descripcion = document.getElementById('descripcion');
+        const contador = document.getElementById('contadorCaracteres');
+        
+        if (descripcion && contador) {
+            // Actualizar contador al cargar
+            contador.textContent = `${descripcion.value.length}/100 caracteres`;
+            
+            // Actualizar contador al escribir
+            descripcion.addEventListener('input', function() {
+                contador.textContent = `${this.value.length}/100 caracteres`;
+            });
+        }
 
         // Asignar el evento input con debounce a la cédula
         const cedulaInput = document.getElementById('solicitante_cedula');
@@ -418,7 +499,7 @@ async function buscarUsuarioPorCedula() {
     const cedula = document.getElementById('solicitante_cedula').value.trim();
     
     // 1. Limpiar y establecer campos como NO readonly si no se encuentra
-    const camposSolicitante = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
+    const camposSolicitante = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_codigo_telefono', 'solicitante_telefono', 'solicitante_direccion'];
 
     function resetearCampos(esEncontrado) {
         camposSolicitante.forEach(id => {
@@ -466,9 +547,33 @@ async function buscarUsuarioPorCedula() {
                 document.getElementById('solicitante_nombre').value = usuario.nombre || '';
                 document.getElementById('solicitante_apellido').value = usuario.apellido || '';
                 document.getElementById('solicitante_email').value = usuario.email || '';
+                
+                // Rellenar código de teléfono si está disponible
+                if (usuario.codigo_telefono) {
+                    document.getElementById('solicitante_codigo_telefono').value = usuario.codigo_telefono;
+                }
+                
+                // Rellenar número de teléfono
                 document.getElementById('solicitante_telefono').value = usuario.telefono || '';
-                // En get_user_data.php el campo de ubicación se llama 'ubicacion'
+                
+                // Rellenar departamento (ubicación)
                 document.getElementById('solicitante_direccion').value = usuario.ubicacion || '';
+                
+                // Rellenar departamento si está disponible
+                if (usuario.departamento) {
+                    const departamentoSelect = document.getElementById('departamento');
+                    if (departamentoSelect) {
+                        departamentoSelect.value = usuario.departamento;
+                    }
+                }
+                
+                // Rellenar el select de departamento si está disponible
+                if (usuario.departamento) {
+                    const selectDepto = document.getElementById('departamento');
+                    if (selectDepto) {
+                        selectDepto.value = usuario.departamento;
+                    }
+                }
 
                 // Poner campos como readonly para evitar edición accidental
                 resetearCampos(true);
@@ -507,16 +612,39 @@ async function buscarUsuarioPorCedula() {
             formData.set('solicitante_cedula', cedulaEl.value || '');
         }
 
-        // Validar que los campos que deben llenarse automáticamente no estén vacíos en modo creación
-        if (!modoEdicion) {
-             const camposRequeridosBusqueda = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_direccion'];
-             for (const campoId of camposRequeridosBusqueda) {
-                 if (!formData.get(campoId)) {
-                     mostrarError('Por favor, busque un usuario válido ingresando la Cédula.');
-                     return;
-                 }
-             }
+        // Validar campos requeridos
+    const camposRequeridos = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_codigo_telefono', 'solicitante_telefono', 'solicitante_direccion', 'tipo_incidencia', 'descripcion'];
+    for (const campoId of camposRequeridos) {
+        const campo = document.getElementById(campoId);
+        if (campo && campo.required && !campo.value.trim()) {
+            mostrarError(`El campo ${campo.labels[0]?.textContent || campoId} es obligatorio.`);
+            campo.focus();
+            return false;
         }
+    }
+
+    // Validar formato de teléfono (solo números, 7 dígitos)
+    const telefono = document.getElementById('solicitante_telefono').value.trim();
+    if (telefono && !/^\d{7}$/.test(telefono)) {
+        mostrarError('El teléfono debe tener exactamente 7 dígitos.');
+        document.getElementById('solicitante_telefono').focus();
+        return false;
+    }
+
+    // Validar que se haya seleccionado un código de teléfono
+    const codigoTelefono = document.getElementById('solicitante_codigo_telefono').value;
+    if (!codigoTelefono) {
+        mostrarError('Por favor seleccione un código de teléfono.');
+        return false;
+    }
+
+    // Validar formato de email
+    const email = document.getElementById('solicitante_email').value.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        mostrarError('Por favor ingrese un correo electrónico válido.');
+        document.getElementById('solicitante_email').focus();
+        return false;
+    }
 
         if (modoEdicion) {
             formData.append('action', 'actualizar');
@@ -528,8 +656,19 @@ async function buscarUsuarioPorCedula() {
         // Ya se eliminó solicitante_extension en el HTML, no es necesario quitarlo aquí.
 
         try {
-            // Asegurar que el backend reciba 'departamento' aunque lo eliminamos del formulario
-            formData.set('departamento', document.getElementById('solicitante_direccion').value || '');
+            // Asegurar que el backend reciba 'departamento' del select
+            const departamento = document.getElementById('departamento').value;
+            formData.set('departamento', departamento);
+            
+            // Obtener código de teléfono y número por separado
+            const codigoTelefono = document.getElementById('solicitante_codigo_telefono').value;
+            const telefono = document.getElementById('solicitante_telefono').value;
+            
+            // Guardar el código de teléfono en el campo solicitante_code
+            formData.set('solicitante_code', codigoTelefono);
+            
+            // Guardar solo el número de teléfono en solicitante_telefono
+            formData.set('solicitante_telefono', telefono);
             const response = await fetch('../php/gestionar_incidencias_crud.php', {
                 method: 'POST',
                 body: formData
@@ -583,17 +722,54 @@ async function buscarUsuarioPorCedula() {
             if (data.success && data.incidencia) {
                 const incidencia = data.incidencia;
                 
+                // Debug: Ver los datos recibidos
+                console.log('Datos de la incidencia:', JSON.stringify(incidencia, null, 2));
+                
                 // Rellenar el formulario
                 document.getElementById('incidencia_id').value = incidencia.id;
-                document.getElementById('tipo_incidencia').value = incidencia.tipo_incidencia;
                 
-                // Información del Solicitante (Ahora con campos extra y sin 'extension')
+                // Información del Solicitante
                 document.getElementById('solicitante_cedula').value = incidencia.solicitante_cedula;
                 document.getElementById('solicitante_nombre').value = incidencia.solicitante_nombre;
                 document.getElementById('solicitante_apellido').value = incidencia.solicitante_apellido || '';
                 document.getElementById('solicitante_email').value = incidencia.solicitante_email;
-                document.getElementById('solicitante_telefono').value = incidencia.solicitante_telefono || '';
-                document.getElementById('solicitante_direccion').value = incidencia.solicitante_direccion || incidencia.departamento || '';
+                
+                // Establecer el número de teléfono directamente desde solicitante_telefono
+                if (incidencia.solicitante_telefono) {
+                    document.getElementById('solicitante_telefono').value = incidencia.solicitante_telefono;
+                }
+                
+                // Establecer el código de teléfono si está disponible
+                console.log('Intentando establecer código de teléfono con valor:', incidencia.solicitante_code);
+                const codigoTelefonoSelect = document.getElementById('solicitante_codigo_telefono');
+                if (codigoTelefonoSelect) {
+                    console.log('Opciones disponibles:', Array.from(codigoTelefonoSelect.options).map(opt => `${opt.value} (${opt.text})`));
+                    if (incidencia.solicitante_code) {
+                        console.log('Estableciendo valor del select a:', incidencia.solicitante_code);
+                        codigoTelefonoSelect.value = incidencia.solicitante_code;
+                        console.log('Valor después de establecer:', codigoTelefonoSelect.value);
+                    } else {
+                        console.warn('solicitante_code está vacío o no está definido');
+                    }
+                } else {
+                    console.error('No se encontró el elemento select con ID "solicitante_codigo_telefono"');
+                }
+                
+                // Establecer la dirección
+                document.getElementById('solicitante_direccion').value = incidencia.solicitante_direccion || '';
+                
+                // Establecer el departamento si está disponible
+                if (incidencia.departamento) {
+                    const departamentoSelect = document.getElementById('departamento');
+                    if (departamentoSelect) {
+                        departamentoSelect.value = incidencia.departamento;
+                    }
+                }
+                
+                // Establecer el tipo de incidencia
+                if (incidencia.tipo_incidencia) {
+                    document.getElementById('tipo_incidencia').value = incidencia.tipo_incidencia;
+                }
 
                 // Detalles de la Incidencia
                 document.getElementById('descripcion').value = incidencia.descripcion;
@@ -818,9 +994,60 @@ async function buscarUsuarioPorCedula() {
     }
 
 
-    // Función para formatear fecha (Mantenida igual)
+    // Función para validar un campo en tiempo real
+    function validarCampo(input) {
+        // Si el campo es requerido y está vacío
+        if (input.required && !input.value.trim()) {
+            input.classList.add('is-invalid');
+            return false;
+        }
+
+        // Validar según el tipo de campo
+        if (input.validity) {
+            if (input.validity.patternMismatch) {
+                input.classList.add('is-invalid');
+                return false;
+            }
+            if (input.validity.tooShort || input.validity.tooLong) {
+                input.classList.add('is-invalid');
+                return false;
+            }
+        }
+
+        // Validación personalizada para el campo de cédula
+        if (input.id === 'solicitante_cedula') {
+            const cedula = input.value.trim();
+            if (cedula.length < 7 || cedula.length > 8 || !/^\d+$/.test(cedula)) {
+                input.classList.add('is-invalid');
+                return false;
+            }
+        }
+
+        // Validación personalizada para el campo de teléfono
+        if (input.id === 'solicitante_telefono') {
+            const telefono = input.value.trim();
+            if (telefono.length !== 7 || !/^\d+$/.test(telefono)) {
+                input.classList.add('is-invalid');
+                return false;
+            }
+        }
+
+        // Validación personalizada para la descripción
+        if (input.id === 'descripcion') {
+            const descripcion = input.value.trim();
+            if (descripcion.length < 10 || descripcion.length > 100) {
+                input.classList.add('is-invalid');
+                return false;
+            }
+        }
+
+        // Si pasa todas las validaciones
+        input.classList.remove('is-invalid');
+        return true;
+    }
+
+    // Función para formatear fecha
     function formatearFecha(fecha) {
-        // ... (El código de esta función se mantiene igual)
         if (!fecha) return 'N/A';
         const date = new Date(fecha);
         return date.toLocaleDateString('es-ES', {
@@ -832,77 +1059,237 @@ async function buscarUsuarioPorCedula() {
         });
     }
 
-    // Funciones para mostrar error y éxito (Mantenidas iguales)
-    function mostrarError(mensaje) {
-        // ... (El código de esta función se mantiene igual)
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-        alertDiv.innerHTML = `
-            ${mensaje}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        const container = document.querySelector('.main-content'); // O el contenedor donde quieras mostrar
-        if(container) {
-            container.insertBefore(alertDiv, container.firstChild);
-        } else {
-            document.body.insertBefore(alertDiv, document.body.firstChild);
-        }
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
+function mostrarDetallesIncidencia(incidencia) {
+const contenido = `
+    <div class="details-container">
+        <div class="detail-section">
+            <h3 class="detail-section-title">
+                <i class="fas fa-clipboard-list"></i>
+                Información Principal
+            </h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">ID de Incidencia</span>
+                    <span class="detail-value detail-id">#${incidencia.id}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tipo de Incidencia</span>
+                    <span class="detail-value">${incidencia.tipo_incidencia}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Estado</span>
+                    <span class="badge-status ${incidencia.estado.toLowerCase().replace(' ', '-')}">${incidencia.estado}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Ubicación del usuario</span>
+                    <span class="detail-value">${incidencia.departamento}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Técnico Asignado</span>
+                    <span class="detail-value ${incidencia.tecnico_nombre ? 'detail-assigned' : 'detail-unassigned'}">
+                        ${incidencia.tecnico_nombre || 'Sin asignar'}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fecha de Creación</span>
+                    <span class="detail-value">${formatearFecha(incidencia.fecha_creacion)}</span>
+                </div>
+            </div>
+        </div>
 
-    function mostrarExito(mensaje) {
-        // ... (El código de esta función se mantiene igual)
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-success alert-dismissible fade show';
-        alertDiv.innerHTML = `
-            ${mensaje}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        const container = document.querySelector('.main-content'); // O el contenedor donde quieras mostrar
-        if(container) {
-            container.insertBefore(alertDiv, container.firstChild);
-        } else {
-            document.body.insertBefore(alertDiv, document.body.firstChild);
-        }
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
+        <div class="detail-section">
+            <h3 class="detail-section-title">
+                <i class="fas fa-align-left"></i>
+                Descripción del Problema
+            </h3>
+            <div class="detail-description">
+                ${incidencia.descripcion}
+            </div>
+        </div>
 
-    // Limpiar formulario al cerrar modal (MODIFICADA para limpiar también el select de técnico)
-    document.getElementById('modalIncidencia').addEventListener('hidden.bs.modal', function() {
-        document.getElementById('formIncidencia').reset();
-        modoEdicion = false;
-        document.getElementById('modalTitulo').textContent = 'Crear Incidencia';
-        document.querySelector('#modalIncidencia .btn-primary-modern').textContent = 'Crear Incidencia';
-        
-        // Limpiar el select de técnico
-        const selectTecnico = document.getElementById('tecnico_asignado_id');
-        if (selectTecnico) selectTecnico.value = '';
+        <div class="detail-section">
+            <h3 class="detail-section-title">
+                <i class="fas fa-user"></i>
+                Información del Solicitante
+            </h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Nombre Completo</span>
+                    <span class="detail-value">${incidencia.solicitante_nombre} ${incidencia.solicitante_apellido || ''}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cédula</span>
+                    <span class="detail-value">${incidencia.solicitante_nacionalidad || ''}${incidencia.solicitante_cedula}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Correo Electrónico</span>
+                    <span class="detail-value detail-email">${incidencia.solicitante_email}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Teléfono</span>
+                    <span class="detail-value">${incidencia.solicitante_telefono || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Dirección</span>
+                    <span class="detail-value">${incidencia.solicitante_direccion || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+    
+document.getElementById('detallesContenido').innerHTML = contenido;
+// Asumiendo que tienes una modal con ID 'modalDetalles' y librería bootstrap cargada
+new bootstrap.Modal(document.getElementById('modalDetalles')).show(); 
+}
 
-        // Restaurar los estados iniciales de los campos del solicitante (readonly por defecto excepto la cédula)
-        const camposSolicitanteRestore = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
-        camposSolicitanteRestore.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                if (id === 'solicitante_cedula') {
-                    el.disabled = false;
-                } else {
-                    // Dejar los demás como readonly por defecto (como en el HTML inicial)
-                    el.readOnly = true;
-                }
-            }
-        });
+// Función para asignar técnico (Mantenida igual, solo corregido el nombre del select)
+function asignarTecnicoIncidencia(id) {
+document.getElementById('incidencia_id_asignar').value = id;
+// Asegurar que el select técnico de la modal de asignación use los datos correctos
+// NOTA: Se asume que existe una MODAL ASIGNAR con un select id='tecnico_id'
+// Si no existe, esta función dará error y la lógica debe integrarse en la modal principal.
+new bootstrap.Modal(document.getElementById('modalAsignar')).show();
+}
+
+async function asignarTecnico() {
+const incidenciaId = document.getElementById('incidencia_id_asignar').value;
+// Se mantiene tecnico_id para la modal de asignación separada
+const tecnicoId = document.getElementById('tecnico_id').value; 
+    
+if (!tecnicoId) {
+    mostrarError('Por favor selecciona un técnico');
+    return;
+}
+    
+try {
+    const formData = new FormData();
+    formData.append('incidencia_id', incidenciaId);
+    // Si el backend espera la cédula, se mantiene como string. Si espera el ID numérico, se mantiene el parseInt.
+    formData.append('tecnico_id', tecnicoId); 
+    formData.append('comentario', 'Asignado por administrador');
+    
+    const response = await fetch('../php/asignar_tecnico.php', {
+    method: 'POST',
+        body: formData
     });
+    
+    // Verificar si la respuesta es JSON válido
+    const responseText = await response.text();
+    let data;
+    
+    try {
+        data = JSON.parse(responseText);
+    } catch (parseError) {
+        console.error('Error al parsear JSON:', parseError);
+        console.error('Respuesta del servidor:', responseText);
+        throw new Error('El servidor devolvió una respuesta inválida. Verifique los logs del servidor.');
+    }
+    
+    if (data.success) {
+        mostrarExito('Técnico asignado exitosamente');
+        bootstrap.Modal.getInstance(document.getElementById('modalAsignar')).hide();
+        cargarIncidencias();
+    } else {
+        mostrarError(data.message || 'Error al asignar técnico');
+    }
+} catch (error) {
+    console.error('Error al asignar técnico:', error);
+    mostrarError('Error al asignar técnico: ' + error.message);
+}
+}
+
+
+// Función para formatear fecha (Mantenida igual)
+function formatearFecha(fecha) {
+// ... (El código de esta función se mantiene igual)
+if (!fecha) return 'N/A';
+const date = new Date(fecha);
+return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+});
+}
+
+// Funciones para mostrar error y éxito (Mantenidas iguales)
+function showGlobalNotification(message, type = 'error') {
+const notification = document.createElement('div');
+const icon = type === 'error' ? 'exclamation-circle' : 'check-circle';
+const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+    
+notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+notification.role = 'alert';
+notification.style.zIndex = '9999';
+notification.style.maxWidth = '90%';
+notification.innerHTML = `
+    <i class='fas fa-${icon} me-2'></i>
+    ${message}
+    <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+`;
+    
+// Agregar al body
+document.body.appendChild(notification);
+    
+// Ocultar después de 5 segundos
+setTimeout(() => {
+    const bsAlert = new bootstrap.Alert(notification);
+    bsAlert.close();
+}, 5000);
+}
+
+// Función para mostrar mensajes de error (mantenida por compatibilidad)
+function mostrarError(mensaje) {
+showGlobalNotification(mensaje, 'error');
+}
+
+// Función para mostrar mensajes de éxito
+function mostrarExito(mensaje) {
+showGlobalNotification(mensaje, 'success');
+}
+
+// Limpiar formulario al cerrar modal (MODIFICADA para limpiar también el select de técnico)
+document.getElementById('modalIncidencia').addEventListener('hidden.bs.modal', function() {
+document.getElementById('formIncidencia').reset();
+modoEdicion = false;
+document.getElementById('modalTitulo').textContent = 'Crear Incidencia';
+document.querySelector('#modalIncidencia .btn-primary-modern').textContent = 'Crear Incidencia';
+    
+// Limpiar el select de técnico
+const selectTecnico = document.getElementById('tecnico_asignado_id');
+if (selectTecnico) selectTecnico.value = '';
+
+// Restaurar los estados iniciales de los campos del solicitante (readonly por defecto excepto la cédula)
+const camposSolicitanteRestore = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
+camposSolicitanteRestore.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        if (id === 'solicitante_cedula') {
+            el.disabled = false;
+        } else {
+            // Dejar los demás como readonly por defecto (como en el HTML inicial)
+            el.readOnly = true;
+        }
+    }
+});
+});
 
     
 </script>
-    <?php include_once('../page/footer.php'); ?>
+    <?php 
+    include_once('../page/header.php');
+    include_once('components/notification.php');
+    
+    // Mostrar notificaciones si existen
+    if (!empty($error_message)) {
+        echo showNotification($error_message, 'error');
+    }
+    if (!empty($success_message)) {
+        echo showNotification($success_message, 'success');
+    }
+    ?>
+    <div class="container-fluid">
 </body>
 </html>
