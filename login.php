@@ -149,10 +149,6 @@
                                 <input type="tel" id="incident-telefono" placeholder="Número de teléfono" pattern="[0-9]{7}" minlength="7" maxlength="7" onkeypress="return isNumberKey(event)" required>
                             </div>
                         </div>
-                        <div class="form-group half-width">
-                            <label for="incident-ubicacion">Ubicación del usuario *</label>
-                            <input type="text" id="incident-ubicacion" placeholder="Departamento/Dirección" maxlength="50" required readonly>
-                        </div>
                     </div>
                     
                     <h3 class="form-section-title">Detalles de la Incidencia</h3>

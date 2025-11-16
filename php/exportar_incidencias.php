@@ -18,7 +18,7 @@ if (!esAdmin() && !esDirector()) {
 }
 
 try {
-    $conexion = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    $conexion = new mysqli(host, user, pass, database);
     
     if ($conexion->connect_error) {
         throw new Exception('Error de conexión a la base de datos');
@@ -26,7 +26,6 @@ try {
     
     // Obtener filtros
     $estado = $_GET['estado'] ?? '';
-    $prioridad = $_GET['prioridad'] ?? '';
     $departamento = $_GET['departamento'] ?? '';
     $fechaDesde = $_GET['fechaDesde'] ?? '';
     
@@ -43,12 +42,6 @@ try {
     if (!empty($estado)) {
         $sql .= " AND i.estado = ?";
         $params[] = $estado;
-        $types .= 's';
-    }
-    
-    if (!empty($prioridad)) {
-        $sql .= " AND i.prioridad = ?";
-        $params[] = $prioridad;
         $types .= 's';
     }
     
@@ -101,7 +94,6 @@ try {
         'Tipo de Incidencia',
         'Departamento',
         'Descripción',
-        'Prioridad',
         'Estado',
         'Técnico Asignado',
         'Fecha de Asignación',
@@ -125,7 +117,6 @@ try {
             $row['tipo_incidencia'],
             $row['departamento'],
             $row['descripcion'],
-            ucfirst($row['prioridad']),
             ucfirst(str_replace('_', ' ', $row['estado'])),
             $row['nombre_tecnico'] ?? '',
             $row['fecha_asignacion'] ? date('d/m/Y H:i', strtotime($row['fecha_asignacion'])) : '',

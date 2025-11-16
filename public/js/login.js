@@ -62,8 +62,6 @@ function applyValidationClass(element, isValid) {
                 message = 'Seleccione un código de teléfono';
             } else if (element.id === 'incident-telefono') {
                 message = 'El teléfono debe tener exactamente 7 dígitos';
-            } else if (element.id === 'incident-ubicacion') {
-                message = 'La ubicación es requerida';
             } else if (element.id === 'incident-tipo') {
                 message = 'Seleccione un tipo de incidencia';
             } else if (element.id === 'incident-descripcion') {
@@ -140,8 +138,7 @@ function fillIncidentFields(data) {
         incidentFields.apellido, 
         incidentFields.email,
         incidentFields.codigoTelefono,
-        incidentFields.telefono, 
-        incidentFields.ubicacion
+        incidentFields.telefono
     ];
 
     if (data) {
@@ -151,7 +148,6 @@ function fillIncidentFields(data) {
         incidentFields.email.value = data.email || '';
         incidentFields.codigoTelefono.value = data.codigo_telefono || '';
         incidentFields.telefono.value = data.telefono || '';
-        incidentFields.ubicacion.value = data.ubicacion || '';
 
         // DESHABILITAR campos porque los datos vienen del sistema
         fieldsToToggle.forEach(field => {
@@ -164,7 +160,6 @@ function fillIncidentFields(data) {
         applyValidationClass(incidentFields.email, true);
         applyValidationClass(incidentFields.codigoTelefono, validatePhoneCode(data.codigo_telefono || ''));
         applyValidationClass(incidentFields.telefono, validatePhone(data.telefono || ''));
-        applyValidationClass(incidentFields.ubicacion, true);
         
     } else {
         // Datos NO encontrados: Limpiar y HABILITAR
@@ -173,7 +168,6 @@ function fillIncidentFields(data) {
         incidentFields.email.value = '';
         incidentFields.codigoTelefono.value = '';
         incidentFields.telefono.value = '';
-        incidentFields.ubicacion.value = '';
 
         // HABILITAR campos para que el usuario los ingrese
         fieldsToToggle.forEach(field => {
@@ -186,7 +180,6 @@ function fillIncidentFields(data) {
         applyValidationClass(incidentFields.email, false);
         applyValidationClass(incidentFields.codigoTelefono, false);
         applyValidationClass(incidentFields.telefono, false);
-        applyValidationClass(incidentFields.ubicacion, false);
     }
 }
 
@@ -312,13 +305,6 @@ function validateAndSubmitIncident(event) {
         return showError('El teléfono debe tener exactamente 7 dígitos', incidentFields.telefono, errorDiv);
     }
 
-    if (!validateRequiredText(incidentFields.ubicacion.value)) {
-        showError('La Ubicación del usuario es requerida (debe autocompletarse).', incidentFields.ubicacion, errorDiv);
-        isValid = false;
-        return;
-    }
-    applyValidationClass(incidentFields.ubicacion, true);
-    
     if (!validateSelect(incidentFields.tipo.value)) {
         showError('Debe seleccionar un Tipo de Incidencia.', incidentFields.tipo, errorDiv);
         isValid = false;
@@ -346,7 +332,6 @@ function validateAndSubmitIncident(event) {
         formData.append('codigo_telefono', incidentFields.codigoTelefono.value);
         formData.append('telefono', incidentFields.telefono.value);
         formData.append('telefono_completo', incidentFields.codigoTelefono.value + incidentFields.telefono.value);
-        formData.append('ubicacion', incidentFields.ubicacion.value);
         formData.append('tipo', incidentFields.tipo.value);
         formData.append('descripcion', incidentFields.descripcion.value);
 
@@ -399,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
         email: document.getElementById('incident-email'),
         codigoTelefono: document.getElementById('incident-codigo-telefono'),
         telefono: document.getElementById('incident-telefono'),
-        ubicacion: document.getElementById('incident-ubicacion'),
         tipo: document.getElementById('incident-tipo'),
         descripcion: document.getElementById('incident-descripcion')
     };
@@ -488,13 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
         incidentFields.telefono.addEventListener('input', () => {
             const isValid = validatePhone(incidentFields.telefono.value);
             applyValidationClass(incidentFields.telefono, isValid);
-        });
-    }
-
-    if (incidentFields.ubicacion) {
-        incidentFields.ubicacion.addEventListener('input', () => {
-            const isValid = validateRequiredText(incidentFields.ubicacion.value);
-            applyValidationClass(incidentFields.ubicacion, isValid);
         });
     }
 

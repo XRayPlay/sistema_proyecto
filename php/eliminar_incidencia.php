@@ -36,7 +36,7 @@ if (!$input || !isset($input['id'])) {
 $id = intval($input['id']);
 
 try {
-    $conexion = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    $conexion = new mysqli(host, user, pass,database);
     
     if ($conexion->connect_error) {
         throw new Exception('Error de conexión a la base de datos');

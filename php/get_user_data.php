@@ -41,8 +41,7 @@ try {
                 solicitante_apellido, 
                 solicitante_email,
                 solicitante_code, 
-                solicitante_telefono, 
-                solicitante_direccion,
+                solicitante_telefono,
                 departamento
             FROM incidencias 
             WHERE solicitante_cedula = ?
@@ -73,7 +72,6 @@ try {
             'email' => $incidente_data['solicitante_email'],
             'codigo_telefono' => $incidente_data['solicitante_code'],
             'telefono' => $incidente_data['solicitante_telefono'], 
-            'ubicacion' => $incidente_data['solicitante_direccion'],
             'departamento' => $incidente_data['departamento']
         ];
     } else {

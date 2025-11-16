@@ -162,7 +162,7 @@ try {
                                        title="Solo se permiten letras y espacios (3-30 caracteres)" 
                                        oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, ''); validarCampo(this);" 
                                        onblur="validarCampo(this)"
-                                       readonly required>
+                                       required>
                                 <div class="invalid-feedback">El nombre debe contener solo letras y espacios (3-30 caracteres)</div>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -172,11 +172,11 @@ try {
                                        pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" 
                                        title="Solo se permiten letras y espacios (3-30 caracteres)" 
                                        oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, '')" 
-                                       readonly required>
+                                       required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="solicitante_email" class="form-label required-field">Correo Electrónico</label>
-                                <input type="email" class="form-control modern-input" id="solicitante_email" name="solicitante_email" readonly required>
+                                <input type="email" class="form-control modern-input" id="solicitante_email" name="solicitante_email" required>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label for="solicitante_codigo_telefono" class="form-label">Código</label>
@@ -199,12 +199,6 @@ try {
                                        onblur="validarCampo(this)"
                                        required>
                                 <div class="invalid-feedback">El teléfono debe tener exactamente 7 dígitos</div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="solicitante_direccion" class="form-label">Dirección</label>
-                                <input type="text" class="form-control modern-input" id="solicitante_direccion" name="solicitante_direccion" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="departamento" class="form-label">Departamento</label>
@@ -237,7 +231,7 @@ try {
                             <textarea class="form-control modern-input" id="descripcion" name="descripcion" rows="6" 
                                 minlength="10" maxlength="100"
                                 placeholder="Describa detalladamente el problema o solicitud (10-100 caracteres). Incluya información como: tipo de problema, departamento afectado, urgencia, etc." 
-                                oninput="if(this.value.length > 100) this.value = this.value.slice(0, 100); contador.textContent = `${this.value.length}/100 caracteres`; validarCampo(this);"
+                                oninput="if(this.value.length > 100) this.value = this.value.slice(0, 100); validarCampo(this);"
                                 onblur="validarCampo(this)"
                                 required></textarea>
                             <div class="d-flex justify-content-between">
@@ -499,17 +493,20 @@ async function buscarUsuarioPorCedula() {
     const cedula = document.getElementById('solicitante_cedula').value.trim();
     
     // 1. Limpiar y establecer campos como NO readonly si no se encuentra
-    const camposSolicitante = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_codigo_telefono', 'solicitante_telefono', 'solicitante_direccion'];
+    const camposSolicitante = ['solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_codigo_telefono', 'solicitante_telefono'];
 
     function resetearCampos(esEncontrado) {
         camposSolicitante.forEach(id => {
             const campo = document.getElementById(id);
+            if (!campo) return;
+
             if (!esEncontrado) {
-                campo.value = ''; // Limpiar si no se encontró o se está reseteando
-                try { campo.readOnly = false; } catch(e) {}
+                campo.value = '';
+                campo.readOnly = false;
+                campo.disabled = false;
             } else {
-                // Si se encontró, mantener los campos como solo lectura
-                try { campo.readOnly = true; } catch(e) {}
+                campo.readOnly = false;
+                campo.disabled = false;
             }
         });
     }
@@ -526,7 +523,6 @@ async function buscarUsuarioPorCedula() {
         try {
             // Mostrar spinner y deshabilitar la cédula mientras se busca
             if (spinner) spinner.style.display = 'inline-block';
-            if (cedulaInput) cedulaInput.disabled = true;
 
             const formData = new FormData();
             formData.append('cedula', cedula);
@@ -556,9 +552,6 @@ async function buscarUsuarioPorCedula() {
                 // Rellenar número de teléfono
                 document.getElementById('solicitante_telefono').value = usuario.telefono || '';
                 
-                // Rellenar departamento (ubicación)
-                document.getElementById('solicitante_direccion').value = usuario.ubicacion || '';
-                
                 // Rellenar departamento si está disponible
                 if (usuario.departamento) {
                     const departamentoSelect = document.getElementById('departamento');
@@ -575,7 +568,7 @@ async function buscarUsuarioPorCedula() {
                     }
                 }
 
-                // Poner campos como readonly para evitar edición accidental
+                // Permitir edición aun cuando los datos provengan del historial
                 resetearCampos(true);
             } else {
                 // Usuario no encontrado: Limpiar y permitir ingreso manual
@@ -588,7 +581,11 @@ async function buscarUsuarioPorCedula() {
             resetearCampos(false);
         } finally {
             if (spinner) spinner.style.display = 'none';
-            if (cedulaInput) cedulaInput.disabled = false;
+            if (cedulaInput) {
+                cedulaInput.focus();
+                const len = cedulaInput.value.length;
+                cedulaInput.setSelectionRange(len, len);
+            }
         }
     } catch (error) {
         console.error('Error al buscar usuario:', error);
@@ -604,6 +601,21 @@ async function buscarUsuarioPorCedula() {
         const form = document.getElementById('formIncidencia');
         const formData = new FormData(form);
 
+        const mensajeConfirm = modoEdicion
+            ? '¿Está seguro de que desea actualizar esta incidencia?'
+            : '¿Está seguro de que desea crear esta incidencia?';
+
+        const confirmado = await mostrarConfirmacionPersonalizada({
+            titulo: modoEdicion ? 'Confirmar actualización' : 'Confirmar creación',
+            mensaje: mensajeConfirm,
+            textoConfirmar: modoEdicion ? 'Actualizar' : 'Crear',
+            textoCancelar: 'Cancelar'
+        });
+
+        if (!confirmado) {
+            return false;
+        }
+
         // Los campos deshabilitados (disabled) no se incluyen en FormData.
         // Cuando estamos en modo edición la cédula del solicitante se deshabilita para evitar cambios,
         // por lo que debemos añadirla manualmente si está deshabilitada.
@@ -613,7 +625,7 @@ async function buscarUsuarioPorCedula() {
         }
 
         // Validar campos requeridos
-    const camposRequeridos = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_codigo_telefono', 'solicitante_telefono', 'solicitante_direccion', 'tipo_incidencia', 'descripcion'];
+    const camposRequeridos = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_codigo_telefono', 'solicitante_telefono', 'tipo_incidencia', 'descripcion'];
     for (const campoId of camposRequeridos) {
         const campo = document.getElementById(campoId);
         if (campo && campo.required && !campo.value.trim()) {
@@ -755,8 +767,6 @@ async function buscarUsuarioPorCedula() {
                     console.error('No se encontró el elemento select con ID "solicitante_codigo_telefono"');
                 }
                 
-                // Establecer la dirección
-                document.getElementById('solicitante_direccion').value = incidencia.solicitante_direccion || '';
                 
                 // Establecer el departamento si está disponible
                 if (incidencia.departamento) {
@@ -796,23 +806,14 @@ async function buscarUsuarioPorCedula() {
                 document.querySelector('#modalIncidencia .btn-primary-modern').textContent = 'Actualizar Incidencia';
                 modoEdicion = true;
 
-                // Poner campos del solicitante como solo lectura para preservar historial
-                const camposSolicitante = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
-                camposSolicitante.forEach(id => {
+                // Asegurar que todos los campos queden editables en modo edición
+                ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
-                        // La cédula la dejamos deshabilitada para evitar cambios de referencia
-                        if (id === 'solicitante_cedula') {
-                            el.disabled = true;
-                        } else {
-                            el.readOnly = true;
-                        }
+                        el.disabled = false;
+                        el.readOnly = false;
                     }
                 });
-                
-                // Ocultar el campo de asignar técnico en la modal de edición para evitar errores de doble asignación
-                // Si el técnico ya está asignado, solo se muestra. Si no lo está, se puede asignar.
-                // Sin embargo, para simplificar y cumplir con el requisito, rellenamos el select.
 
                 new bootstrap.Modal(document.getElementById('modalIncidencia')).show();
             } else {
@@ -825,11 +826,62 @@ async function buscarUsuarioPorCedula() {
     }
 
 
+    async function eliminarIncidencia(id) {
+        if (!id) {
+            mostrarError('ID de incidencia no válido.');
+            return;
+        }
+
+        const confirmado = await mostrarConfirmacionPersonalizada({
+            titulo: 'Eliminar incidencia',
+            mensaje: `¿Desea eliminar la incidencia #${id}? Esta acción no se puede deshacer.`,
+            textoConfirmar: 'Eliminar',
+            textoCancelar: 'Cancelar',
+            tipo: 'danger'
+        });
+
+        if (!confirmado) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'eliminar');
+        formData.append('id', id);
+
+        try {
+            const response = await fetch('../php/gestionar_incidencias_crud.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const responseText = await response.text();
+            let data;
+
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Error al parsear JSON al eliminar incidencia:', parseError);
+                console.error('Respuesta del servidor:', responseText);
+                throw new Error('El servidor devolvió una respuesta inválida. Verifique los logs.');
+            }
+
+            if (data.success) {
+                mostrarExito(data.message || 'Incidencia eliminada exitosamente');
+                cargarIncidencias();
+            } else {
+                mostrarError(data.message || 'No se pudo eliminar la incidencia');
+            }
+        } catch (error) {
+            console.error('Error al eliminar incidencia:', error);
+            mostrarError('Error al eliminar incidencia: ' + error.message);
+        }
+    }
+
+
     // --- Funciones de Utilidad ---
 
     // Función para ver detalles (Mantenida igual, solo se actualiza el campo 'Piso' a 'N/A' si no existe)
     async function verDetallesIncidencia(id) {
-        // ... (El código de esta función se mantiene igual, se asume que solicitante_extension se cambió por solicitante_direccion en la base de datos o se omitirá)
         try {
             const formData = new FormData();
             formData.append('action', 'obtener_por_id');
@@ -922,10 +974,6 @@ async function buscarUsuarioPorCedula() {
                         <div class="detail-item">
                             <span class="detail-label">Teléfono</span>
                             <span class="detail-value">${incidencia.solicitante_telefono || 'N/A'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Dirección</span>
-                            <span class="detail-value">${incidencia.solicitante_direccion || 'N/A'}</span>
                         </div>
                     </div>
                 </div>
@@ -1129,10 +1177,6 @@ const contenido = `
                     <span class="detail-label">Teléfono</span>
                     <span class="detail-value">${incidencia.solicitante_telefono || 'N/A'}</span>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Dirección</span>
-                    <span class="detail-value">${incidencia.solicitante_direccion || 'N/A'}</span>
-                </div>
             </div>
         </div>
     </div>
@@ -1250,6 +1294,63 @@ function mostrarExito(mensaje) {
 showGlobalNotification(mensaje, 'success');
 }
 
+// Función genérica para confirmaciones personalizadas
+function mostrarConfirmacionPersonalizada({ titulo = 'Confirmar', mensaje = '¿Desea continuar?', textoConfirmar = 'Aceptar', textoCancelar = 'Cancelar', tipo = 'primary' } = {}) {
+    return new Promise((resolve) => {
+        const modalId = 'modalConfirmacionPersonalizada';
+        let modalExistente = document.getElementById(modalId);
+
+        if (modalExistente) {
+            modalExistente.remove();
+        }
+
+        const modalWrapper = document.createElement('div');
+        modalWrapper.innerHTML = `
+            <div class="modal fade" id="${modalId}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${titulo}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-0">${mensaje}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${textoCancelar}</button>
+                            <button type="button" class="btn btn-${tipo}" id="btnConfirmarPersonalizado">${textoConfirmar}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modalWrapper);
+        const modalElement = document.getElementById(modalId);
+        const modalBootstrap = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        const confirmarBtn = modalElement.querySelector('#btnConfirmarPersonalizado');
+        const cerrar = () => {
+            modalBootstrap.hide();
+        };
+
+        confirmarBtn.addEventListener('click', () => {
+            resolve(true);
+            cerrar();
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            resolve(false);
+            modalElement.remove();
+        }, { once: true });
+
+        modalBootstrap.show();
+    });
+}
+
 // Limpiar formulario al cerrar modal (MODIFICADA para limpiar también el select de técnico)
 document.getElementById('modalIncidencia').addEventListener('hidden.bs.modal', function() {
 document.getElementById('formIncidencia').reset();
@@ -1261,17 +1362,14 @@ document.querySelector('#modalIncidencia .btn-primary-modern').textContent = 'Cr
 const selectTecnico = document.getElementById('tecnico_asignado_id');
 if (selectTecnico) selectTecnico.value = '';
 
-// Restaurar los estados iniciales de los campos del solicitante (readonly por defecto excepto la cédula)
-const camposSolicitanteRestore = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono', 'solicitante_direccion'];
+// Restaurar los estados iniciales de los campos del solicitante (todos editables)
+const camposSolicitanteRestore = ['solicitante_cedula', 'solicitante_nombre', 'solicitante_apellido', 'solicitante_email', 'solicitante_telefono'];
 camposSolicitanteRestore.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-        if (id === 'solicitante_cedula') {
-            el.disabled = false;
-        } else {
-            // Dejar los demás como readonly por defecto (como en el HTML inicial)
-            el.readOnly = true;
-        }
+        el.disabled = false;
+        el.readOnly = false;
+        el.value = '';
     }
 });
 });

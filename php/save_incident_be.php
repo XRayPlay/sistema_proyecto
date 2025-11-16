@@ -18,20 +18,19 @@ if ($conexion->connect_error) {
 }
 
 // 1. Obtener y sanear todos los datos del formulario (desde el POST de JS)
-// Nota: 'ubicacion' del JS se mapea a 'solicitante_direccion' aquí.
+// Nota: ya no se recibe ubicación/departamento desde el login.
 $nombre = isset($_POST['nombre']) ? $conexion->real_escape_string(trim($_POST['nombre'])) : '';
+
 $apellido = isset($_POST['apellido']) ? $conexion->real_escape_string(trim($_POST['apellido'])) : '';
 $cedula = isset($_POST['cedula']) ? $conexion->real_escape_string(trim($_POST['cedula'])) : '';
 $email = isset($_POST['email']) ? $conexion->real_escape_string(trim($_POST['email'])) : '';
 $codigo_telefono = isset($_POST['codigo_telefono']) ? $conexion->real_escape_string(trim($_POST['codigo_telefono'])) : '';
 $telefono = isset($_POST['telefono']) ? $conexion->real_escape_string(trim($_POST['telefono'])) : '';
-$ubicacion = isset($_POST['ubicacion']) ? $conexion->real_escape_string(trim($_POST['ubicacion'])) : ''; // Dirección
 $tipo = isset($_POST['tipo']) ? $conexion->real_escape_string(trim($_POST['tipo'])) : '';
 $descripcion = isset($_POST['descripcion']) ? $conexion->real_escape_string(trim($_POST['descripcion'])) : '';
 
 // 2. Definir valores por defecto y automáticos
 $fecha_creacion = date('Y-m-d H:i:s');
-$prioridad_inicial = 'Baja'; 
 
 // ----------------------------------------------------
 // 🔑 LÓGICA DE ASIGNACIÓN DE TÉCNICO (Tabla 'user')
@@ -70,11 +69,9 @@ $sql_insert_incident = "INSERT INTO incidencias (
  solicitante_cedula, 
  solicitante_email, 
  solicitante_code, 
- solicitante_telefono, 
- solicitante_direccion, 
+ solicitante_telefono,
  tipo_incidencia, 
  descripcion, 
- prioridad, 
  estado,
     tecnico_asignado,       /* Campo en tabla incidencias */
     fecha_asignacion,       /* Campo en tabla incidencias */
@@ -89,10 +86,8 @@ VALUES (
  '$email', 
  '$codigo_telefono', 
  '$telefono', 
- '$ubicacion', 
  '$tipo', 
  '$descripcion', 
- '$prioridad_inicial', 
  '$estado_asignacion', 
     $tecnico_asignado_id,   
     $fecha_asignacion,      
