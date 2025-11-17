@@ -36,22 +36,11 @@ $query_incidencias = "SELECT i.*,
                                  WHEN i.estado = 'resuelta' THEN 'Resuelta'
                                  WHEN i.estado = 'cerrada' THEN 'Cerrada'
                                  ELSE i.estado
-                             END as estado_formateado,
-                             CASE 
-                                 WHEN i.prioridad = 'baja' THEN 'Baja'
-                                 WHEN i.prioridad = 'media' THEN 'Media'
-                                 WHEN i.prioridad = 'alta' THEN 'Alta'
-                                 ELSE i.prioridad
-                             END as prioridad_formateada
+                             END as estado_formateado
                       FROM incidencias i 
                       WHERE i.tecnico_asignado = ? 
                       ORDER BY 
-                          CASE i.prioridad 
-                              WHEN 'alta' THEN 1
-                              WHEN 'media' THEN 2
-                              WHEN 'baja' THEN 3
-                              ELSE 4
-                          END,
+                          
                           i.fecha_creacion DESC 
                       LIMIT 10";
 
@@ -1120,7 +1109,6 @@ mysqli_close($conexion);
                                     <tr><td><strong>Nombre:</strong></td><td>${incidencia.solicitante_nombre}</td></tr>
                                     <tr><td><strong>Email:</strong></td><td>${incidencia.solicitante_email}</td></tr>
                                     <tr><td><strong>Teléfono:</strong></td><td>${incidencia.solicitante_telefono}</td></tr>
-                                    <tr><td><strong>Dirección:</strong></td><td>${incidencia.solicitante_direccion}</td></tr>
                                     <tr><td><strong>Extensión:</strong></td><td>${incidencia.solicitante_extension}</td></tr>
                                 </table>
                             </div>

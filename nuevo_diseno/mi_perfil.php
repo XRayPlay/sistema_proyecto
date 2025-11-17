@@ -61,8 +61,20 @@ include('../page/menu.php');
                             <input type="text" id="cedula" name="cedula" class="form-control" required pattern="[0-9]{7,8}">
                         </div>
                         <div class="mb-3">
+                            <label for="code_phone" class="form-label">Código de Teléfono</label>
+                            <select class="form-select" id="code_phone" name="code_phone" required>
+                                <option value="">Seleccionar código</option>
+                                <option value="412">412</option>
+                                <option value="414">414</option>
+                                <option value="416">416</option>
+                                <option value="422">422</option>
+                                <option value="424">424</option>
+                                <option value="426">426</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="text" id="telefono" name="telefono" class="form-control" required pattern="[0-9]{10,11}">
+                            <input type="text" id="telefono" name="telefono" class="form-control" required pattern="[0-9]{7}">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -94,8 +106,73 @@ include('../page/menu.php');
     </div>
 </main>
 
+<!-- Modal de confirmación personalizada -->
+<div class="modal fade" id="modalConfirmacionPerfil" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmacionPerfilTitulo">Confirmar acción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmacionPerfilMensaje" class="mb-0">¿Deseas continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btnPerfilCancelar" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnPerfilConfirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+function mostrarModalConfirmacionPerfil({ titulo, mensaje, textoConfirmar = 'Confirmar', textoCancelar = 'Cancelar' }) {
+    return new Promise((resolve) => {
+        const modalEl = document.getElementById('modalConfirmacionPerfil');
+        const tituloEl = document.getElementById('confirmacionPerfilTitulo');
+        const mensajeEl = document.getElementById('confirmacionPerfilMensaje');
+        const btnConfirmar = document.getElementById('btnPerfilConfirmar');
+        const btnCancelar = document.getElementById('btnPerfilCancelar');
+
+        tituloEl.textContent = titulo || 'Confirmar acción';
+        mensajeEl.textContent = mensaje || '¿Deseas continuar?';
+        btnConfirmar.textContent = textoConfirmar;
+        btnCancelar.textContent = textoCancelar;
+
+        const confirmModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        const handleConfirm = () => {
+            cleanup();
+            confirmModal.hide();
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            cleanup();
+            confirmModal.hide();
+            resolve(false);
+        };
+
+        const handleHidden = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        function cleanup() {
+            btnConfirmar.removeEventListener('click', handleConfirm);
+            btnCancelar.removeEventListener('click', handleCancel);
+            modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+        }
+
+        btnConfirmar.addEventListener('click', handleConfirm, { once: true });
+        btnCancelar.addEventListener('click', handleCancel, { once: true });
+        modalEl.addEventListener('hidden.bs.modal', handleHidden, { once: true });
+
+        confirmModal.show();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function(){
     const form = document.getElementById('perfilForm');
     const msg = document.getElementById('msgResult');
@@ -110,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function(){
             document.getElementById('apellido').value = u.apellido || '';
             document.getElementById('email').value = u.email || '';
             document.getElementById('cedula').value = u.cedula || '';
+            document.getElementById('code_phone').value = u.code_phone || '';
             document.getElementById('telefono').value = u.telefono || '';
             document.getElementById('birthday').value = u.birthday || '';
             document.getElementById('address').value = u.address || '';
@@ -119,9 +197,21 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     }).catch(err => { console.error(err); msg.innerText = 'Error al cargar datos'; msg.className = 'text-danger'; });
 
-    form.addEventListener('submit', function(e){
+    form.addEventListener('submit', async function(e){
         e.preventDefault();
         msg.innerText = '';
+
+        const confirmado = await mostrarModalConfirmacionPerfil({
+            titulo: 'Confirmar actualización',
+            mensaje: '¿Deseas actualizar tu perfil con la información ingresada?',
+            textoConfirmar: 'Sí, actualizar',
+            textoCancelar: 'No, cancelar'
+        });
+
+        if (!confirmado) {
+            return;
+        }
+
         const formData = new FormData(form);
 
         // Enviar por fetch

@@ -9,8 +9,8 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-// Verificar permisos de administrador o director
-if (!esAdmin() && !esDirector()) {
+// Verificar permisos de administrador, director o analista
+if (!esAdmin() && !esDirector() && !esAnalista()) {
     header("Location: ../index.php");
     exit();
 }
@@ -113,6 +113,7 @@ try {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div id="formTecnicoAlerta" class="alert alert-danger d-none"></div>
                     <form id="formTecnico">
                         <input type="hidden" id="tecnico_id" name="tecnico_id">
                         <div class="row">
@@ -120,13 +121,13 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nombre" class="form-label">Nombre</label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre" minlength="3"  required>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" minlength="3" maxlength="30" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="apellido" class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" id="apellido" name="apellido" minlength="3"  required>
+                                    <input type="text" class="form-control" id="apellido" name="apellido" minlength="3" maxlength="30" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -137,8 +138,22 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="code_phone" class="form-label">Código de Teléfono</label>
+                                    <select class="form-select" id="code_phone" name="code_phone" required>
+                                        <option value="">Seleccionar código</option>
+                                        <option value="412">412</option>
+                                        <option value="414">414</option>
+                                        <option value="416">416</option>
+                                        <option value="422">422</option>
+                                        <option value="424">424</option>
+                                        <option value="426">426</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="tel" class="form-control" id="telefono" name="telefono" minlength="10"  required>
+                                    <input type="tel" class="form-control" id="telefono" name="telefono" minlength="7" maxlength="7" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -165,9 +180,9 @@ try {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="sexo" class="form-label">Sexo</label>
+                                        <label for="sexo" class="form-label">Genero</label>
                                         <select class="form-select" id="sexo" name="sexo" required>
-                                            <option value="">Seleccionar sexo</option>
+                                            <option value="">Seleccionar Genero</option>
                                             <option value="Masculino">Masculino</option>
                                             <option value="Femenino">Femenino</option>
                                         </select>
@@ -193,12 +208,14 @@ try {
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6 d-none" id="estadoTecnicoGroup">
                                 <div class="mb-3">
-                                    <label for="address" class="form-label">Dirección</label>
-                                        <textarea class="form-control" id="address" name="address" rows="2" minlength="20" " required></textarea>
+                                    <label for="id_status_user" class="form-label">Estado</label>
+                                    <select class="form-select" id="id_status_user" name="id_status_user">
+                                        <option value="1">Activo</option>
+                                        <option value="2">Ocupado</option>
+                                        <option value="3">Ausente</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -221,6 +238,25 @@ try {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="guardarTecnico()">Crear Técnico</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación personalizada -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmacionTitulo">Confirmar acción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmacionMensaje" class="mb-0">¿Deseas continuar?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarAccion" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarAccion">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -276,14 +312,13 @@ try {
         };
 
         // Aplicar límites máximos (según tu solicitud)
-        applyMaxLengthRestriction('nombre', 50);
-        applyMaxLengthRestriction('apellido', 50);
+        applyMaxLengthRestriction('nombre', 30);
+        applyMaxLengthRestriction('apellido', 30);
         applyMaxLengthRestriction('email', 50);
         applyMaxLengthRestriction('password', 15);
         applyMaxLengthRestriction('confirmar_password', 15);
-        applyMaxLengthRestriction('telefono', 11); // El máximo es 11
+        applyMaxLengthRestriction('telefono', 7); // El máximo es 7
         applyMaxLengthRestriction('cedula', 8);   // El máximo es 8
-        applyMaxLengthRestriction('address', 100);
         // Establecer rango de fecha de nacimiento: mínimo 80 años, máximo 18 años
         const birthdayInput = document.getElementById('birthday');
         if (birthdayInput) {
@@ -301,12 +336,13 @@ try {
             birthdayInput.setAttribute('max', maxDate);
         }
 
-        // Máscara y formato visual para el teléfono: sólo dígitos y espacios cada 3 caracteres
+        // Máscara y formato visual para el teléfono: sólo dígitos con tope 7
         const telefonoInput = document.getElementById('telefono');
         if (telefonoInput) {
             telefonoInput.addEventListener('input', (e) => {
-                // Mantener sólo dígitos y truncar a 11
-                let digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                // Mantener sólo dígitos y truncar a 7
+                let digits = e.target.value.replace(/\D/g, '').slice(0, 7);
+                e.target.value = digits;
             });
             // Al perder el foco, quitar espacios al inicio/fin
             telefonoInput.addEventListener('blur', (e) => {
@@ -337,6 +373,7 @@ try {
         asignarValidaciones();
 
         cargarTecnicos();
+        inicializarValidacionTiempoReal('formTecnico', validarFormularioTecnico);
         console.log('🚀 Panel de técnicos modernizado inicializado correctamente');
     });
 // ---
@@ -405,6 +442,7 @@ function soloNumeros(event) {
 function resetModalTecnico() {
     const form = document.getElementById('formTecnico');
     form.reset();
+    ocultarErroresModal('formTecnicoAlerta');
     document.getElementById('tecnico_id').value = '';
     document.getElementById('modalTitulo').textContent = 'Crear Técnico';
     document.querySelector('#modalTecnico .btn-primary').textContent = 'Crear Técnico';
@@ -420,6 +458,10 @@ function resetModalTecnico() {
     // Mostrar campos de contraseña para el modo Crear
     passwordInput.closest('.col-md-6').style.display = 'block';
     confirmPasswordInput.closest('.col-md-6').style.display = 'block';
+    const estadoGroup = document.getElementById('estadoTecnicoGroup');
+    const estadoSelect = document.getElementById('id_status_user');
+    if (estadoGroup) estadoGroup.classList.add('d-none');
+    if (estadoSelect) estadoSelect.value = '1';
     
     modoEdicion = false;
 }
@@ -462,7 +504,15 @@ async function abrirModalTecnico(modo, tecnico = null) {
         // **NUEVOS CAMPOS**
         document.getElementById('birthday').value = tecnico.birthday || '';
         document.getElementById('sexo').value = tecnico.sexo || '';
-        document.getElementById('address').value = tecnico.address || '';
+        document.getElementById('code_phone').value = tecnico.code_phone || '';
+        const estadoSelect = document.getElementById('id_status_user');
+        const estadoGroup = document.getElementById('estadoTecnicoGroup');
+        if (estadoSelect) {
+            estadoSelect.value = (tecnico.id_status_user ?? 1).toString();
+        }
+        if (estadoGroup) {
+            estadoGroup.classList.remove('d-none');
+        }
         // Nota: El campo 'file' (avatar) no se puede prellenar por seguridad.
     }
     
@@ -500,7 +550,7 @@ async function cargarTecnicos() {
                         <td>${tecnico.nombre} ${tecnico.apellido}</td>
                         <td>${tecnico.especialidad}</td>
                         <td>${tecnico.email}</td>
-                        <td>${tecnico.telefono}</td>
+                        <td>${tecnico.code_phone ? `(${tecnico.code_phone}) ` : ''}${tecnico.telefono}</td>
                         <td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td>
                         <td>${formatearFecha(tecnico.fecha_registro)}</td>
                         <td>
@@ -575,10 +625,9 @@ function mostrarDetallesTecnico(tecnico) {
             
             <tr><td><strong>F. Nacimiento:</strong></td><td>${tecnico.birthday || 'No especificado'}</td></tr>
             <tr><td><strong>Sexo:</strong></td><td>${tecnico.sexo || 'No especificado'}</td></tr>
-            <tr><td><strong>Dirección:</strong></td><td>${tecnico.address || 'No especificado'}</td></tr>
             
             <tr><td><strong>Email:</strong></td><td>${tecnico.email}</td></tr>
-            <tr><td><strong>Teléfono:</strong></td><td>${tecnico.telefono}</td></tr>
+            <tr><td><strong>Teléfono:</strong></td><td>${tecnico.code_phone ? `(${tecnico.code_phone}) ` : ''}${tecnico.telefono}</td></tr>
             <tr><td><strong>Especialidad:</strong></td><td>${tecnico.especialidad}</td></tr>
             <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td></tr>
             <tr><td><strong>Fecha de Registro:</strong></td><td>${formatearFecha(tecnico.fecha_registro)}</td></tr>
@@ -648,83 +697,19 @@ async function eliminarTecnico(id) {
 
 // Función para guardar (crear o actualizar) técnico
 async function guardarTecnico() {
-    const form = document.getElementById('formTecnico');
-    
-    // Ejecutar la validación nativa de HTML5 para campos 'required'
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        mostrarError('Por favor, rellena todos los campos obligatorios.');
+    if (!validarFormularioTecnico(true)) {
         return;
-    }
-    // Validaciones de longitud mín/máx específicas
-    const nombre = document.getElementById('nombre').value.trim();
-    const apellido = document.getElementById('apellido').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const cedula = document.getElementById('cedula').value.trim();
-    const address = document.getElementById('address').value.trim();
-    const birthday = document.getElementById('birthday').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmar_password').value;
-
-    if (nombre.length < 3 || nombre.length > 50) {
-        mostrarError('El nombre debe tener entre 3 y 50 caracteres.');
-        form.classList.add('was-validated');
-        return;
-    }
-    if (apellido.length < 3 || apellido.length > 50) {
-        mostrarError('El apellido debe tener entre 3 y 50 caracteres.');
-        form.classList.add('was-validated');
-        return;
-    }
-    // Teléfono: entre 10 y 11 caracteres
-    const telefonoVal = document.getElementById('telefono').value.trim();
-    if (telefonoVal.length < 10 || telefonoVal.length > 11) {
-        mostrarError('El teléfono debe tener entre 10 y 11 caracteres.');
-        form.classList.add('was-validated');
-        return;
-    }
-    if (email.length < 13 || email.length > 50) {
-        mostrarError('El email debe tener entre 13 y 50 caracteres.');
-        form.classList.add('was-validated');
-        return;
-    }
-    if (cedula.length < 7 || cedula.length > 8) {
-        mostrarError('La cédula debe tener entre 7 y 8 caracteres.');
-        form.classList.add('was-validated');
-        return;
-    }
-    if (address.length < 20 || address.length > 100) {
-        mostrarError('La dirección debe tener entre 20 y 100 caracteres.');
-        form.classList.add('was-validated');
-        return;
-    }
-    if (!birthday) {
-        mostrarError('La fecha de nacimiento es obligatoria.');
-        form.classList.add('was-validated');
-        return;
-    }
-    // Validar que la birthday esté dentro del rango permitido (min/max atributos)
-    const birthdayEl = document.getElementById('birthday');
-    if (birthdayEl) {
-        const min = birthdayEl.min; // YYYY-MM-DD
-        const max = birthdayEl.max;
-        if (birthday < min || birthday > max) {
-            mostrarError('La fecha de nacimiento debe estar entre ' + min + ' y ' + max + ' (edad entre 18 y 80 años).');
-            form.classList.add('was-validated');
-            return;
-        }
     }
 
-    // Validar contraseñas
-    if (password !== confirmPassword) {
-        mostrarError('Las contraseñas no coinciden.');
+    const confirmado = await mostrarModalConfirmacion({
+        titulo: modoEdicion ? 'Confirmar actualización' : 'Confirmar registro',
+        mensaje: modoEdicion ? '¿Deseas actualizar la información de este técnico?' : '¿Deseas registrar a este nuevo técnico?',
+        textoConfirmar: modoEdicion ? 'Sí, actualizar' : 'Sí, registrar',
+        textoCancelar: 'No, cancelar'
+    });
+
+    if (!confirmado) {
         return;
-    }
-    if (!modoEdicion || (modoEdicion && password.length > 0)) {
-        if (password.length < 7 || password.length > 15) {
-            mostrarError('La contraseña debe tener entre 7 y 15 caracteres.');
-            return;
-        }
     }
 
     // Antes de construir formData asegurarnos que el teléfono se envíe sólo con dígitos (sin espacios)
@@ -733,6 +718,7 @@ async function guardarTecnico() {
         telefonoEl.value = telefonoEl.value.replace(/\D/g, '');
     }
 
+    const form = document.getElementById('formTecnico');
     const formData = new FormData(form);
     
     if (modoEdicion) {
@@ -892,6 +878,151 @@ function mostrarExito(mensaje) {
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
+}
+
+function mostrarErroresModal(alertaId, errores) {
+    const alerta = document.getElementById(alertaId);
+    if (!alerta) return;
+    alerta.innerHTML = errores.map(err => `<div>${err}</div>`).join('');
+    alerta.classList.remove('d-none');
+}
+
+function ocultarErroresModal(alertaId) {
+    const alerta = document.getElementById(alertaId);
+    if (!alerta) return;
+    alerta.classList.add('d-none');
+    alerta.innerHTML = '';
+}
+
+function inicializarValidacionTiempoReal(formId, fnValidar) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    const controls = form.querySelectorAll('input, select, textarea');
+    controls.forEach(ctrl => {
+        ['input', 'change', 'blur'].forEach(evt => {
+            ctrl.addEventListener(evt, () => fnValidar(true));
+        });
+    });
+}
+
+function validarFormularioTecnico(mostrarErrores = false) {
+    const errores = [];
+    const form = document.getElementById('formTecnico');
+    if (!form) return true;
+
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const emailInput = document.getElementById('email');
+    const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+    if (emailInput) {
+        emailInput.value = email;
+    }
+    const cedula = document.getElementById('cedula').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const codePhone = document.getElementById('code_phone').value.trim();
+    const birthday = document.getElementById('birthday').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmarPassword = document.getElementById('confirmar_password').value;
+    const estadoSelect = document.getElementById('id_status_user');
+    const estadoVal = estadoSelect ? estadoSelect.value : '1';
+
+    if (nombre.length < 3 || nombre.length > 30) {
+        errores.push('El nombre debe tener entre 3 y 30 caracteres.');
+    }
+    if (apellido.length < 3 || apellido.length > 30) {
+        errores.push('El apellido debe tener entre 3 y 30 caracteres.');
+    }
+    if (email.length < 13 || email.length > 50) {
+        errores.push('El email debe tener entre 13 y 50 caracteres.');
+    }
+    if (!email.endsWith('.com')) {
+        errores.push('El email debe terminar en ".com".');
+    }
+    if (cedula.length < 7 || cedula.length > 8) {
+        errores.push('La cédula debe tener entre 7 y 8 caracteres.');
+    }
+    if (telefono.length !== 7) {
+        errores.push('El teléfono debe tener exactamente 7 caracteres.');
+    }
+    if (!codePhone) {
+        errores.push('Seleccione un código de teléfono.');
+    }
+    if (!birthday) {
+        errores.push('La fecha de nacimiento es obligatoria.');
+    }
+    if (!['1','2','3'].includes(estadoVal)) {
+        errores.push('Debe seleccionar un estado válido.');
+    }
+
+    if (!modoEdicion || (modoEdicion && password.length > 0)) {
+        if (password.length < 7 || password.length > 15) {
+            errores.push('La contraseña debe tener entre 7 y 15 caracteres.');
+        }
+        if (password !== confirmarPassword) {
+            errores.push('Las contraseñas no coinciden.');
+        }
+    } else if (confirmarPassword.length > 0 && password.length === 0) {
+        errores.push('Si desea cambiar la contraseña debe completar ambos campos.');
+    }
+
+    if (errores.length > 0) {
+        form.classList.add('was-validated');
+        if (mostrarErrores) {
+            mostrarErroresModal('formTecnicoAlerta', errores);
+        }
+        return false;
+    }
+
+    form.classList.remove('was-validated');
+    if (mostrarErrores) ocultarErroresModal('formTecnicoAlerta');
+    return true;
+}
+
+// Modal de confirmación reutilizable
+function mostrarModalConfirmacion({ titulo, mensaje, textoConfirmar = 'Confirmar', textoCancelar = 'Cancelar' }) {
+    return new Promise((resolve) => {
+        const modalEl = document.getElementById('modalConfirmacion');
+        const tituloEl = document.getElementById('confirmacionTitulo');
+        const mensajeEl = document.getElementById('confirmacionMensaje');
+        const btnConfirmar = document.getElementById('btnConfirmarAccion');
+        const btnCancelar = document.getElementById('btnCancelarAccion');
+
+        tituloEl.textContent = titulo || 'Confirmar acción';
+        mensajeEl.textContent = mensaje || '¿Deseas continuar?';
+        btnConfirmar.textContent = textoConfirmar;
+        btnCancelar.textContent = textoCancelar;
+
+        const confirmModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        const handleConfirm = () => {
+            cleanup();
+            confirmModal.hide();
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            cleanup();
+            confirmModal.hide();
+            resolve(false);
+        };
+
+        const handleHidden = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        function cleanup() {
+            btnConfirmar.removeEventListener('click', handleConfirm);
+            btnCancelar.removeEventListener('click', handleCancel);
+            modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+        }
+
+        btnConfirmar.addEventListener('click', handleConfirm, { once: true });
+        btnCancelar.addEventListener('click', handleCancel, { once: true });
+        modalEl.addEventListener('hidden.bs.modal', handleHidden, { once: true });
+
+        confirmModal.show();
+    });
 }
 </script>
     <?php include_once('../page/footer.php'); ?>

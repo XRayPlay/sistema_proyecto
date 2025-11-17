@@ -19,7 +19,7 @@
             
             <nav class="sidebar-nav">
                 <?php
-                // Mostrar solo la opción de 'Gestión de Incidencias' cuando el usuario es Analista
+                // Mostrar opciones según rol
                 $rol_actual = 0;
                 if (isset($_SESSION['usuario']['id_rol'])) {
                     $rol_actual = $_SESSION['usuario']['id_rol'];
@@ -35,7 +35,12 @@
                             <span>Gestión de Incidencias</span>
                         </a>
                     </div>
-                    <!-- Los analistas no ven opciones adicionales aquí -->
+                    <div class="nav-item">
+                        <a href="gestionar_tecnicos.php" class="nav-link <?php echo ($menu === 'tecnic') ? 'active' : ''; ?>">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Gestión de Técnicos</span>
+                        </a>
+                    </div>
                     <div class="nav-item">
                         <a href="../php/cerrar_sesion.php" class="nav-link">
                             <i class="fas fa-sign-out-alt"></i>
@@ -84,3 +89,4 @@
                 <?php endif; ?>
             </nav>
         </div>
+    </div>

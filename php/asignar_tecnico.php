@@ -5,7 +5,7 @@ require_once 'permisos.php';
 require_once 'clases.php';
 
 // Verificar que sea Admin o Director (o Analista)
-if (!esAdmin() && !esDirector()) {
+if (!esAdmin() && !esDirector() && !esAnalista()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
     exit();

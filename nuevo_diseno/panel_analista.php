@@ -104,19 +104,20 @@ try {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div id="formAnalistaAlerta" class="alert alert-danger d-none"></div>
                     <form id="formAnalista">
                         <input type="hidden" id="analista_id" name="analista_id">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nombre" class="form-label">Nombre</label>
-                                    <input maxlength="50" type="text" class="form-control" id="nombre" name="nombre" required>
+                                    <input minlength="3" maxlength="30" type="text" class="form-control" id="nombre" name="nombre" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="apellido" class="form-label">Apellido</label>
-                                    <input maxlength="50" type="text" class="form-control" id="apellido" name="apellido" required>
+                                    <input minlength="3" maxlength="30" type="text" class="form-control" id="apellido" name="apellido" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -127,8 +128,22 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="code_phone" class="form-label">Código de Teléfono</label>
+                                    <select class="form-select" id="code_phone" name="code_phone" required>
+                                        <option value="">Seleccionar código</option>
+                                        <option value="412">412</option>
+                                        <option value="414">414</option>
+                                        <option value="416">416</option>
+                                        <option value="422">422</option>
+                                        <option value="424">424</option>
+                                        <option value="426">426</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="telefono" class="form-label">Teléfono</label>
-                                    <input maxlength="11" type="tel" class="form-control" id="telefono" name="telefono" required>
+                                    <input minlength="7" maxlength="7" type="tel" class="form-control" id="telefono" name="telefono" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -155,17 +170,22 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="sexo" class="form-label">Sexo</label>
+                                    <label for="sexo" class="form-label">Genero</label>
                                     <select class="form-control" id="sexo" name="sexo" required>
+                                        <option value="">Seleccionar Genero</option>
                                         <option value="M">Masculino</option>
                                         <option value="F">Femenino</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6 d-none" id="estadoAnalistaGroup">
                                 <div class="mb-3">
-                                    <label for="address" class="form-label">Dirección</label>
-                                    <input maxlength="255" type="text" class="form-control" id="address" name="address" required>
+                                    <label for="id_status_user" class="form-label">Estado</label>
+                                    <select class="form-select" id="id_status_user" name="id_status_user">
+                                        <option value="1">Activo</option>
+                                        <option value="2">Ocupado</option>
+                                        <option value="3">Ausente</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -198,6 +218,25 @@ try {
         </div>
     </div>
 
+    <!-- Modal de confirmación personalizada -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmacionTitulo">Confirmar acción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmacionMensaje" class="mb-0">¿Deseas continuar?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarAccion" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarAccion">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modalDetalles" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -222,6 +261,7 @@ try {
         document.addEventListener('DOMContentLoaded', function() {
             cargarAnalistas();
             asignarValidaciones(); // Asignar listeners de restricción de caracteres
+            inicializarValidacionTiempoReal('formAnalista', validarFormularioAnalista);
         });
         
         // ===================================
@@ -284,31 +324,38 @@ try {
          * Realiza la validación de todos los campos del formulario modal.
          * @returns {boolean} - true si el formulario es válido, false en caso contrario.
          */
-        function validarFormularioAnalista() {
+        function validarFormularioAnalista(mostrarErrores = false) {
             const errores = [];
             const isEdicion = modoEdicion;
 
             // Obtener valores de los campos
             const nombre = document.getElementById('nombre').value.trim();
             const apellido = document.getElementById('apellido').value.trim();
-            const email = document.getElementById('email').value.trim();
+            const emailInput = document.getElementById('email');
+            const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+            if (emailInput) {
+                emailInput.value = email;
+            }
+
             const telefono = document.getElementById('telefono').value.trim();
+            const codePhone = document.getElementById('code_phone').value.trim();
             const cedula = document.getElementById('cedula').value.trim();
             const password = document.getElementById('password').value;
             const confirmarPassword = document.getElementById('confirmar_password').value;
-            const address = document.getElementById('address').value.trim();
+            const estadoSelect = document.getElementById('id_status_user');
+            const estadoVal = estadoSelect ? estadoSelect.value : '1';
             
             // Expresión regular para validar formato de email simple
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             
             // Validación de Nombre
-            if (nombre.length < 3 || nombre.length > 50) {
-                errores.push('El Nombre debe tener entre 3 y 50 caracteres.');
+            if (nombre.length < 3 || nombre.length > 30) {
+                errores.push('El Nombre debe tener entre 3 y 30 caracteres.');
             }
 
             // Validación de Apellido
-            if (apellido.length < 3 || apellido.length > 50) {
-                errores.push('El Apellido debe tener entre 3 y 50 caracteres.');
+            if (apellido.length < 3 || apellido.length > 30) {
+                errores.push('El Apellido debe tener entre 3 y 30 caracteres.');
             }
 
             // Validación de Email
@@ -318,12 +365,28 @@ try {
             if (!emailRegex.test(email)) {
                 errores.push('El formato del Email es inválido.');
             }
+            if (!email.endsWith('.com')) {
+                errores.push('El Email debe terminar en ".com".');
+            }
             
-            // Validación de Teléfono (solo 10 u 11 caracteres numéricos)
-            if (telefono.length !== 10 && telefono.length !== 11) {
-                errores.push('El Teléfono debe tener **exactamente** 10 u 11 dígitos.');
+            // Código de teléfono
+            if (!codePhone) {
+                errores.push('Debe seleccionar un código de teléfono.');
+            }
+            const codigosPermitidos = ['412','414','416','422','424','426'];
+            if (codePhone && !codigosPermitidos.includes(codePhone)) {
+                errores.push('El código de teléfono seleccionado no es válido.');
+            }
+
+            // Validación de Teléfono (exactamente 7 dígitos)
+            if (telefono.length !== 7) {
+                errores.push('El Teléfono debe tener exactamente 7 dígitos.');
             } else if (isNaN(telefono)) {
                  errores.push('El Teléfono solo debe contener números.');
+            }
+
+            if (!['1','2','3'].includes(estadoVal)) {
+                errores.push('Debe seleccionar un estado válido.');
             }
 
             // Validación de Cédula (entre 7 y 8 caracteres numéricos)
@@ -349,12 +412,6 @@ try {
             birthdayInput.setAttribute('max', maxDate);
         }
 
-            // Validación de Dirección
-            if (address.length < 5 || address.length > 255) {
-                errores.push('La Dirección debe tener entre 5 y 255 caracteres.');
-            }
-
-
             // Validación de Contraseñas (solo para Creación o si se llenan en Edición)
             if (!isEdicion || (isEdicion && password.length > 0)) {
                 if (password.length < 7 || password.length > 15) {
@@ -372,24 +429,11 @@ try {
                 errores.push('Si desea cambiar la contraseña, debe llenar ambos campos.');
             }
 
-            // NOTA: Para mostrar los errores en la modal, la modal debe contener un elemento con id='modalErrores'
-            // Ya que este elemento no existe en tu HTML, la validación se imprime en consola y el proceso se detiene.
-            // Para ser funcional, recomiendo añadir este div en el modal-body:
-            // <div id="modalErrores" class="alert alert-danger" style="display:none;"></div>
-            
-            const form = document.getElementById('formAnalista');
-            if (errores.length > 0) {
-                console.error('Errores de validación:', errores);
-                const mensajeError = errores.join('\n');
-                // Usar el mismo estilo visual que en gestionar_tecnicos: alerta global + was-validated
-                if (form) form.classList.add('was-validated');
-                mostrarError(mensajeError);
-                return false; // El formulario NO es válido
+            if (mostrarErrores) {
+                mostrarErroresModal('formAnalistaAlerta', errores);
             }
 
-            // Si pasó la validación, quitar marca visual previa
-            if (form) form.classList.remove('was-validated');
-            return true; // El formulario es válido
+            return errores.length === 0;
         }
 
         
@@ -424,7 +468,7 @@ try {
                             <td>${analista.id}</td>
                             <td>${analista.name} ${analista.apellido}</td>
                             <td>${analista.email}</td>
-                            <td>${analista.telefono || 'N/A'}</td>
+                            <td>${analista.code_phone ? `(${analista.code_phone}) ` : ''}${analista.telefono || 'N/A'}</td>
                             <td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td>
                             <td>${formatearFecha(analista.created_at)}</td>
                             <td>
@@ -484,12 +528,11 @@ try {
                             <tr><td><strong>Nombre Completo:</strong></td><td>${analista.name} ${analista.apellido}</td></tr>
                             <tr><td><strong>Cédula:</strong></td><td>${analista.nacionalidad === 'venezolano' ? 'V' : ''}${analista.nacionalidad === 'extranjero' ? 'E' : ''}-${analista.cedula}</td></tr>
                             <tr><td><strong>Email:</strong></td><td>${analista.email}</td></tr>
-                            <tr><td><strong>Teléfono:</strong></td><td>${analista.telefono || 'N/A'}</td></tr>
+            <tr><td><strong>Teléfono:</strong></td><td>${analista.code_phone ? `(${analista.code_phone}) ` : ''}${analista.telefono || 'N/A'}</td></tr>
+
                             <tr><td><strong>Sexo:</strong></td><td>${analista.sexo === 'M' ? 'Masculino' : 'Femenino'}</td></tr>
                             <tr><td><strong>Fecha Nac.:</strong></td><td>${formatearFechaCorta(analista.birthday)}</td></tr>
                             <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td></tr>
-                            <tr><td colspan="2"><strong>Dirección:</strong></td></tr>
-                            <tr><td colspan="2">${analista.address || 'No especificada'}</td></tr>
                         </table>
                     </div>
                 </div>
@@ -516,13 +559,19 @@ try {
             document.getElementById('nacionalidad').value = analista.nacionalidad;
             document.getElementById('cedula').value = analista.cedula;
             document.getElementById('email').value = analista.email;
+            document.getElementById('code_phone').value = analista.code_phone || '';
             document.getElementById('telefono').value = analista.telefono || ''; // Usar 'phone'
             
             // *** CAMPOS NUEVOS ***
             document.getElementById('birthday').value = analista.birthday || ''; // Formato YYYY-MM-DD
             document.getElementById('sexo').value = analista.sexo || 'M';
-            document.getElementById('address').value = analista.address || '';
             document.getElementById('avatar').value = analista.avatar || '';
+            const estadoSelect = document.getElementById('id_status_user');
+            const estadoGroup = document.getElementById('estadoAnalistaGroup');
+            if (estadoSelect) {
+                estadoSelect.value = (analista.id_status_user ?? 1).toString();
+            }
+            if (estadoGroup) estadoGroup.classList.remove('d-none');
             // *********************
 
             // Campos de Contraseña
@@ -572,8 +621,19 @@ try {
         // Función para guardar analista
         async function guardarAnalista() {
             // 1. Validar el formulario
-            if (!validarFormularioAnalista()) {
+            if (!validarFormularioAnalista(true)) {
                 return; // Detener si la validación falla
+            }
+
+            const confirmado = await mostrarModalConfirmacion({
+                titulo: modoEdicion ? 'Confirmar actualización' : 'Confirmar registro',
+                mensaje: modoEdicion ? '¿Deseas actualizar la información de este analista?' : '¿Deseas registrar a este nuevo analista?',
+                textoConfirmar: modoEdicion ? 'Sí, actualizar' : 'Sí, registrar',
+                textoCancelar: 'No, cancelar'
+            });
+
+            if (!confirmado) {
+                return;
             }
             // Limpiar teléfono para enviar solo dígitos
             const telEl = document.getElementById('telefono');
@@ -675,15 +735,92 @@ try {
             }, 5000);
         }
 
+        function mostrarErroresModal(alertId, errores) {
+            const alerta = document.getElementById(alertId);
+            if (!alerta) return;
+            alerta.innerHTML = errores.map(err => `<div>${err}</div>`).join('');
+            alerta.classList.remove('d-none');
+        }
+
+        function ocultarErroresModal(alertId) {
+            const alerta = document.getElementById(alertId);
+            if (!alerta) return;
+            alerta.classList.add('d-none');
+            alerta.innerHTML = '';
+        }
+
+        function inicializarValidacionTiempoReal(formId, fnValidar) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+            const controls = form.querySelectorAll('input, select, textarea');
+            controls.forEach(ctrl => {
+                ['input', 'change', 'blur'].forEach(evt => {
+                    ctrl.addEventListener(evt, () => fnValidar(true));
+                });
+            });
+        }
+
         // Limpiar formulario al cerrar modal
         document.getElementById('modalAnalista').addEventListener('hidden.bs.modal', function() {
             document.getElementById('formAnalista').reset();
+            ocultarErroresModal('formAnalistaAlerta');
             modoEdicion = false;
             document.getElementById('modalTitulo').textContent = 'Crear Analista';
             document.querySelector('#modalAnalista .btn-primary').textContent = 'Crear Analista';
             document.getElementById('password').required = true;
             document.getElementById('confirmar_password').required = true; // Asegurar que sea requerido en creación
+            const estadoGroup = document.getElementById('estadoAnalistaGroup');
+            const estadoSelect = document.getElementById('id_status_user');
+            if (estadoGroup) estadoGroup.classList.add('d-none');
+            if (estadoSelect) estadoSelect.value = '1';
         });
+
+        // Modal de confirmación reutilizable
+        function mostrarModalConfirmacion({ titulo, mensaje, textoConfirmar = 'Confirmar', textoCancelar = 'Cancelar' }) {
+            return new Promise((resolve) => {
+                const modalEl = document.getElementById('modalConfirmacion');
+                const tituloEl = document.getElementById('confirmacionTitulo');
+                const mensajeEl = document.getElementById('confirmacionMensaje');
+                const btnConfirmar = document.getElementById('btnConfirmarAccion');
+                const btnCancelar = document.getElementById('btnCancelarAccion');
+
+                tituloEl.textContent = titulo || 'Confirmar acción';
+                mensajeEl.textContent = mensaje || '¿Deseas continuar?';
+                btnConfirmar.textContent = textoConfirmar;
+                btnCancelar.textContent = textoCancelar;
+
+                const confirmModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+                const handleConfirm = () => {
+                    cleanup();
+                    confirmModal.hide();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    cleanup();
+                    confirmModal.hide();
+                    resolve(false);
+                };
+
+                const handleHidden = () => {
+                    cleanup();
+                    resolve(false);
+                };
+
+                function cleanup() {
+                    btnConfirmar.removeEventListener('click', handleConfirm);
+                    btnCancelar.removeEventListener('click', handleCancel);
+                    modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+                }
+
+                btnConfirmar.addEventListener('click', handleConfirm, { once: true });
+                btnCancelar.addEventListener('click', handleCancel, { once: true });
+                modalEl.addEventListener('hidden.bs.modal', handleHidden, { once: true });
+
+                confirmModal.show();
+            });
+        }
 
         // Logs de inicialización
         console.log('🚀 Panel de analistas modernizado inicializado correctamente');

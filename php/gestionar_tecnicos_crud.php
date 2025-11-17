@@ -13,7 +13,7 @@ require_once "permisos.php";
 require_once "clases.php";
 
 // Solo Admin y Director pueden acceder
-if (!esAdmin() && !esDirector()) {
+if (!esAdmin() && !esDirector() && !esAnalista()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
     exit();
@@ -73,8 +73,14 @@ function crearTecnico($conexion) {
 
     // Valores que pueden venir del formulario
     $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'No especificado');
+    $id_status_user = (int)($_POST['id_status_user'] ?? 1);
+
+    if (!in_array($id_status_user, [1,2,3], true)) {
+        echo json_encode(['success' => false, 'message' => 'Estado inválido']);
+        return;
+    }
+
     $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '1990-01-01');
-    $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? 'No especificado');
 
     // Campos que vienen del formulario (ya sanitizados con mysqli_real_escape_string)
     $nombre = mysqli_real_escape_string($conexion, $_POST['nombre'] ?? '');
@@ -89,11 +95,12 @@ function crearTecnico($conexion) {
     }
     $email = mysqli_real_escape_string($conexion, $_POST['email'] ?? '');
     $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
+    $code_phone = mysqli_real_escape_string($conexion, $_POST['code_phone'] ?? '');
     $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
     $confirmar_password = mysqli_real_escape_string($conexion, $_POST['confirmar_password'] ?? '');
     
     // Validar campos requeridos (incluyendo fecha de nacimiento)
-    if (empty($nombre) || empty($apellido) || empty($nacionalidad) || empty($cedula_post) || empty($especialidad) || empty($email) || empty($telefono) || empty($password) || empty($birthday) || empty($address)) {
+    if (empty($nombre) || empty($apellido) || empty($nacionalidad) || empty($cedula_post) || empty($especialidad) || empty($email) || empty($telefono) || empty($password) || empty($birthday) || empty($code_phone)) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
         return;
     }
@@ -115,12 +122,13 @@ function crearTecnico($conexion) {
         echo json_encode(['success' => false, 'message' => 'La cédula debe tener entre 7 y 8 caracteres']);
         return;
     }
-    if (strlen($telefono) < 10 || strlen($telefono) > 11) {
-        echo json_encode(['success' => false, 'message' => 'El teléfono debe tener entre 10 y 11 caracteres']);
+    if (strlen($telefono) !== 7) {
+        echo json_encode(['success' => false, 'message' => 'El teléfono debe tener exactamente 7 caracteres']);
         return;
     }
-    if (strlen($address) < 20 || strlen($address) > 100) {
-        echo json_encode(['success' => false, 'message' => 'La dirección debe tener entre 20 y 100 caracteres']);
+    $codigosPermitidos = ['412','414','416','422','424','426'];
+    if (!in_array($code_phone, $codigosPermitidos, true)) {
+        echo json_encode(['success' => false, 'message' => 'Código de teléfono inválido']);
         return;
     }
 
@@ -170,7 +178,7 @@ function crearTecnico($conexion) {
     // CONSULTA SQL CORREGIDA: Incluye todos los campos de la tabla 'user' relevantes y 'CURDATE()' para 'last_connection'
     // Aseguramos que CURDATE() se inserte en la columna last_connection (posición correcta)
     $query = "INSERT INTO user (
-        username, pass, name, apellido, nacionalidad, cedula, sexo, phone, email, birthday, address, avatar, 
+        username, pass, name, apellido, nacionalidad, cedula, sexo, code_phone, phone, email, birthday, avatar, 
         last_connection, id_floor, id_cargo, id_rol, id_status_user
     ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?
@@ -194,10 +202,10 @@ function crearTecnico($conexion) {
         $nacionalidad,
         $cedula_post,
         $sexo,
+        $code_phone,
         $telefono,
         $email,
         $birthday,
-        $address,
         $avatar,
         $id_floor,
         $id_cargo,
@@ -230,13 +238,18 @@ function crearTecnico($conexion) {
 
 function obtenerTecnicos($conexion) {
     // Obtener todos los técnicos registrados
-    $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, u.phone as telefono,
-                     CASE WHEN u.id_status_user = 1 THEN 'Activo' ELSE 'Inactivo' END as estado,
+    $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, u.phone as telefono, u.code_phone,
+                     u.id_status_user,
+                     CASE u.id_status_user 
+                        WHEN 1 THEN 'Activo' 
+                        WHEN 2 THEN 'Ocupado' 
+                        WHEN 3 THEN 'Ausente' 
+                        ELSE 'Inactivo' 
+                     END as estado,
                      'Soporte Técnico' as especialidad,
                      u.last_connection as fecha_registro
               FROM user u
-              WHERE u.id_rol = 3 
-              AND u.id_status_user = 1
+              WHERE u.id_rol = 3
               ORDER BY u.name";
     
     $resultado = mysqli_query($conexion, $query);
@@ -257,7 +270,9 @@ function obtenerTecnicos($conexion) {
             'especialidad' => $row['especialidad'],
             'email' => $row['email'],
             'telefono' => $row['telefono'],
+            'code_phone' => $row['code_phone'],
             'estado' => $row['estado'],
+            'id_status_user' => (int)$row['id_status_user'],
             'fecha_registro' => $row['fecha_registro']
         ];
     }
@@ -274,16 +289,22 @@ function editarTecnico($conexion) {
     $especialidad = mysqli_real_escape_string($conexion, $_POST['especialidad'] ?? '');
     $email = mysqli_real_escape_string($conexion, $_POST['email'] ?? '');
     $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
+    $code_phone = mysqli_real_escape_string($conexion, $_POST['code_phone'] ?? '');
     $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '');
-    $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? '');
     $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
     $confirmar_password = mysqli_real_escape_string($conexion, $_POST['confirmar_password'] ?? '');
     $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'No especificado');
     // Especialidad como id_cargo
     $id_cargo = (!empty($especialidad) && ctype_digit(strval($especialidad))) ? (int)$especialidad : null;
+    $id_status_user = (int)($_POST['id_status_user'] ?? 1);
+
+    if (!in_array($id_status_user, [1,2,3], true)) {
+        echo json_encode(['success' => false, 'message' => 'Estado inválido']);
+        return;
+    }
     
     // Validar campos requeridos (incluyendo fecha de nacimiento)
-    if (empty($nombre) || empty($apellido) || empty($nacionalidad) || empty($cedula) || empty($especialidad) || empty($email) || empty($telefono) || empty($birthday) || empty($address)) {
+    if (empty($nombre) || empty($apellido) || empty($nacionalidad) || empty($cedula) || empty($especialidad) || empty($email) || empty($telefono) || empty($birthday) || empty($code_phone)) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
         return;
     }
@@ -305,12 +326,13 @@ function editarTecnico($conexion) {
         echo json_encode(['success' => false, 'message' => 'La cédula debe tener entre 7 y 8 caracteres']);
         return;
     }
-    if (strlen($telefono) < 10 || strlen($telefono) > 11) {
-        echo json_encode(['success' => false, 'message' => 'El teléfono debe tener entre 10 y 11 caracteres']);
+    if (strlen($telefono) < 7 || strlen($telefono) > 7) {
+        echo json_encode(['success' => false, 'message' => 'El teléfono debe tener 7 caracteres']);
         return;
     }
-    if (strlen($address) < 20 || strlen($address) > 100) {
-        echo json_encode(['success' => false, 'message' => 'La dirección debe tener entre 20 y 100 caracteres']);
+    $codigosPermitidos = ['412','414','416','422','424','426'];
+    if (!in_array($code_phone, $codigosPermitidos, true)) {
+        echo json_encode(['success' => false, 'message' => 'Código de teléfono inválido']);
         return;
     }
 
@@ -352,28 +374,28 @@ function editarTecnico($conexion) {
         return;
     }
     
-    // Actualizar técnico en la tabla user (incluye apellido, birthday, address, nacionalidad, cedula, sexo, id_cargo)
+    // Actualizar técnico en la tabla user (incluye apellido, birthday, nacionalidad, cedula, sexo, id_cargo)
     if ($update_password) {
         // Incluir pass en la actualización
         $password_hash = hash('sha256', $password);
         $password_hash = substr($password_hash, 0, 20);
-        $query = "UPDATE user SET name = ?, apellido = ?, pass = ?, email = ?, phone = ?, birthday = ?, address = ?, nacionalidad = ?, cedula = ?, sexo = ?, id_cargo = ? WHERE id_user = ? AND id_rol = 3";
+        $query = "UPDATE user SET name = ?, apellido = ?, pass = ?, email = ?, sexo = ?, code_phone = ?, phone = ?, birthday = ?, nacionalidad = ?, cedula = ?, id_cargo = ?, id_status_user = ? WHERE id_user = ? AND id_rol = 3";
         $stmt = mysqli_prepare($conexion, $query);
         $id_cargo_param = $id_cargo ?? 0;
-        // Tipos: 10 strings (name, apellido, pass, email, phone, birthday, address, nacionalidad, cedula, sexo) + 2 integers (id_cargo, id)
-        mysqli_stmt_bind_param($stmt, 'ssssssssssii', $nombre, $apellido, $password_hash, $email, $telefono, $birthday, $address, $nacionalidad, $cedula, $sexo, $id_cargo_param, $id);
+        // Tipos: 10 strings + 3 enteros
+        mysqli_stmt_bind_param($stmt, 'ssssssssssiii', $nombre, $apellido, $password_hash, $email, $sexo, $code_phone, $telefono, $birthday, $nacionalidad, $cedula, $id_cargo_param, $id_status_user, $id);
     } else {
-        $query = "UPDATE user SET name = ?, apellido = ?, email = ?, phone = ?, birthday = ?, address = ?, nacionalidad = ?, cedula = ?, sexo = ?, id_cargo = ? WHERE id_user = ? AND id_rol = 3";
+        $query = "UPDATE user SET name = ?, apellido = ?, email = ?, sexo = ?, code_phone = ?, phone = ?, birthday = ?, nacionalidad = ?, cedula = ?, id_cargo = ?, id_status_user = ? WHERE id_user = ? AND id_rol = 3";
         $stmt = mysqli_prepare($conexion, $query);
         $id_cargo_param = $id_cargo ?? 0;
-        // Tipos: 9 strings (name, apellido, email, phone, birthday, address, nacionalidad, cedula, sexo) + 2 integers (id_cargo, id)
-        mysqli_stmt_bind_param($stmt, 'sssssssssii', $nombre, $apellido, $email, $telefono, $birthday, $address, $nacionalidad, $cedula, $sexo, $id_cargo_param, $id);
+        // Tipos: 9 strings + 3 enteros
+        mysqli_stmt_bind_param($stmt, 'sssssssssiii', $nombre, $apellido, $email, $sexo, $code_phone, $telefono, $birthday, $nacionalidad, $cedula, $id_cargo_param, $id_status_user, $id);
     }
     
     if (mysqli_stmt_execute($stmt)) {
         // Recuperar el técnico actualizado para devolver los datos y facilitar la verificación en frontend
         mysqli_stmt_close($stmt);
-        $query_get = "SELECT id_user as id, name as nombre, apellido, nacionalidad, cedula, email, birthday, address, phone as telefono, sexo, avatar, id_cargo as especialidad, last_connection as fecha_registro FROM user WHERE id_user = ? AND id_rol = 3 LIMIT 1";
+        $query_get = "SELECT id_user as id, name as nombre, apellido, nacionalidad, cedula, email, birthday, phone as telefono, sexo, code_phone, avatar, id_cargo as especialidad, id_status_user, last_connection as fecha_registro FROM user WHERE id_user = ? AND id_rol = 3 LIMIT 1";
         $stmt_get = mysqli_prepare($conexion, $query_get);
         if ($stmt_get) {
             mysqli_stmt_bind_param($stmt_get, 'i', $id);
@@ -424,8 +446,9 @@ function obtenerTecnicoPorId($conexion) {
     }
     // Consulta: obtener técnico por su ID y asegurarse de que sea rol técnico (id_rol = 3)
     // Incluimos 'sexo' y 'avatar' para que el frontend pueda prellenar correctamente el modal de edición
-    $query = "SELECT id_user as id, name as nombre, apellido, nacionalidad, cedula, email, birthday, address, phone as telefono, sexo,
-            avatar, CASE WHEN id_status_user = 1 THEN 'Activo' ELSE 'Inactivo' END as estado, id_cargo as especialidad,
+    $query = "SELECT id_user as id, name as nombre, apellido, nacionalidad, cedula, email, birthday, phone as telefono, sexo, code_phone,
+            avatar, id_status_user,
+            CASE id_status_user WHEN 1 THEN 'Activo' WHEN 2 THEN 'Ocupado' WHEN 3 THEN 'Ausente' ELSE 'Inactivo' END as estado, id_cargo as especialidad,
             last_connection as fecha_registro
         FROM user
         WHERE id_user = ? AND id_rol = 3
@@ -460,8 +483,9 @@ function obtenerTecnicoPorId($conexion) {
                 'especialidad' => $tecnico['especialidad'],
                 'email' => $tecnico['email'],
                 'birthday' => $tecnico['birthday'],
-                'address' => $tecnico['address'],
                 'telefono' => $tecnico['telefono'],
+                'code_phone' => $tecnico['code_phone'],
+                'id_status_user' => (int)$tecnico['id_status_user'],
                 'sexo' => $tecnico['sexo'] ?? '',
                 'avatar' => $tecnico['avatar'] ?? '',
                 'estado' => $tecnico['estado'],

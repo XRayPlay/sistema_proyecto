@@ -22,7 +22,7 @@ $conexion = $c->conexion();
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Devolver datos básicos del usuario
-        $query = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, birthday, sexo, address, avatar, id_rol FROM user WHERE id_user = ?";
+        $query = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, address, avatar, id_rol FROM user WHERE id_user = ?";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param($stmt, 'i', $userId);
         mysqli_stmt_execute($stmt);
@@ -45,6 +45,7 @@ try {
         $cedula = mysqli_real_escape_string($conexion, $_POST['cedula'] ?? '');
         $email = mysqli_real_escape_string($conexion, $_POST['email'] ?? '');
         $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
+        $code_phone = mysqli_real_escape_string($conexion, $_POST['code_phone'] ?? '');
         $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '');
         $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'M');
         $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? '');
@@ -80,8 +81,12 @@ try {
         if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
             echo json_encode(['success' => false, 'message' => 'La Cédula debe tener entre 7 y 8 dígitos numéricos']); exit();
         }
-        if (!preg_match('/^[0-9]{10,11}$/', $telefono)) {
-            echo json_encode(['success' => false, 'message' => 'El Teléfono debe tener 10 u 11 dígitos numéricos']); exit();
+        if (!preg_match('/^[0-9]{7,7}$/', $telefono)) {
+            echo json_encode(['success' => false, 'message' => 'El Teléfono debe tener 7 dígitos numéricos']); exit();
+        }
+        $codigosPermitidos = ['412','414','416','422','424','426'];
+        if (!in_array($code_phone, $codigosPermitidos, true)) {
+            echo json_encode(['success' => false, 'message' => 'Código de teléfono inválido']); exit();
         }
         if (strlen($address) < 5 || strlen($address) > 255) {
             echo json_encode(['success' => false, 'message' => 'La Dirección debe tener entre 5 y 255 caracteres']); exit();
@@ -147,6 +152,7 @@ try {
         $update_fields[] = 'nacionalidad = ?'; $types .= 's'; $params[] = $nacionalidad;
         $update_fields[] = 'cedula = ?'; $types .= 's'; $params[] = $cedula;
         $update_fields[] = 'email = ?'; $types .= 's'; $params[] = $email;
+        $update_fields[] = 'code_phone = ?'; $types .= 's'; $params[] = $code_phone;
         $update_fields[] = 'phone = ?'; $types .= 's'; $params[] = $telefono;
         $update_fields[] = 'birthday = ?'; $types .= 's'; $params[] = $birthday;
         $update_fields[] = 'sexo = ?'; $types .= 's'; $params[] = $sexo;
@@ -172,7 +178,7 @@ try {
 
         if (mysqli_stmt_execute($stmt_upd)) {
             // Devolver usuario actualizado
-            $query_sel = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, birthday, sexo, address, avatar FROM user WHERE id_user = ?";
+            $query_sel = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, address, avatar FROM user WHERE id_user = ?";
             $s2 = mysqli_prepare($conexion, $query_sel);
             mysqli_stmt_bind_param($s2, 'i', $userId);
             mysqli_stmt_execute($s2);

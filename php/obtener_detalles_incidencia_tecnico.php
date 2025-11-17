@@ -37,7 +37,7 @@ try {
     // Obtener detalles de la incidencia, verificando que pertenece al técnico
     $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.solicitante_nombre, 
                      i.solicitante_cedula, i.solicitante_email, i.solicitante_telefono, 
-                     i.solicitante_direccion, i.solicitante_extension, i.departamento, 
+                     i.solicitante_extension, i.departamento, 
                      i.fecha_creacion, i.fecha_asignacion, i.comentarios_tecnico, u.name as nombre_tecnico 
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
