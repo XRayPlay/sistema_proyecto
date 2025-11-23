@@ -91,7 +91,7 @@ try {
                             <th>ESPECIALIDAD</th>
                             <th>EMAIL</th>
                             <th>TELÉFONO</th>
-                            <th>ESTADO</th>
+                            <th>STATUS</th>
                             <th>FECHA REGISTRO</th>
                             <th>ACCIONES</th>
                         </tr>
@@ -178,6 +178,8 @@ try {
                                         <input type="date" class="form-control" id="birthday" name="birthday" required>
                                     </div>
                                 </div>
+
+                                <!-- Elimiar Genero -->
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="sexo" class="form-label">Genero</label>
@@ -185,9 +187,12 @@ try {
                                             <option value="">Seleccionar Genero</option>
                                             <option value="Masculino">Masculino</option>
                                             <option value="Femenino">Femenino</option>
+                                            <option value="Femenino">Femenino</option>
                                         </select>
                                     </div>
                                 </div>
+                                <!-- Elimiar Genero -->
+
                             </div>
                         <div class="row">
                             <div class="col-md-6">
@@ -199,7 +204,7 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="especialidad" class="form-label">Especialidad</label>
+                                    <label for="especialidad" class="form-label">Área de Atención</label>
                                     <select class="form-select" id="especialidad" name="especialidad" required>
                                         <option value="">Seleccionar especialidad</option>
                                         <option value="1">Soporte</option>
@@ -210,7 +215,7 @@ try {
                             </div>
                             <div class="col-md-6 d-none" id="estadoTecnicoGroup">
                                 <div class="mb-3">
-                                    <label for="id_status_user" class="form-label">Estado</label>
+                                    <label for="id_status_user" class="form-label">Status</label>
                                     <select class="form-select" id="id_status_user" name="id_status_user">
                                         <option value="1">Activo</option>
                                         <option value="2">Ocupado</option>
@@ -951,7 +956,7 @@ function validarFormularioTecnico(mostrarErrores = false) {
         errores.push('La fecha de nacimiento es obligatoria.');
     }
     if (!['1','2','3'].includes(estadoVal)) {
-        errores.push('Debe seleccionar un estado válido.');
+        errores.push('Debe seleccionar un status válido.');
     }
 
     if (!modoEdicion || (modoEdicion && password.length > 0)) {

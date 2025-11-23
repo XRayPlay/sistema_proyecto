@@ -107,7 +107,7 @@ try {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>TIPO DE INCIDENCIA</th>
+                            <th>Área de Atención</th>
                             <th>DESCRIPCIÓN</th>
                             <th>ESTADO</th>
                             <th>TÉCNICO</th>
@@ -215,7 +215,7 @@ try {
                     <div class="form-section">
                         <h3 class="section-title">Detalles de la Incidencia</h3>
                         <div class="mb-3">
-                            <label for="tipo_incidencia" class="form-label required-field">Tipo de Incidencia</label>
+                            <label for="tipo_incidencia" class="form-label required-field">Área de Atención</label>
                             <select class="form-control modern-input" id="tipo_incidencia" name="tipo_incidencia" required>
                                 <option value="">Seleccionar tipo</option>
                             </select>
@@ -776,7 +776,7 @@ async function buscarUsuarioPorCedula() {
                     }
                 }
                 
-                // Establecer el tipo de incidencia
+                // Establecer el Área de Atención
                 if (incidencia.tipo_incidencia) {
                     document.getElementById('tipo_incidencia').value = incidencia.tipo_incidencia;
                 }
@@ -919,7 +919,7 @@ async function buscarUsuarioPorCedula() {
                             <span class="detail-value detail-id">#${incidencia.id}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Tipo de Incidencia</span>
+                            <span class="detail-label">Área de Atención</span>
                             <span class="detail-value">${incidencia.tipo_incidencia}</span>
                         </div>
                         <div class="detail-item">
@@ -1121,7 +1121,7 @@ const contenido = `
                     <span class="detail-value detail-id">#${incidencia.id}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Tipo de Incidencia</span>
+                    <span class="detail-label">Área de Atención</span>
                     <span class="detail-value">${incidencia.tipo_incidencia}</span>
                 </div>
                 <div class="detail-item">

@@ -66,7 +66,13 @@
                             <span>Gestión de Analistas</span>
                         </a>
                     </div>
-                    <?php if ($rol_actual == 1): // Admin: opción para editar su perfil - colocado al final antes de cerrar sesión ?>
+                    <?php if ($rol_actual == 1): // Admin: opción para configuración y perfil ?>
+                    <div class="nav-item">
+                        <a href="config_db.php" class="nav-link <?php echo ($menu === 'configuracion') ? 'active' : ''; ?>">
+                            <i class="fas fa-cog"></i>
+                            <span>Configuración del Sistema</span>
+                        </a>
+                    </div>
                     <div class="nav-item">
                         <a href="mi_perfil.php" class="nav-link <?php echo ($menu === 'perfil') ? 'active' : ''; ?>">
                             <i class="fas fa-user-cog"></i>

@@ -266,9 +266,9 @@ if (empty($datos_departamento)) {
                     <form id="filterForm">
                         <div class="filters-grid">
                         <div class="form-group">
-                                <label class="form-label">Estado</label>
+                                <label class="form-label">Status</label>
                                 <select class="form-select" name="estado">
-                                    <option value="">Todos los estados</option>
+                                    <option value="">Seleccione un status</option>
                                     <option value="pendiente">Pendiente</option>
                                     <option value="asignada">Asignada</option>
                                     <option value="en_proceso">En Proceso</option>
@@ -278,7 +278,7 @@ if (empty($datos_departamento)) {
                         </div>
                             
                             <div class="form-group">
-                                <label class="form-label">Departamento</label>
+                                <label class="form-label">Área de Atención</label>
                                 <select class="form-select" name="departamento">
                                     <option value="">Todos los departamentos</option>
                                     <option value="1">Soporte</option>
