@@ -28,38 +28,22 @@ $codigo_telefono = isset($_POST['codigo_telefono']) ? $conexion->real_escape_str
 $telefono = isset($_POST['telefono']) ? $conexion->real_escape_string(trim($_POST['telefono'])) : '';
 $tipo = isset($_POST['tipo']) ? $conexion->real_escape_string(trim($_POST['tipo'])) : '';
 $descripcion = isset($_POST['descripcion']) ? $conexion->real_escape_string(trim($_POST['descripcion'])) : '';
+$solicitante_piso = isset($_POST['solicitante_piso']) ? $conexion->real_escape_string(trim($_POST['solicitante_piso'])) : '';
 
 // 2. Definir valores por defecto y automáticos
 $fecha_creacion = date('Y-m-d H:i:s');
 
-// ----------------------------------------------------
-// 🔑 LÓGICA DE ASIGNACIÓN DE TÉCNICO (Tabla 'user')
-// ----------------------------------------------------
+$estado_incidencia = 'pendiente';
 
-$tecnico_asignado_id = 'NULL'; 
-$fecha_asignacion = 'NULL';
-$estado_asignacion = 'Nueva'; // El estado por defecto si no se asigna
+$query = "SELECT id_cargo AS cargo FROM reports_type WHERE id_reports_type = $tipo";
+$depart = $conexion->query($query);
 
-// Asumimos que el id_status_user de AUSENTE es 3. Si es otro valor, debes ajustarlo.
-// Buscar un técnico disponible (id_rol=3 y NO ausente, id_status_user != 3)
-$sql_select_tecnico = "SELECT u.id_user, COUNT(i.id) AS total_incidencias_asignadas
-                       FROM user u LEFT JOIN incidencias i ON u.id_user = i.tecnico_asignado
-                       AND i.estado NOT IN ('resuelta', 'cerrada')
-                       WHERE u.id_rol = 3 AND u.id_status_user != 3
-                       GROUP BY u.id_user ORDER BY total_incidencias_asignadas ASC,
-                       u.id_user ASC LIMIT 1;";
-
-$resultado_tecnico = $conexion->query($sql_select_tecnico);
-
-if ($resultado_tecnico && $resultado_tecnico->num_rows > 0) {
-    $tecnico = $resultado_tecnico->fetch_assoc();
-    // NOTA: Usamos el campo 'id_user' de la tabla 'user'
-    $tecnico_asignado_id = "'" . $tecnico['id_user'] . "'"; // Citar el ID para la inserción
-    $fecha_asignacion = "'" . $fecha_creacion . "'"; // Citar la fecha
-    $estado_asignacion = 'Asignada'; // Si se asigna, cambia el estado
+if ($depart->num_rows > 0) {
+    $row = $depart->fetch_assoc();
+    $cargo = $row['cargo'];
+} else {
+    $cargo = null;
 }
-
-// ----------------------------------------------------
 
 // 3. Consulta de Inserción (Incluye técnico y fecha de asignación)
 $sql_insert_incident = "INSERT INTO incidencias (
@@ -70,11 +54,13 @@ $sql_insert_incident = "INSERT INTO incidencias (
  solicitante_email, 
  solicitante_code, 
  solicitante_telefono,
- tipo_incidencia, 
+ tipo_incidencia,
+ solicitante_piso,
+ departamento,
  descripcion, 
  estado,
-    tecnico_asignado,       /* Campo en tabla incidencias */
-    fecha_asignacion,       /* Campo en tabla incidencias */
+    tecnico_asignado,
+    fecha_asignacion,
  created_at, 
  updated_at
 ) 
@@ -85,12 +71,14 @@ VALUES (
  '$cedula', 
  '$email', 
  '$codigo_telefono', 
- '$telefono', 
- '$tipo', 
+ '$telefono',
+ '$tipo',
+ '$solicitante_piso',
+ '$cargo',
  '$descripcion', 
- '$estado_asignacion', 
-    $tecnico_asignado_id,   
-    $fecha_asignacion,      
+ '$estado_incidencia', 
+    NULL,
+    NULL,
  '$fecha_creacion', 
  '$fecha_creacion'
 )";
@@ -102,8 +90,9 @@ if ($conexion->query($sql_insert_incident) === TRUE) {
  echo json_encode([
   'success' => true, 
   'incident_id' => $conexion->insert_id,
-  'message' => 'Incidencia creada y ' . ($tecnico_asignado_id != 'NULL' ? 'asignada' : 'pendiente de asignación') . ' con éxito.'
+  'message' => 'Incidencia creada y queda pendiente de asignación.'
  ]);
+
 } else {
  // Error al crear la incidencia
  http_response_code(500);

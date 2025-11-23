@@ -92,7 +92,6 @@ function crearIncidencia($conexion) {
     $solicitante_email = $_POST['solicitante_email'] ?? '';
     $solicitante_code = $_POST['solicitante_code'] ?? '';
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
-    $solicitante_extension = $_POST['solicitante_extension'] ?? '';
     $departamento = $_POST['departamento'] ?? '';
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
     // Normalizar el valor del técnico: el frontend a veces envía la cédula,
@@ -132,13 +131,13 @@ function crearIncidencia($conexion) {
     if ($tecnico_id === null) {
         $query = "INSERT INTO incidencias (
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
-                    solicitante_email, solicitante_code, solicitante_telefono, solicitante_extension,
+                    solicitante_email, solicitante_code, solicitante_telefono,
                     departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', NULL, NOW(), NOW())";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', NULL, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
-            'ssssssssss',
+            'ssssssssi',
             $tipo_incidencia,
             $descripcion,
             $solicitante_nombre,
@@ -147,19 +146,18 @@ function crearIncidencia($conexion) {
             $solicitante_email,
             $solicitante_code,
             $solicitante_telefono,
-            $solicitante_extension,
             $departamento
         );
     } else {
         $query = "INSERT INTO incidencias (
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
-                    solicitante_email, solicitante_code, solicitante_telefono, solicitante_extension,
+                    solicitante_email, solicitante_code, solicitante_telefono, 
                     departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', ?, NOW(), NOW())";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', ?, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
-            'ssssssssssi',
+            'ssssssssii',
             $tipo_incidencia,
             $descripcion,
             $solicitante_nombre,
@@ -168,7 +166,6 @@ function crearIncidencia($conexion) {
             $solicitante_email,
             $solicitante_code,
             $solicitante_telefono,
-            $solicitante_extension,
             $departamento,
             $tecnico_id
         );
@@ -231,10 +228,10 @@ function obtenerIncidencias($conexion) {
     $q = trim($_POST['q'] ?? '');
     if ($q !== '') {
         $like = '%' . $q . '%';
-        $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
-            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
+        $query = "SELECT i.id, c.id_cargo as tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
+            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre 
               FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
               WHERE (i.tipo_incidencia LIKE ? OR i.descripcion LIKE ? OR i.solicitante_nombre LIKE ?)
               ORDER BY i.fecha_creacion DESC";
         $stmt = mysqli_prepare($conexion, $query);
@@ -247,12 +244,12 @@ function obtenerIncidencias($conexion) {
             $resultado = mysqli_query($conexion, "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre FROM incidencias i LEFT JOIN user u ON i.tecnico_asignado = u.id_user ORDER BY i.fecha_creacion DESC");
         }
     } else {
-        $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
+        $query = "SELECT i.id, c.id_cargo as tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
             i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, i.solicitante_email, 
-            i.solicitante_telefono, i.solicitante_extension, i.solicitante_code,
+            i.solicitante_telefono, i.solicitante_code,
             i.departamento, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
               FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
               ORDER BY i.fecha_creacion DESC";
         $resultado = mysqli_query($conexion, $query);
     }
@@ -274,7 +271,6 @@ function obtenerIncidencias($conexion) {
             'solicitante_cedula' => $row['solicitante_cedula'],
             'solicitante_email' => $row['solicitante_email'],
             'solicitante_telefono' => $row['solicitante_telefono'],
-            'solicitante_extension' => $row['solicitante_extension'],
             'solicitante_code' => $row['solicitante_code'],
             'departamento' => $row['departamento'],
             'tecnico_id' => $row['tecnico_id'],
@@ -295,14 +291,14 @@ function obtenerIncidenciaPorId($conexion) {
         return;
     }
     
-    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, 
+    $query = "SELECT i.id, c.id_cargo as tipo_incidencia, i.descripcion, i.estado, 
                      i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, 
                      i.solicitante_email, i.solicitante_code, i.solicitante_telefono, 
-                     i.solicitante_extension, i.departamento, 
+                     i.departamento, 
                      i.fecha_creacion, i.tecnico_asignado as tecnico_id, 
                      u.cedula as tecnico_cedula, u.name as tecnico_nombre
               FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
               WHERE i.id = ?";
     $stmt = mysqli_prepare($conexion, $query);
     mysqli_stmt_bind_param($stmt, 'i', $id);
@@ -330,7 +326,6 @@ function obtenerIncidenciaPorId($conexion) {
                 'solicitante_email' => $incidencia['solicitante_email'],
                 'solicitante_code' => $incidencia['solicitante_code'] ?? '',
                 'solicitante_telefono' => $incidencia['solicitante_telefono'],
-                'solicitante_extension' => $incidencia['solicitante_extension'],
                 'departamento' => $incidencia['departamento'],
                 // Añadimos el id y la cédula del técnico (si existe) para que el frontend pueda seleccionar el option correcto
                 'tecnico_id' => $incidencia['tecnico_id'] ?? null,
@@ -348,6 +343,7 @@ function actualizarIncidencia($conexion) {
     $id = (int)$_POST['incidencia_id'];
     // Usar null coalescing para evitar warnings si alguna clave no viene en POST
     $tipo_incidencia = mysqli_real_escape_string($conexion, $_POST['tipo_incidencia'] ?? '');
+    $tipo_incidencia = mysqli_real_escape_string($conexion, $_POST['tipo_incidencia'] ?? '');
     $descripcion = mysqli_real_escape_string($conexion, $_POST['descripcion'] ?? '');
     $solicitante_nombre = mysqli_real_escape_string($conexion, $_POST['solicitante_nombre'] ?? '');
     $solicitante_apellido = mysqli_real_escape_string($conexion, $_POST['solicitante_apellido'] ?? '');
@@ -355,7 +351,6 @@ function actualizarIncidencia($conexion) {
     $solicitante_email = mysqli_real_escape_string($conexion, $_POST['solicitante_email'] ?? '');
     $solicitante_code = mysqli_real_escape_string($conexion, $_POST['solicitante_code'] ?? '');
     $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono'] ?? '');
-    $solicitante_extension = mysqli_real_escape_string($conexion, $_POST['solicitante_extension'] ?? '');
     $departamento = mysqli_real_escape_string($conexion, $_POST['departamento'] ?? '');
 
     // Manejar técnico asignado (puede ser id_user o cédula). El select en frontend envía id_user.
@@ -393,22 +388,22 @@ function actualizarIncidencia($conexion) {
     if ($tecnico_id === null) {
         $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
                     solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_code = ?, solicitante_telefono = ?, 
-                    solicitante_extension = ?, departamento = ?, estado = 'asignado', tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
+                    departamento = ?, estado = 'pendiente', tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conexion, $query);
         // Bind: 10 strings + id (int)
-        mysqli_stmt_bind_param($stmt, 'ssssssssssi', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+        mysqli_stmt_bind_param($stmt, 'ssssssssii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
                                     $solicitante_apellido, $solicitante_cedula, $solicitante_email, $solicitante_code,
-                                    $solicitante_telefono, $solicitante_extension, 
+                                    $solicitante_telefono, 
                                     $departamento, $id);
     } else {
         $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
                     solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_code = ?, solicitante_telefono = ?, 
-                    solicitante_extension = ?, departamento = ?, estado = 'asignada', tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
+                    departamento = ?, estado = 'asignada', tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conexion, $query);
         // Bind actualizado: 10 strings, 1 entero (tecnico_id), 1 entero (id)
-        mysqli_stmt_bind_param($stmt, 'ssssssssssii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+        mysqli_stmt_bind_param($stmt, 'ssssssssiii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
                                     $solicitante_apellido, $solicitante_cedula, $solicitante_email, $solicitante_code,
-                                    $solicitante_telefono, $solicitante_extension, 
+                                    $solicitante_telefono, 
                                     $departamento, $tecnico_id, $id);
     }
 
@@ -444,13 +439,13 @@ function eliminarIncidencia($conexion) {
 
 function obtenerTiposIncidencia($conexion) {
     // Primero intentar obtener de la tabla reports_type
-    $query = "SELECT name FROM reports_type ORDER BY name";
+    $query = "SELECT id_reports_type, name FROM reports_type ORDER BY id_reports_type ASC";
     $resultado = mysqli_query($conexion, $query);
     $tipos = [];
     
     if ($resultado && mysqli_num_rows($resultado) > 0) {
         while ($row = mysqli_fetch_assoc($resultado)) {
-            $tipos[] = $row['name'];
+            $tipos[] = ['id' => $row['id_reports_type'], 'value' => $row['name']];
         }
     } else {
         // Si no hay datos en reports_type, obtener de incidencias existentes
@@ -461,21 +456,6 @@ function obtenerTiposIncidencia($conexion) {
             while ($row = mysqli_fetch_assoc($resultado)) {
                 $tipos[] = $row['tipo_incidencia'];
             }
-        }
-        
-        // Si tampoco hay tipos en incidencias, usar valores por defecto (9 tipos esenciales)
-        if (empty($tipos)) {
-            $tipos = [
-                'Hardware',
-                'Software',
-                'Internet/Red',
-                'Email',
-                'Impresoras',
-                'Sistema',
-                'Seguridad',
-                'Configuración de Equipo',
-                'Otros'
-            ];
         }
     }
     

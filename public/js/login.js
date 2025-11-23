@@ -87,7 +87,7 @@ function validateName(value) {
 }
 
 function validateUsername(value) {
-    return value.length >= 3 && value.length <= 50 && !value.includes(' ');
+    return value.length >= 7 && value.length <= 8 && !value.includes(' ');
 }
 
 function validateEmail(value) {
@@ -148,6 +148,10 @@ function fillIncidentFields(data) {
         incidentFields.email.value = data.email || '';
         incidentFields.codigoTelefono.value = data.codigo_telefono || '';
         incidentFields.telefono.value = data.telefono || '';
+        if (incidentFields.piso) {
+            incidentFields.piso.value = data.piso_id || '';
+            applyValidationClass(incidentFields.piso, !!data.piso_id);
+        }
 
         // DESHABILITAR campos porque los datos vienen del sistema
         fieldsToToggle.forEach(field => {
@@ -168,6 +172,10 @@ function fillIncidentFields(data) {
         incidentFields.email.value = '';
         incidentFields.codigoTelefono.value = '';
         incidentFields.telefono.value = '';
+        if (incidentFields.piso) {
+            incidentFields.piso.value = '';
+            incidentFields.piso.classList.remove('is-valid', 'is-invalid');
+        }
 
         // HABILITAR campos para que el usuario los ingrese
         fieldsToToggle.forEach(field => {
@@ -312,6 +320,13 @@ function validateAndSubmitIncident(event) {
     }
     applyValidationClass(incidentFields.tipo, true);
 
+    if (!validateSelect(incidentFields.piso.value)) {
+        showError('Debe seleccionar un Piso.', incidentFields.piso, errorDiv);
+        isValid = false;
+        return;
+    }
+    applyValidationClass(incidentFields.piso, true);
+
     if (!validateRequiredText(incidentFields.descripcion.value)) {
         showError('La Descripción Detallada es requerida.', incidentFields.descripcion, errorDiv);
         isValid = false;
@@ -332,6 +347,7 @@ function validateAndSubmitIncident(event) {
         formData.append('codigo_telefono', incidentFields.codigoTelefono.value);
         formData.append('telefono', incidentFields.telefono.value);
         formData.append('telefono_completo', incidentFields.codigoTelefono.value + incidentFields.telefono.value);
+        formData.append('solicitante_piso', incidentFields.piso.value);
         formData.append('tipo', incidentFields.tipo.value);
         formData.append('descripcion', incidentFields.descripcion.value);
 
@@ -384,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email: document.getElementById('incident-email'),
         codigoTelefono: document.getElementById('incident-codigo-telefono'),
         telefono: document.getElementById('incident-telefono'),
+        piso: document.getElementById('incident-piso'),
         tipo: document.getElementById('incident-tipo'),
         descripcion: document.getElementById('incident-descripcion')
     };
@@ -472,6 +489,13 @@ document.addEventListener('DOMContentLoaded', () => {
         incidentFields.telefono.addEventListener('input', () => {
             const isValid = validatePhone(incidentFields.telefono.value);
             applyValidationClass(incidentFields.telefono, isValid);
+        });
+    }
+
+    if (incidentFields.piso) {
+        incidentFields.piso.addEventListener('change', () => {
+            const isValid = validateSelect(incidentFields.piso.value);
+            applyValidationClass(incidentFields.piso, isValid);
         });
     }
 

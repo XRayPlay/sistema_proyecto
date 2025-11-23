@@ -9,9 +9,9 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-// Verificar permisos de administrador, director o analista
-if (!esAdmin() && !esDirector() && !esAnalista()) {
-    header("Location: ../index.php");
+// Verificar permisos de administrador o director
+if (!esAdmin() && !esDirector()) {
+    header("Location: ../index.php?error=acceso_denegado");
     exit();
 }
 

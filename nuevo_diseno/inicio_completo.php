@@ -281,9 +281,9 @@ if (empty($datos_departamento)) {
                                 <label class="form-label">Departamento</label>
                                 <select class="form-select" name="departamento">
                                     <option value="">Todos los departamentos</option>
-                                    <option value="Sistema">Sistema</option>
-                                    <option value="Soporte">Soporte</option>
-                                    <option value="Redes">Redes</option>
+                                    <option value="1">Soporte</option>
+                                    <option value="2">Sistema</option>
+                                    <option value="3">Redes</option>
                                 </select>
                 </div>
                             
@@ -313,11 +313,35 @@ if (empty($datos_departamento)) {
                             </div>
                         </div>
                         
-                                                <div style="margin-top: 1.5rem;">
+                                                <div style="margin-top: 1.5rem; display: flex; gap: 10px;">
                             <button type="submit" class="btn-filter">
                                 <i class="fas fa-search"></i>
                                 Aplicar Filtros
                             </button>
+                            <button type="button" id="exportExcelBtn" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-file-excel"></i>
+                                Exportar a Excel
+                            </button>
+                            <script>
+                            document.getElementById('exportExcelBtn').addEventListener('click', function() {
+                                const form = document.getElementById('filterForm');
+                                const formData = new FormData(form);
+                                const params = new URLSearchParams();
+                                
+                                // Add all form data to URL parameters
+                                for (let [key, value] of formData.entries()) {
+                                    if (value) {
+                                        params.append(key, value);
+                                    }
+                                }
+                                
+                                // Add export flag
+                                params.append('export', '1');
+                                
+                                // Redirect to export with filters
+                                window.location.href = '../php/exportar_incidencias_excel.php?' + params.toString();
+                            });
+                            </script>
                             </div>
                     </form>
                         </div>

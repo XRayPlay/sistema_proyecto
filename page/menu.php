@@ -13,7 +13,7 @@
         <!-- Sidebar Moderno -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title">Soporte Técnico</div>
+                <div class="sidebar-title">Centro de Atención al Usuario</div>
                 <div class="sidebar-subtitle">Panel</div>
             </div>
             
@@ -33,12 +33,6 @@
                         <a href="gestionar_incidencias.php" class="nav-link <?php echo ($menu === 'inciden') ? 'active' : ''; ?>">
                             <i class="fas fa-clipboard-list"></i>
                             <span>Gestión de Incidencias</span>
-                        </a>
-                    </div>
-                    <div class="nav-item">
-                        <a href="gestionar_tecnicos.php" class="nav-link <?php echo ($menu === 'tecnic') ? 'active' : ''; ?>">
-                            <i class="fas fa-users-cog"></i>
-                            <span>Gestión de Técnicos</span>
                         </a>
                     </div>
                     <div class="nav-item">

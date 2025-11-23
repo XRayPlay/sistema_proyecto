@@ -201,12 +201,12 @@ try {
                                 <div class="invalid-feedback">El teléfono debe tener exactamente 7 dígitos</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="departamento" class="form-label">Departamento</label>
+                                <label for="departamento" class="form-label">Área de atención</label>
                                 <select class="form-control modern-input" id="departamento" name="departamento" required>
-                                    <option value="">Seleccione un departamento</option>
-                                    <option value="Sistema">Sistema</option>
-                                    <option value="Soporte">Soporte</option>
-                                    <option value="Redes">Redes</option>
+                                    <option value="">Seleccione un área de atención</option>
+                                    <option value="1">Soporte</option>
+                                    <option value="2">Sistema</option>
+                                    <option value="3">Redes</option>
                                 </select>
                             </div>
                         </div>
@@ -476,8 +476,8 @@ try {
                 
                 data.tipos.forEach(tipo => {
                     const option = document.createElement('option');
-                    option.value = tipo;
-                    option.textContent = tipo;
+                    option.value = tipo.id;
+                    option.textContent = tipo.value;
                     select.appendChild(option);
                 });
             }
