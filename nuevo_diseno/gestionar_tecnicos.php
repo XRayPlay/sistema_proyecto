@@ -3,6 +3,27 @@ session_start();
 require_once "../php/permisos.php";
 require_once "../php/clases.php";
 
+// Obtener la lista de pisos para el select
+$pisos = [];
+try {
+    $conexion = new conectar();
+    $conexion = $conexion->conexion();
+    
+    $query = "SELECT id_floors, name FROM floors ORDER BY id_floors ASC";
+    $result = $conexion->query($query);
+    
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $pisos[] = $row;
+        }
+        $result->free();
+    }
+    $conexion->close();
+} catch (Exception $e) {
+    // En caso de error, se deja el array de pisos vacío
+    error_log("Error al obtener pisos: " . $e->getMessage());
+}
+
 // Verificar autenticación
 if (!isset($_SESSION['usuario'])) {
     header("Location: ../index.php");
@@ -159,9 +180,10 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nacionalidad" class="form-label">Nacionalidad</label>
-                                    <select class="form-control" id="nacionalidad" name="nacionalidad" required>
-                                        <option value="venezolano">V</option>
-                                        <option value="extranjero">E</option>
+                                    <select class="form-select" id="nacionalidad" name="nacionalidad" required>
+                                        <option value="">Seleccionar nacionalidad</option>
+                                        <option value="venezolano">Venezolano (V)</option>
+                                        <option value="extranjero">Extranjero (E)</option>
                                     </select>
                                 </div>
                             </div>
@@ -170,24 +192,36 @@ try {
                                     <label for="cedula" class="form-label">Cedula</label>
                                     <input type="tel" class="form-control" id="cedula" name="cedula" minlength="7" required>
                                 </div>
-                            </div>                            
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="piso" class="form-label">Piso</label>
+                                    <select class="form-select" id="piso" name="piso" required>
+                                        <option value="">Seleccionar piso</option>
+                                        <?php foreach ($pisos as $piso): ?>
+                                            <option value="<?php echo (int)$piso['id_floors']; ?>">
+                                                <?php echo htmlspecialchars($piso['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="birthday" class="form-label">Fecha de Nacimiento</label>
-                                        <input type="date" class="form-control" id="birthday" name="birthday" required>
+                                        <input type="hidden" id="birthday" name="birthday" value="<?php echo (date('Y')-20).'-01-01'; ?>">
                                     </div>
                                 </div>
 
                                 <!-- Elimiar Genero -->
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="sexo" class="form-label">Genero</label>
-                                        <select class="form-select" id="sexo" name="sexo" required>
-                                            <option value="">Seleccionar Genero</option>
+                                        <label for="sexo" class="form-label" hidden>Genero</label>
+                                        <select class="form-select" id="sexo" name="sexo" hidden>
+                                            <option value="Sin Definir">Seleccionar Genero</option>
                                             <option value="Masculino">Masculino</option>
                                             <option value="Femenino">Femenino</option>
-                                            <option value="Femenino">Femenino</option>
+                                            <option value="Otro">Otro</option>
                                         </select>
                                     </div>
                                 </div>
@@ -195,13 +229,6 @@ try {
 
                             </div>
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="avatar" class="form-label">Foto de Perfil (Avatar)</label>
-                                    <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
-                                    <small class="form-text text-muted">Solo se permiten imágenes (JPG, PNG, GIF).</small>
-                                </div>
-                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="especialidad" class="form-label">Área de Atención</label>
@@ -221,6 +248,13 @@ try {
                                         <option value="2">Ocupado</option>
                                         <option value="3">Ausente</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="avatar" class="form-label" hidden>Foto de Perfil (Avatar)</label>
+                                    <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*" hidden>
+                                    <small class="form-text text-muted" hidden>Solo se permiten imágenes (JPG, PNG, GIF).</small>
                                 </div>
                             </div>
                         </div>
@@ -487,6 +521,8 @@ async function abrirModalTecnico(modo, tecnico = null) {
         document.getElementById('modalTitulo').textContent = 'Editar Técnico';
         document.querySelector('#modalTecnico .btn-primary').textContent = 'Actualizar Técnico';
         
+        
+        
         // ... (Contraseñas opcionales) ...
 
         // Las contraseñas no son obligatorias al editar: permitir dejar en blanco para no cambiarla
@@ -505,6 +541,7 @@ async function abrirModalTecnico(modo, tecnico = null) {
         document.getElementById('nacionalidad').value = tecnico.nacionalidad;
         document.getElementById('cedula').value = tecnico.cedula; 
         document.getElementById('especialidad').value = tecnico.especialidad;
+        document.getElementById('piso').value = tecnico.id_piso !== undefined ? parseInt(tecnico.id_piso) : '';
 
         // **NUEVOS CAMPOS**
         document.getElementById('birthday').value = tecnico.birthday || '';
@@ -555,7 +592,7 @@ async function cargarTecnicos() {
                         <td>${tecnico.nombre} ${tecnico.apellido}</td>
                         <td>${tecnico.especialidad}</td>
                         <td>${tecnico.email}</td>
-                        <td>${tecnico.code_phone ? `(${tecnico.code_phone}) ` : ''}${tecnico.telefono}</td>
+                        <td>(${tecnico.code_phone}) ${tecnico.telefono}</td>
                         <td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td>
                         <td>${formatearFecha(tecnico.fecha_registro)}</td>
                         <td>
@@ -623,7 +660,6 @@ async function verDetallesTecnico(id) {
 function mostrarDetallesTecnico(tecnico) {
     const contenido = `
         <table class="table table-borderless">
-            <tr><td><strong>Avatar:</strong></td><td>${tecnico.avatar ? `<img src="../path/to/avatars/${tecnico.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%;">` : 'No asignado'}</td></tr>
             <tr><td><strong>ID:</strong></td><td>#${tecnico.id}</td></tr>
             <tr><td><strong>Nombre:</strong></td><td>${tecnico.nombre} ${tecnico.apellido}</td></tr>
             <tr><td><strong>Cédula:</strong></td><td>${tecnico.nacionalidad === 'venezolano' ? 'V' : ''}${tecnico.nacionalidad === 'extranjero' ? 'E' : ''}-${tecnico.cedula}</td></tr>
@@ -634,7 +670,7 @@ function mostrarDetallesTecnico(tecnico) {
             <tr><td><strong>Email:</strong></td><td>${tecnico.email}</td></tr>
             <tr><td><strong>Teléfono:</strong></td><td>${tecnico.code_phone ? `(${tecnico.code_phone}) ` : ''}${tecnico.telefono}</td></tr>
             <tr><td><strong>Especialidad:</strong></td><td>${tecnico.especialidad}</td></tr>
-            <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td></tr>
+            <tr><td><strong>Status:</strong></td><td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td></tr>
             <tr><td><strong>Fecha de Registro:</strong></td><td>${formatearFecha(tecnico.fecha_registro)}</td></tr>
         </table>
     `;
@@ -705,6 +741,9 @@ async function guardarTecnico() {
     if (!validarFormularioTecnico(true)) {
         return;
     }
+    
+    // Get the floor value
+    const piso = document.getElementById('piso').value;
 
     const confirmado = await mostrarModalConfirmacion({
         titulo: modoEdicion ? 'Confirmar actualización' : 'Confirmar registro',
@@ -789,7 +828,7 @@ function mostrarIncidenciasTecnico(incidencias, tecnicoNombre) {
                         <tr>
                             <th>ID</th>
                             <th>Descripción</th>
-                            <th>Estado</th>
+                            <th>Status</th>
                             <th>Fecha Asignación</th>
                         </tr>
                     </thead>

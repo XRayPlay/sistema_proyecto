@@ -92,7 +92,21 @@ function crearIncidencia($conexion) {
     $solicitante_email = $_POST['solicitante_email'] ?? '';
     $solicitante_code = $_POST['solicitante_code'] ?? '';
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
-    $departamento = $_POST['departamento'] ?? '';
+    $piso = $_POST['piso'] ?? '';
+    
+    $departamento = 1;
+    $sqlde = "SELECT tipo_incidencia FROM incidencias WHERE id = ?";
+    $stmt_depto = mysqli_prepare($conexion, $sqlde);
+    if ($stmt_depto) {
+        mysqli_stmt_bind_param($stmt_depto, 'i', $tipo_incidencia);
+        if (mysqli_stmt_execute($stmt_depto)) {
+            $result = mysqli_stmt_get_result($stmt_depto);
+            if ($row = mysqli_fetch_assoc($result)) {
+                $departamento = $row['tipo_incidencia'];
+            }
+        }
+        mysqli_stmt_close($stmt_depto);
+    }
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
     // Normalizar el valor del técnico: el frontend a veces envía la cédula,
     // otras veces el id_user. Queremos almacenar el id_user en la tabla incidencias.
@@ -118,11 +132,32 @@ function crearIncidencia($conexion) {
     }
     
     // Validar campos requeridos
-    if (empty($tipo_incidencia) || empty($descripcion) || empty($solicitante_nombre) || 
-        empty($solicitante_cedula) || empty($solicitante_email) || empty($solicitante_code) ||
-        empty($solicitante_telefono) || empty($departamento)) {
-        echo json_encode(['success' => false, 'message' => 'Todos los campos requeridos deben ser completados']);
-        return;
+    $required = [
+        'tipo_incidencia' => $tipo_incidencia,
+        'descripcion' => $descripcion,
+        'solicitante_nombre' => $solicitante_nombre,
+        'solicitante_apellido' => $solicitante_apellido,
+        'solicitante_cedula' => $solicitante_cedula,
+        'solicitante_email' => $solicitante_email,
+        'solicitante_code' => $solicitante_code,
+        'solicitante_telefono' => $solicitante_telefono,
+        'piso' => $piso
+    ];
+    
+    $missing = [];
+    foreach ($required as $field => $value) {
+        if (empty($value)) {
+            $missing[] = $field;
+        }
+    }
+    
+    if (!empty($missing)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Faltan campos obligatorios: ' . implode(', ', $missing)
+        ]);
+        exit();
     }
     
     // Query actualizado en crearIncidencia
@@ -133,7 +168,7 @@ function crearIncidencia($conexion) {
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
                     solicitante_email, solicitante_code, solicitante_telefono,
                     departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', NULL, NOW(), NOW())";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NULL, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
@@ -152,12 +187,12 @@ function crearIncidencia($conexion) {
         $query = "INSERT INTO incidencias (
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
                     solicitante_email, solicitante_code, solicitante_telefono, 
-                    departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', ?, NOW(), NOW())";
+                    solicitante_piso, departamento, estado, tecnico_asignado, fecha_creacion, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', ?, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
-            'ssssssssii',
+            'sssssssssii',
             $tipo_incidencia,
             $descripcion,
             $solicitante_nombre,
@@ -166,20 +201,42 @@ function crearIncidencia($conexion) {
             $solicitante_email,
             $solicitante_code,
             $solicitante_telefono,
+            $piso,
             $departamento,
             $tecnico_id
         );
     }
     
-    if (mysqli_stmt_execute($stmt)) {
-        $id_incidencia = mysqli_insert_id($conexion);
+    if (!$stmt) {
+        http_response_code(500);
         echo json_encode([
-            'success' => true, 
-            'message' => 'Incidencia creada exitosamente',
-            'id' => $id_incidencia
+            'success' => false, 
+            'message' => 'Error al preparar la consulta: ' . mysqli_error($conexion)
         ]);
+        exit();
+    }
+    
+    if (mysqli_stmt_execute($stmt)) {
+        $incidencia_id = mysqli_insert_id($conexion);
+        // Limpiar cualquier salida antes de enviar la respuesta JSON
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Incidencia creada exitosamente',
+            'id' => $incidencia_id
+        ]);
+        exit();
     } else {
-        echo json_encode(['success' => false, 'message' => 'Error al crear incidencia: ' . mysqli_error($conexion)]);
+        // Limpiar cualquier salida antes de enviar el error
+        if (ob_get_length()) ob_clean();
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error al crear la incidencia: ' . mysqli_error($conexion)
+        ]);
+        exit();
     }
 }
 
@@ -294,11 +351,11 @@ function obtenerIncidenciaPorId($conexion) {
     $query = "SELECT i.id, c.id_cargo as tipo_incidencia, i.descripcion, i.estado, 
                      i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, 
                      i.solicitante_email, i.solicitante_code, i.solicitante_telefono, 
-                     i.departamento, 
+                     i.solicitante_piso, i.departamento, c.description as depart_name,
                      i.fecha_creacion, i.tecnico_asignado as tecnico_id, 
-                     u.cedula as tecnico_cedula, u.name as tecnico_nombre
+                     u.cedula as tecnico_cedula, u.name as tecnico_nombre, f.name as name_piso
               FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo INNER JOIN floors f ON f.id_floors = i.solicitante_piso
               WHERE i.id = ?";
     $stmt = mysqli_prepare($conexion, $query);
     mysqli_stmt_bind_param($stmt, 'i', $id);
@@ -326,7 +383,10 @@ function obtenerIncidenciaPorId($conexion) {
                 'solicitante_email' => $incidencia['solicitante_email'],
                 'solicitante_code' => $incidencia['solicitante_code'] ?? '',
                 'solicitante_telefono' => $incidencia['solicitante_telefono'],
+                'solicitante_piso' => $incidencia['solicitante_piso'],
+                'piso' => $incidencia['name_piso'],
                 'departamento' => $incidencia['departamento'],
+                'depart_name' => $incidencia['depart_name'],
                 // Añadimos el id y la cédula del técnico (si existe) para que el frontend pueda seleccionar el option correcto
                 'tecnico_id' => $incidencia['tecnico_id'] ?? null,
                 'tecnico_cedula' => $incidencia['tecnico_cedula'] ?? null,
@@ -351,8 +411,22 @@ function actualizarIncidencia($conexion) {
     $solicitante_email = mysqli_real_escape_string($conexion, $_POST['solicitante_email'] ?? '');
     $solicitante_code = mysqli_real_escape_string($conexion, $_POST['solicitante_code'] ?? '');
     $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono'] ?? '');
-    $departamento = mysqli_real_escape_string($conexion, $_POST['departamento'] ?? '');
-
+    $piso = mysqli_real_escape_string($conexion, $_POST['piso'] ?? '');
+    
+    $departamento = 1;
+    $sqlde = "SELECT tipo_incidencia FROM incidencias WHERE id = ?";
+    $stmt_depto = mysqli_prepare($conexion, $sqlde);
+    if ($stmt_depto) {
+        mysqli_stmt_bind_param($stmt_depto, 'i', $tipo_incidencia);
+        if (mysqli_stmt_execute($stmt_depto)) {
+            $result = mysqli_stmt_get_result($stmt_depto);
+            if ($row = mysqli_fetch_assoc($result)) {
+                $departamento = $row['tipo_incidencia'];
+            }
+        }
+        mysqli_stmt_close($stmt_depto);
+    }
+    $departamento = mysqli_real_escape_string($conexion, $departamento ?? '');
     // Manejar técnico asignado (puede ser id_user o cédula). El select en frontend envía id_user.
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
     $tecnico_id = null;
@@ -379,7 +453,7 @@ function actualizarIncidencia($conexion) {
     // Validar campos requeridos
     if (empty($tipo_incidencia) || empty($descripcion) || empty($solicitante_nombre) || 
         empty($solicitante_cedula) || empty($solicitante_email) || empty($solicitante_code) ||
-        empty($solicitante_telefono) || empty($departamento)) {
+        empty($solicitante_telefono)) {
         echo json_encode(['success' => false, 'message' => 'Todos los campos requeridos deben ser completados']);
         return;
     }
@@ -388,22 +462,24 @@ function actualizarIncidencia($conexion) {
     if ($tecnico_id === null) {
         $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
                     solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_code = ?, solicitante_telefono = ?, 
-                    departamento = ?, estado = 'pendiente', tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
+                    solicitante_piso = ?, departamento = ?, estado = 'pendiente', tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conexion, $query);
         // Bind: 10 strings + id (int)
-        mysqli_stmt_bind_param($stmt, 'ssssssssii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+        mysqli_stmt_bind_param($stmt, 'sssssssssii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
                                     $solicitante_apellido, $solicitante_cedula, $solicitante_email, $solicitante_code,
                                     $solicitante_telefono, 
+                                    $piso,
                                     $departamento, $id);
     } else {
         $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
                     solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_code = ?, solicitante_telefono = ?, 
-                    departamento = ?, estado = 'asignada', tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
+                    solicitante_piso = ?, departamento = ?, estado = 'asignada', tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conexion, $query);
         // Bind actualizado: 10 strings, 1 entero (tecnico_id), 1 entero (id)
-        mysqli_stmt_bind_param($stmt, 'ssssssssiii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+        mysqli_stmt_bind_param($stmt, 'sssssssssiii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
                                     $solicitante_apellido, $solicitante_cedula, $solicitante_email, $solicitante_code,
                                     $solicitante_telefono, 
+                                    $piso,
                                     $departamento, $tecnico_id, $id);
     }
 

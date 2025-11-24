@@ -78,15 +78,34 @@ include('../page/menu.php');
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="birthday" class="form-label">Fecha de Nacimiento</label>
-                            <input type="date" id="birthday" name="birthday" class="form-control" required>
+                        <div class="mb-3 d-none">
+                            <input type="date" id="birthday" name="birthday" class="form-control" value="<?php echo (date('Y')-20) . '-01-01'; ?>" required>
                         </div>
                         <div class="mb-3">
-                            <label for="address" class="form-label">Dirección</label>
-                            <input type="text" id="address" name="address" class="form-control" required minlength="5" maxlength="255">
+                            <label for="piso" class="form-label">Piso</label>
+                            <select class="form-select" id="piso" name="piso" required>
+                                <option value="">Seleccionar piso</option>
+                                <?php
+                                try {
+                                    $conexion = new conectar();
+                                    $conexion = $conexion->conexion();
+                                    $query = "SELECT id_floors, name FROM floors ORDER BY id_floors ASC";
+                                    $result = $conexion->query($query);
+                                    
+                                    if ($result) {
+                                        while ($row = $result->fetch_assoc()) {
+                                            echo '<option value="' . htmlspecialchars($row['id_floors']) . '">' . htmlspecialchars($row['name']) . '</option>';
+                                        }
+                                        $result->free();
+                                    }
+                                    $conexion->close();
+                                } catch (Exception $e) {
+                                    error_log("Error al obtener pisos: " . $e->getMessage());
+                                }
+                                ?>
+                            </select>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3 d-none">
                             <label for="avatar" class="form-label">Avatar (opcional)</label>
                             <input type="file" id="avatar" name="avatar" accept="image/*" class="form-control">
                         </div>
@@ -190,7 +209,10 @@ document.addEventListener('DOMContentLoaded', function(){
             document.getElementById('code_phone').value = u.code_phone || '';
             document.getElementById('telefono').value = u.telefono || '';
             document.getElementById('birthday').value = u.birthday || '';
-            document.getElementById('address').value = u.address || '';
+            // Set the floor value if it exists in the user data
+            if (u.id_piso) {
+                document.getElementById('piso').value = u.id_piso;
+            }
         } else {
             msg.innerText = data.message || 'No se pudo obtener los datos del perfil';
             msg.className = 'text-danger';

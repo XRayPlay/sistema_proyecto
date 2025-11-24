@@ -36,11 +36,12 @@ try {
                 i.id,
                 i.fecha_creacion,
                 i.solicitante_nombre,
+                i.solicitante_apellido,
                 i.solicitante_cedula,
                 i.solicitante_email,
                 i.solicitante_telefono,
-                i.tipo_incidencia,
-                i.departamento,
+                COALESCE(rt.description, i.tipo_incidencia) as tipo_incidencia,
+                COALESCE(c.name, i.departamento) as departamento,
                 i.descripcion,
                 i.estado,
                 i.fecha_asignacion,
@@ -49,6 +50,8 @@ try {
                 u.email as email_tecnico
             FROM incidencias i
             LEFT JOIN user u ON i.tecnico_asignado = u.id_user
+            LEFT JOIN reports_type rt ON i.tipo_incidencia = rt.id_reports_type
+            LEFT JOIN cargo c ON i.departamento = c.id_cargo
             WHERE 1=1";
     
     // Aplicar filtros si existen
@@ -124,22 +127,28 @@ try {
         ob_end_clean();
     }
     
-    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Type: text/csv; charset=utf-8; sep=;');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Pragma: no-cache');
     header('Expires: 0');
     
-    // Crear archivo CSV
+    // Crear archivo CSV con configuración para Excel
     $output = fopen('php://output', 'w');
     
     // BOM para UTF-8 (para que Excel reconozca caracteres especiales)
     fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+    
+    // Configuración del CSV para Excel
+    $delimiter = ";";  // Usar punto y coma como delimitador (más común en Excel para español)
+    $enclosure = '"';
+    $escape = '\\';
     
     // Encabezados del CSV
     $headers = [
         'ID',
         'Fecha Creación',
         'Solicitante Nombre',
+        'Solicitante Apellido',
         'Solicitante Cédula',
         'Solicitante Email',
         'Solicitante Teléfono',
@@ -153,7 +162,7 @@ try {
         'Email Técnico'
     ];
     
-    fputcsv($output, $headers);
+    fputcsv($output, $headers, $delimiter, $enclosure, $escape);
     
     // Datos de las incidencias
     while ($row = $result->fetch_assoc()) {
@@ -161,6 +170,7 @@ try {
             $row['id'],
             $row['fecha_creacion'],
             $row['solicitante_nombre'],
+            $row['solicitante_apellido'],
             $row['solicitante_cedula'],
             $row['solicitante_email'],
             $row['solicitante_telefono'],
@@ -174,7 +184,16 @@ try {
             $row['email_tecnico'] ?: 'N/A'
         ];
         
-        fputcsv($output, $csv_row);
+        // Limpiar y formatear cada campo
+        $formatted_row = array_map(function($value) {
+            // Convertir a string y limpiar saltos de línea y tabulaciones
+            $value = strval($value);
+            $value = str_replace(["\r\n", "\r", "\n"], ' ', $value);
+            $value = str_replace("\t", ' ', $value);
+            return $value;
+        }, $csv_row);
+        
+        fputcsv($output, $formatted_row, $delimiter, $enclosure, $escape);
     }
     
     fclose($output);

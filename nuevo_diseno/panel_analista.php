@@ -83,7 +83,7 @@ try {
                             <th>NOMBRE</th>
                             <th>EMAIL</th>
                             <th>TELÉFONO</th>
-                            <th>ESTADO</th>
+                            <th>STATUS</th>
                             <th>FECHA REGISTRO</th>
                             <th>ACCIONES</th>
                         </tr>
@@ -149,9 +149,10 @@ try {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nacionalidad" class="form-label">Nacionalidad</label>
-                                    <select class="form-control" id="nacionalidad" name="nacionalidad" required>
-                                        <option value="venezolano">V</option>
-                                        <option value="extranjero">E</option>
+                                    <select class="form-select" id="nacionalidad" name="nacionalidad" required>
+                                        <option value="">Seleccionar nacionalidad</option>
+                                        <option value="venezolano">Venezolano (V)</option>
+                                        <option value="extranjero">Extranjero (E)</option>
                                     </select>
                                 </div>
                             </div>
@@ -161,26 +162,9 @@ try {
                                     <input maxlength="8" type="tel" class="form-control" id="cedula" name="cedula" required>
                                 </div>
                             </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="birthday" class="form-label">Fecha de Nacimiento</label>
-                                    <input type="date" class="form-control" id="birthday" name="birthday" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="sexo" class="form-label">Genero</label>
-                                    <select class="form-control" id="sexo" name="sexo" required>
-                                        <option value="">Seleccionar Genero</option>
-                                        <option value="M">Masculino</option>
-                                        <option value="F">Femenino</option>
-                                    </select>
-                                </div>
-                            </div>
                             <div class="col-md-6 d-none" id="estadoAnalistaGroup">
                                 <div class="mb-3">
-                                    <label for="id_status_user" class="form-label">Estado</label>
+                                    <label for="id_status_user" class="form-label">Status</label>
                                     <select class="form-select" id="id_status_user" name="id_status_user">
                                         <option value="1">Activo</option>
                                         <option value="2">Ocupado</option>
@@ -188,11 +172,28 @@ try {
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">                                    
+                                    <label for="birthday" class="form-label" hidden>Fecha de Nacimiento</label >
+                                    <input type="date" class="form-control" id="birthday" name="birthday" value="<?php echo (date('Y')-20).'-01-01'; ?>" hidden>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label hidden for="sexo" class="form-label">Genero</label>
+                                    <select class="form-select" id="sexo" name="sexo" hidden>
+                                        <option value="Sin Definir">Seleccionar Genero</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Femenino">Femenino</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label for="avatar" class="form-label">URL del Avatar (Opcional)</label>
-                                    <input maxlength="255" type="file" class="form-control" id="avatar" name="avatar">
-                                    <small class="form-text text-muted">Introduce la URL de la imagen del analista.</small>
+                                    <label for="avatar" class="form-label" hidden>URL del Avatar (Opcional)</label>
+                                    <input maxlength="255" type="file" class="form-control" id="avatar" name="avatar" hidden>
+                                    <small class="form-text text-muted" hidden>Introduce la URL de la imagen del analista.</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -519,9 +520,6 @@ try {
         function mostrarDetallesAnalista(analista) {
             const contenido = `
                 <div class="row">
-                    <div class="col-md-4 text-center">
-                        <img src="${analista.avatar || 'assets/images/default-avatar.png'}" alt="Avatar" class="img-fluid rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
-                    </div>
                     <div class="col-md-8">
                         <table class="table table-borderless table-sm">
                             <tr><td><strong>ID:</strong></td><td>#${analista.id}</td></tr>
@@ -532,7 +530,7 @@ try {
 
                             <tr><td><strong>Sexo:</strong></td><td>${analista.sexo === 'M' ? 'Masculino' : 'Femenino'}</td></tr>
                             <tr><td><strong>Fecha Nac.:</strong></td><td>${formatearFechaCorta(analista.birthday)}</td></tr>
-                            <tr><td><strong>Estado:</strong></td><td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td></tr>
+                            <tr><td><strong>Status:</strong></td><td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td></tr>
                         </table>
                     </div>
                 </div>

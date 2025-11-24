@@ -22,7 +22,7 @@ $conexion = $c->conexion();
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Devolver datos básicos del usuario
-        $query = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, address, avatar, id_rol FROM user WHERE id_user = ?";
+        $query = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, address, avatar, id_rol, id_floor as id_piso FROM user WHERE id_user = ?";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param($stmt, 'i', $userId);
         mysqli_stmt_execute($stmt);
@@ -47,8 +47,9 @@ try {
         $telefono = mysqli_real_escape_string($conexion, $_POST['telefono'] ?? '');
         $code_phone = mysqli_real_escape_string($conexion, $_POST['code_phone'] ?? '');
         $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '');
-        $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'M');
+        $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'Sin Definir');
         $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? '');
+        $id_piso = isset($_POST['piso']) ? (int)$_POST['piso'] : 0;
         $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
         $confirm_password = mysqli_real_escape_string($conexion, $_POST['confirmar_password'] ?? '');
 
@@ -88,9 +89,7 @@ try {
         if (!in_array($code_phone, $codigosPermitidos, true)) {
             echo json_encode(['success' => false, 'message' => 'Código de teléfono inválido']); exit();
         }
-        if (strlen($address) < 5 || strlen($address) > 255) {
-            echo json_encode(['success' => false, 'message' => 'La Dirección debe tener entre 5 y 255 caracteres']); exit();
-        }
+        // Address validation removed as requested
         if (empty($birthday)) { echo json_encode(['success' => false, 'message' => 'La Fecha de Nacimiento es obligatoria']); exit(); }
         $dob = new DateTime($birthday);
         $age = (new DateTime())->diff($dob)->y;
@@ -142,12 +141,14 @@ try {
 
         // Construir actualización dinámica
         $update_fields = [];
-        $params = [];
         $types = '';
+        $params = [];
 
-    $update_fields[] = 'name = ?'; $types .= 's'; $params[] = $name;
-    // Incluir username derivado del email
-    $update_fields[] = 'username = ?'; $types .= 's'; $params[] = $username;
+        // Incluir campos obligatorios
+        $update_fields[] = 'name = ?'; $types .= 's'; $params[] = $name;
+        $update_fields[] = 'id_floor = ?'; $types .= 'i'; $params[] = $id_piso;
+        // Incluir username derivado del email
+        $update_fields[] = 'username = ?'; $types .= 's'; $params[] = $username;
         $update_fields[] = 'apellido = ?'; $types .= 's'; $params[] = $apellido;
         $update_fields[] = 'nacionalidad = ?'; $types .= 's'; $params[] = $nacionalidad;
         $update_fields[] = 'cedula = ?'; $types .= 's'; $params[] = $cedula;

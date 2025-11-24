@@ -42,6 +42,7 @@ try {
                 solicitante_email,
                 solicitante_code, 
                 solicitante_telefono,
+                solicitante_piso,
                 departamento
             FROM incidencias 
             WHERE solicitante_cedula = ?
@@ -72,7 +73,8 @@ try {
             'email' => $incidente_data['solicitante_email'],
             'codigo_telefono' => $incidente_data['solicitante_code'],
             'telefono' => $incidente_data['solicitante_telefono'], 
-            'departamento' => $incidente_data['departamento']
+            'departamento' => $incidente_data['departamento'],
+            'piso' => $incidente_data['piso']
         ];
     } else {
         // Cédula NO encontrada en el historial de incidencias

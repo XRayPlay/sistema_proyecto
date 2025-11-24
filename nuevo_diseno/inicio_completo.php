@@ -80,29 +80,53 @@ if ($resultado_usuarios) {
 
 
 
-// Obtener datos para gráfica de incidencias por fecha (últimos 7 días)
-$query_incidencias_fecha = "SELECT DATE(fecha_creacion) as fecha, COUNT(*) as cantidad 
-                            FROM incidencias 
-                            WHERE fecha_creacion >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-                            GROUP BY DATE(fecha_creacion) 
-                            ORDER BY fecha";
+// Obtener datos para gráfica de incidencias por mes (últimos 6 meses)
+$query_incidencias_fecha = "SELECT 
+                            DATE_FORMAT(fecha_creacion, '%Y-%m') as mes,
+                            COUNT(*) as cantidad 
+                          FROM incidencias 
+                          WHERE fecha_creacion >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
+                          GROUP BY DATE_FORMAT(fecha_creacion, '%Y-%m')
+                          ORDER BY mes";
 $resultado_fecha = mysqli_query($conexion, $query_incidencias_fecha);
 $datos_fecha = [];
 $labels_fecha = [];
 $data_fecha = [];
 
+// Inicializar los últimos 6 meses con 0
+$meses_es = [
+    '01' => 'Ene', '02' => 'Feb', '03' => 'Mar', '04' => 'Abr',
+    '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Ago',
+    '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dic'
+];
+
+// Crear array con los últimos 6 meses
+$ultimos_meses = [];
+for ($i = 5; $i >= 0; $i--) {
+    $fecha = new DateTime();
+    $fecha->modify("-$i months");
+    $mes_anio = $fecha->format('Y-m');
+    $mes_num = $fecha->format('m');
+    $anio = $fecha->format('Y');
+    $ultimos_meses[$mes_anio] = [
+        'label' => $meses_es[$mes_num] . ' ' . $anio,
+        'cantidad' => 0
+    ];
+}
+
+// Procesar resultados de la consulta
 if ($resultado_fecha) {
     while ($row = mysqli_fetch_assoc($resultado_fecha)) {
-        $datos_fecha[] = $row;
-        $labels_fecha[] = date('d/m', strtotime($row['fecha']));
-        $data_fecha[] = $row['cantidad'];
+        if (isset($ultimos_meses[$row['mes']])) {
+            $ultimos_meses[$row['mes']]['cantidad'] = (int)$row['cantidad'];
+        }
     }
 }
 
-// Si no hay datos, usar datos de ejemplo
-if (empty($datos_fecha)) {
-    $labels_fecha = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    $data_fecha = [8, 12, 15, 10, 18, 5, 3];
+// Preparar datos para la gráfica
+foreach ($ultimos_meses as $mes) {
+    $labels_fecha[] = $mes['label'];
+    $data_fecha[] = $mes['cantidad'];
 }
 
 // Obtener datos para gráfica de incidencias por tipo
@@ -154,6 +178,25 @@ if ($resultado_departamento) {
 if (empty($datos_departamento)) {
     $labels_departamento = ['Sistema', 'Soporte', 'Redes', 'Administración', 'Recursos Humanos', 'Contabilidad'];
     $data_departamento = [15, 12, 8, 6, 4, 3];
+}
+
+// Obtener incidencias agrupadas por mes
+$query_por_mes = "SELECT 
+                    DATE_FORMAT(fecha_creacion, '%Y-%m') as mes,
+                    COUNT(*) as total_incidencias,
+                    SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
+                    SUM(CASE WHEN estado = 'en_proceso' THEN 1 ELSE 0 END) as en_proceso,
+                    SUM(CASE WHEN estado = 'resuelta' THEN 1 ELSE 0 END) as resueltas
+                  FROM incidencias 
+                  WHERE fecha_creacion >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+                  GROUP BY DATE_FORMAT(fecha_creacion, '%Y-%m')
+                  ORDER BY mes DESC";
+$result_por_mes = mysqli_query($conexion, $query_por_mes);
+$incidencias_por_mes = [];
+if ($result_por_mes) {
+    while ($row = mysqli_fetch_assoc($result_por_mes)) {
+        $incidencias_por_mes[] = $row;
+    }
 }
 ?>
 
@@ -318,10 +361,24 @@ if (empty($datos_departamento)) {
                                 <i class="fas fa-search"></i>
                                 Aplicar Filtros
                             </button>
+                            <button type="button" id="clearFiltersBtn" class="btn btn-outline-secondary" style="display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-eraser"></i>
+                                Limpiar Filtros
+                            </button>
                             <button type="button" id="exportExcelBtn" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 5px;">
                                 <i class="fas fa-file-excel"></i>
                                 Exportar a Excel
                             </button>
+                            <script>
+                            // Clear filters functionality
+                            document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+                                const form = document.getElementById('filterForm');
+                                // Reset all form fields
+                                form.reset();
+                                // Trigger form submission to refresh results
+                                form.dispatchEvent(new Event('submit', { cancelable: true }));
+                            });
+                            </script>
                             <script>
                             document.getElementById('exportExcelBtn').addEventListener('click', function() {
                                 const form = document.getElementById('filterForm');
@@ -370,6 +427,7 @@ if (empty($datos_departamento)) {
                         </div>
                     </div>
                 </div>
+                
                 </div>
     </div> 
     <!-- Scripts -->
@@ -727,24 +785,20 @@ if (empty($datos_departamento)) {
 
         // Inicializar gráficas cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            // Gráfica de Incidencias por Fecha
+            // Gráfica de Incidencias por Mes
             const ctxIncidenciasFecha = document.getElementById('chartIncidenciasFecha').getContext('2d');
             chartIncidenciasFecha = new Chart(ctxIncidenciasFecha, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($labels_fecha); ?>,
                     datasets: [{
-                        label: 'Incidencias Reportadas',
+                        label: 'Incidencias',
                         data: <?php echo json_encode($data_fecha); ?>,
+                        backgroundColor: '#1e3a8a',
                         borderColor: '#1e3a8a',
-                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#1e3a8a',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
                     }]
                 },
                 options: {
@@ -753,33 +807,57 @@ if (empty($datos_departamento)) {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 58, 138, 0.9)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#1e3a8a',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Incidencias: ' + context.raw;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(30, 58, 138, 0.1)'
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
                             },
                             ticks: {
                                 font: {
                                     family: 'Inter',
-                                    size: 12
-                                }
+                                    size: 11
+                                },
+                                color: '#6b7280',
+                                stepSize: 1,
+                                precision: 0
                             }
                         },
                         x: {
                             grid: {
-                                color: 'rgba(30, 58, 138, 0.1)'
+                                display: false,
+                                drawBorder: false
                             },
                             ticks: {
                                 font: {
                                     family: 'Inter',
-                                    size: 12
-                                }
+                                    size: 11
+                                },
+                                color: '#6b7280',
+                                maxRotation: 45,
+                                minRotation: 45
                             }
                         }
-                    }
+                    },
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
                 }
             });
 
@@ -789,7 +867,6 @@ if (empty($datos_departamento)) {
                 type: 'bar',
                 data: {
                     labels: <?php echo json_encode($labels_tipo); ?>,
-                    data: <?php echo json_encode($data_tipo); ?>,
                     datasets: [{
                         label: 'Cantidad de Incidencias',
                         backgroundColor: [

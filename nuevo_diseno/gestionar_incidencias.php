@@ -23,13 +23,44 @@ if (isset($_SESSION['success_message'])) {
 
 require_once "../php/permisos.php";
 require_once "../php/clases.php";
-require_once "../php/conexion_be.php";
 
 // Verificar permisos de administrador o director
-if (!esAdmin() && !esDirector() && !esAnalista()) {
+if (!esAdmin() && !esDirector()) {
     header("Location: ../index.php");
     exit();
 }
+
+ $floors = [];
+  try {
+    $conexionFloors = new conectar();
+    $conexionFloors = $conexionFloors->conexion();
+    if ($conexionFloors instanceof mysqli) {
+      $floorQueries = [
+        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
+        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
+        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
+        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
+      ];
+
+      foreach ($floorQueries as $sqlFloor) {
+        $resultFloor = @$conexionFloors->query($sqlFloor);
+        if ($resultFloor instanceof mysqli_result) {
+          while ($row = $resultFloor->fetch_assoc()) {
+            if (!isset($row['id']) || !isset($row['nombre'])) {
+              continue;
+            }
+            $floors[] = $row;
+          }
+          $resultFloor->free();
+          if (!empty($floors)) {
+            break;
+          }
+        }
+      }
+    }
+  } catch (Throwable $th) {
+    $tipo_incidencias = [];
+  }
 
 try {
     $conexion = new conectar();
@@ -109,7 +140,7 @@ try {
                             <th>ID</th>
                             <th>Área de Atención</th>
                             <th>DESCRIPCIÓN</th>
-                            <th>ESTADO</th>
+                            <th>STATUS</th>
                             <th>TÉCNICO</th>
                             <th>FECHA CREACIÓN</th>
                             <th>ACCIONES</th>
@@ -201,12 +232,18 @@ try {
                                 <div class="invalid-feedback">El teléfono debe tener exactamente 7 dígitos</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="departamento" class="form-label">Área de atención</label>
-                                <select class="form-control modern-input" id="departamento" name="departamento" required>
-                                    <option value="">Seleccione un área de atención</option>
-                                    <option value="1">Soporte</option>
-                                    <option value="2">Sistema</option>
-                                    <option value="3">Redes</option>
+                                <label for="piso" class="form-label">Piso</label>
+                                <select class="form-select modern-select" id="piso" name="piso">
+                                    <option value="">Seleccionar piso</option>
+                                    <?php if (!empty($floors)):
+                                    foreach ($floors as $floor): ?>
+                                        <option value="<?php echo htmlspecialchars($floor['id']); ?>">
+                                        <?php echo htmlspecialchars($floor['nombre']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                    <?php else: ?>
+                                    <option value="" disabled>No hay pisos disponibles</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                         </div>
@@ -552,21 +589,7 @@ async function buscarUsuarioPorCedula() {
                 // Rellenar número de teléfono
                 document.getElementById('solicitante_telefono').value = usuario.telefono || '';
                 
-                // Rellenar departamento si está disponible
-                if (usuario.departamento) {
-                    const departamentoSelect = document.getElementById('departamento');
-                    if (departamentoSelect) {
-                        departamentoSelect.value = usuario.departamento;
-                    }
-                }
                 
-                // Rellenar el select de departamento si está disponible
-                if (usuario.departamento) {
-                    const selectDepto = document.getElementById('departamento');
-                    if (selectDepto) {
-                        selectDepto.value = usuario.departamento;
-                    }
-                }
 
                 // Permitir edición aun cuando los datos provengan del historial
                 resetearCampos(true);
@@ -667,10 +690,10 @@ async function buscarUsuarioPorCedula() {
         // El campo tecnico_asignado_id se envía automáticamente con formData(form)
         // Ya se eliminó solicitante_extension en el HTML, no es necesario quitarlo aquí.
 
-        try {
-            // Asegurar que el backend reciba 'departamento' del select
-            const departamento = document.getElementById('departamento').value;
-            formData.set('departamento', departamento);
+        try {            
+            // Obtener y guardar el piso seleccionado
+            const piso = document.getElementById('piso').value;
+            formData.set('piso', piso);
             
             // Obtener código de teléfono y número por separado
             const codigoTelefono = document.getElementById('solicitante_codigo_telefono').value;
@@ -768,17 +791,14 @@ async function buscarUsuarioPorCedula() {
                 }
                 
                 
-                // Establecer el departamento si está disponible
-                if (incidencia.departamento) {
-                    const departamentoSelect = document.getElementById('departamento');
-                    if (departamentoSelect) {
-                        departamentoSelect.value = incidencia.departamento;
-                    }
-                }
                 
                 // Establecer el Área de Atención
                 if (incidencia.tipo_incidencia) {
                     document.getElementById('tipo_incidencia').value = incidencia.tipo_incidencia;
+                }
+                // Establecer el Área de Atención
+                if (incidencia.solicitante_piso) {
+                    document.getElementById('piso').value = incidencia.solicitante_piso;
                 }
 
                 // Detalles de la Incidencia
@@ -923,18 +943,22 @@ async function buscarUsuarioPorCedula() {
                             <span class="detail-value">${incidencia.tipo_incidencia}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Estado</span>
+                            <span class="detail-label">Status</span>
                             <span class="badge-status ${incidencia.estado.toLowerCase().replace(' ', '-')}">${incidencia.estado}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Ubicación del usuario</span>
-                            <span class="detail-value">${incidencia.departamento}</span>
+                            <span class="detail-value">${incidencia.depart_name}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Técnico Asignado</span>
                             <span class="detail-value ${incidencia.tecnico_nombre ? 'detail-assigned' : 'detail-unassigned'}">
                                 ${incidencia.tecnico_nombre || 'Sin asignar'}
                             </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Piso</span>
+                            <span class="detail-value">${incidencia.piso}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Fecha de Creación</span>
@@ -1107,85 +1131,6 @@ async function buscarUsuarioPorCedula() {
         });
     }
 
-function mostrarDetallesIncidencia(incidencia) {
-const contenido = `
-    <div class="details-container">
-        <div class="detail-section">
-            <h3 class="detail-section-title">
-                <i class="fas fa-clipboard-list"></i>
-                Información Principal
-            </h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">ID de Incidencia</span>
-                    <span class="detail-value detail-id">#${incidencia.id}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Área de Atención</span>
-                    <span class="detail-value">${incidencia.tipo_incidencia}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Estado</span>
-                    <span class="badge-status ${incidencia.estado.toLowerCase().replace(' ', '-')}">${incidencia.estado}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Ubicación del usuario</span>
-                    <span class="detail-value">${incidencia.departamento}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Técnico Asignado</span>
-                    <span class="detail-value ${incidencia.tecnico_nombre ? 'detail-assigned' : 'detail-unassigned'}">
-                        ${incidencia.tecnico_nombre || 'Sin asignar'}
-                    </span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Fecha de Creación</span>
-                    <span class="detail-value">${formatearFecha(incidencia.fecha_creacion)}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h3 class="detail-section-title">
-                <i class="fas fa-align-left"></i>
-                Descripción del Problema
-            </h3>
-            <div class="detail-description">
-                ${incidencia.descripcion}
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h3 class="detail-section-title">
-                <i class="fas fa-user"></i>
-                Información del Solicitante
-            </h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">Nombre Completo</span>
-                    <span class="detail-value">${incidencia.solicitante_nombre} ${incidencia.solicitante_apellido || ''}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Cédula</span>
-                    <span class="detail-value">${incidencia.solicitante_nacionalidad || ''}${incidencia.solicitante_cedula}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Correo Electrónico</span>
-                    <span class="detail-value detail-email">${incidencia.solicitante_email}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Teléfono</span>
-                    <span class="detail-value">${incidencia.solicitante_telefono || 'N/A'}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-`;
-    
-document.getElementById('detallesContenido').innerHTML = contenido;
-// Asumiendo que tienes una modal con ID 'modalDetalles' y librería bootstrap cargada
-new bootstrap.Modal(document.getElementById('modalDetalles')).show(); 
-}
 
 // Función para asignar técnico (Mantenida igual, solo corregido el nombre del select)
 function asignarTecnicoIncidencia(id) {

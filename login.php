@@ -9,7 +9,8 @@
 
   $floors = [];
   try {
-    $conexionFloors = getConexion();
+    $conexionFloors = new conectar();
+    $conexionFloors = $conexionFloors->conexion();
     if ($conexionFloors instanceof mysqli) {
       $floorQueries = [
         "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
@@ -43,10 +44,10 @@
     $conexionFloors = getConexion();
     if ($conexionFloors instanceof mysqli) {
       $floorQueries = [
-        "SELECT id_reports_type AS id, name AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-        "SELECT id_reports_type AS id, name AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-        "SELECT id_reports_type AS id, name AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-        "SELECT id_reports_type AS id, name AS nombre FROM reports_type ORDER BY id_reports_type ASC",
+        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
+        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
+        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
+        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
       ];
 
       foreach ($floorQueries as $sqlFloor) {
