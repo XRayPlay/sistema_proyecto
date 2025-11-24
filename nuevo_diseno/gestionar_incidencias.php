@@ -25,7 +25,7 @@ require_once "../php/permisos.php";
 require_once "../php/clases.php";
 
 // Verificar permisos de administrador o director
-if (!esAdmin() && !esDirector()) {
+if (!esAdmin() && !esDirector() && !esAnalista()) {
     header("Location: ../index.php");
     exit();
 }

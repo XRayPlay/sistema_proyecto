@@ -34,14 +34,22 @@ $incidencia_id = (int)$_GET['id'];
 $tecnico_id = (int)$_SESSION['usuario']['id_user'];
 
 try {
-    // Obtener detalles de la incidencia, verificando que pertenece al técnico
+    // Obtener detalles de la incidencia, verificando que pertenece o perteneció al técnico
     $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.solicitante_nombre, 
                      i.solicitante_cedula, i.solicitante_email, i.solicitante_telefono, 
-                     i.solicitante_extension, i.departamento, 
-                     i.fecha_creacion, i.fecha_asignacion, i.comentarios_tecnico, u.name as nombre_tecnico 
+                     i.departamento, 
+                     i.fecha_creacion, i.fecha_asignacion, i.comentarios_tecnico, 
+                     u.name as nombre_tecnico,
+                     CASE 
+                         WHEN i.estado = '1' OR i.estado = 'asignado' THEN 'Asignado'
+                         WHEN i.estado = '2' OR i.estado = 'en_proceso' THEN 'En Proceso'
+                         WHEN i.estado = '3' OR i.estado = 'redirigido' THEN 'Redirigido'
+                         WHEN i.estado = '4' OR i.estado = 'cerrada' THEN 'Cerrada'
+                         ELSE i.estado
+                     END as estado_formateado
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
-              WHERE i.id = ? AND i.tecnico_asignado = ?";
+              WHERE i.id = ? AND (i.tecnico_asignado = ? OR i.estado = 'redirigido')";
     
     $stmt = mysqli_prepare($conexion, $query);
     mysqli_stmt_bind_param($stmt, 'ii', $incidencia_id, $tecnico_id);

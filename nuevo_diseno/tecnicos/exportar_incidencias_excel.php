@@ -27,7 +27,7 @@ try {
         throw new Exception('Error de conexión a la base de datos: ' . $conexion->connect_error);
     }
     
-    // Obtener incidencias asignadas al técnico
+    // Construir la consulta con filtros
     $sql = "SELECT 
                 i.id,
                 i.fecha_creacion,
@@ -35,8 +35,8 @@ try {
                 i.solicitante_cedula,
                 i.solicitante_email,
                 i.solicitante_telefono,
-                i.tipo_incidencia,
-                i.departamento,
+                COALESCE(rt.description, i.tipo_incidencia) as tipo_incidencia,
+                COALESCE(c.name, i.departamento) as departamento,
                 i.descripcion,
                 i.estado,
                 i.fecha_asignacion,
@@ -46,75 +46,97 @@ try {
                 u.email as email_tecnico
             FROM incidencias i
             LEFT JOIN user u ON i.tecnico_asignado = u.id_user
-            WHERE i.tecnico_asignado = ?
-            ORDER BY i.fecha_creacion DESC";
+            LEFT JOIN reports_type rt ON i.tipo_incidencia = rt.id_reports_type
+            LEFT JOIN cargo c ON i.departamento = c.id_cargo
+            WHERE i.tecnico_asignado = ?";
     
+    // Añadir ordenamiento
+    $sql .= " ORDER BY i.fecha_creacion DESC";
+    
+    // Preparar y ejecutar la consulta
     $stmt = $conexion->prepare($sql);
     $stmt->bind_param('i', $tecnico_id);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = $result = $stmt->get_result();
     
     if (!$result) {
         throw new Exception('Error al obtener las incidencias: ' . $conexion->error);
     }
     
-    // Configurar headers para descarga de CSV
-    $filename = 'mis_incidencias_' . date('Y-m-d_H-i-s') . '.csv';
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    // Configurar cabeceras para descarga de archivo CSV
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="incidencias_tecnico_' . date('Y-m-d') . '.csv"');
     header('Pragma: no-cache');
     header('Expires: 0');
     
-    // Crear archivo CSV
+    // Crear archivo de salida
     $output = fopen('php://output', 'w');
     
-    // BOM para UTF-8 (para que Excel reconozca caracteres especiales)
-    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-    
-    // Encabezados del CSV
-    $headers = [
-        'ID',
-        'Fecha Creacion',
-        'Solicitante Nombre',
-        'Solicitante Cedula',
-        'Solicitante Email',
-        'Solicitante Telefono',
-        'Tipo Incidencia',
-        'Departamento',
-        'Descripcion',
-        'Estado',
-        'Fecha Asignacion',
-        'Fecha Resolucion',
-        'Comentarios Tecnico',
-        'Tecnico Asignado',
-        'Email Tecnico'
-    ];
-    
-    fputcsv($output, $headers);
-    
-    // Datos de las incidencias
-    while ($row = $result->fetch_assoc()) {
-        $csv_row = [
-            $row['id'],
-            $row['fecha_creacion'],
-            $row['solicitante_nombre'],
-            $row['solicitante_cedula'],
-            $row['solicitante_email'],
-            $row['solicitante_telefono'],
-            $row['tipo_incidencia'],
-            $row['departamento'],
-            $row['descripcion'],
-            ucfirst(str_replace('_', ' ', $row['estado'])),
-            $row['fecha_asignacion'] ?: 'Sin asignar',
-            $row['fecha_resolucion'] ?: 'Sin resolver',
-            $row['comentarios_tecnico'] ?: 'N/A',
-            $row['nombre_tecnico'] ?: 'Sin asignar',
-            $row['email_tecnico'] ?: 'N/A'
-        ];
-        
-        fputcsv($output, $csv_row);
+    // Función para limpiar y formatear texto para CSV
+    function limpiarParaCSV($texto) {
+        // Convertir a UTF-8 si no lo está
+        if (!mb_check_encoding($texto, 'UTF-8')) {
+            $texto = mb_convert_encoding($texto, 'UTF-8', 'auto');
+        }
+        // Reemplazar saltos de línea y comillas
+        return str_replace(["\r\n", "\r", "\n"], ' ', str_replace('"', '""', $texto));
     }
     
+    // Función para formatear fechas
+    function formatearFecha($fecha) {
+        if (empty($fecha) || $fecha == '0000-00-00 00:00:00') {
+            return '';
+        }
+        $date = new DateTime($fecha);
+        return $date->format('d/m/Y H:i');
+    }
+    
+    // Función para formatear el estado
+    function formatearEstado($estado) {
+        $estados = [
+            'asignado' => 'Asignado',
+            'en_proceso' => 'En Proceso',
+            'cerrada' => 'Cerrada',
+            'redirigido' => 'Redirigido',
+            'pendiente' => 'Pendiente'
+        ];
+        return $estados[strtolower($estado)] ?? ucfirst($estado);
+    }
+    
+    // Escribir encabezados
+    $encabezados = [
+        'ID', 'Fecha Creacion', 'Solicitante', 'Cedula', 'Email', 'Telefono',
+        'Tipo de Incidencia', 'Departamento', 'Descripcion', 'Estado',
+        'Fecha Asignacion', 'Fecha Resolucion', 'Comentarios Tecnico',
+        'Tecnico Asignado', 'Email Tecnico'
+    ];
+    
+    fputcsv($output, $encabezados, ';', '"');
+    
+    // Escribir datos
+    while ($incidencia = $result->fetch_assoc()) {
+        $fila = [
+            $incidencia['id'],
+            formatearFecha($incidencia['fecha_creacion']),
+            limpiarParaCSV($incidencia['solicitante_nombre']),
+            limpiarParaCSV($incidencia['solicitante_cedula']),
+            limpiarParaCSV($incidencia['solicitante_email']),
+            limpiarParaCSV($incidencia['solicitante_telefono']),
+            limpiarParaCSV($incidencia['tipo_incidencia']),
+            limpiarParaCSV($incidencia['departamento']),
+            limpiarParaCSV($incidencia['descripcion']),
+            formatearEstado($incidencia['estado']),
+            formatearFecha($incidencia['fecha_asignacion']),
+            formatearFecha($incidencia['fecha_resolucion']),
+            limpiarParaCSV($incidencia['comentarios_tecnico']),
+            limpiarParaCSV($incidencia['nombre_tecnico'] ?: 'Sin asignar'),
+            limpiarParaCSV($incidencia['email_tecnico'] ?: 'N/A')
+        ];
+        
+        fputcsv($output, $fila, ';', '"');
+    }
+    
+    // Cerrar recursos
     fclose($output);
     $stmt->close();
     $conexion->close();

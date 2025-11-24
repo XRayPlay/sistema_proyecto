@@ -8,6 +8,27 @@ if (!isset($_SESSION['usuario']) && !isset($_SESSION['id_user'])) {
 require_once "../../php/permisos.php";
 require_once "../../php/clases.php";
 
+// Función para formatear el estado
+function formatearEstado($estado) {
+    switch (strtolower($estado)) {
+        case '2': 
+        case 'en_proceso':
+            return ['texto' => 'En Proceso', 'color' => 'primary', 'class' => 'bg-primary text-white'];
+        case '3':
+        case 'redirigido':
+            return ['texto' => 'Redirigido', 'color' => 'warning', 'class' => 'bg-warning text-dark'];
+        case '4':
+        case 'cerrada':
+            return ['texto' => 'Cerrada', 'color' => 'success', 'class' => 'bg-success text-white'];
+        case '1':
+        case 'asignado':
+        case 'pendiente':
+            return ['texto' => 'Asignado', 'color' => 'light', 'class' => 'bg-white text-dark border'];
+        default: 
+            return ['texto' => ucfirst($estado), 'color' => 'secondary', 'class' => 'bg-secondary text-white'];
+    }
+}
+
 // Verificar que sea técnico
 if (!esTecnico()) {
     header("Location: ../../inicio_completo.php");
@@ -31,10 +52,9 @@ $tecnico_id = (int)($_SESSION['usuario']['id_user'] ?? $_SESSION['id_user']);
 $query_incidencias = "SELECT i.*, 
                              CASE 
                                  WHEN i.estado = 'pendiente' THEN 'Pendiente'
-                                 WHEN i.estado = 'asignada' THEN 'Asignada'
-                                 WHEN i.estado = 'en_proceso' THEN 'En Proceso'
-                                 WHEN i.estado = 'resuelta' THEN 'Resuelta'
-                                 WHEN i.estado = 'cerrada' THEN 'Cerrada'
+                                 WHEN i.estado = '2' THEN 'En Proceso'
+                                 WHEN i.estado = '3' THEN 'Redirigido'
+                                 WHEN i.estado = '4' THEN 'Cerrada'
                                  ELSE i.estado
                              END as estado_formateado
                       FROM incidencias i 
@@ -835,18 +855,11 @@ mysqli_close($conexion);
                                             <td><?php echo htmlspecialchars($incidencia['solicitante_nombre']); ?></td>
                                             <td><?php echo date('d/m/Y', strtotime($incidencia['fecha_creacion'])); ?></td>
                                             <td>
-                                                <span class="badge bg-<?php 
-                                                    $estado_color = 'secondary';
-                                                    switch ($incidencia['estado']) {
-                                                        case 'pendiente': $estado_color = 'warning'; break;
-                                                        case 'asignada': $estado_color = 'info'; break;
-                                                        case 'en_proceso': $estado_color = 'primary'; break;
-                                                        case 'resuelta': $estado_color = 'success'; break;
-                                                        case 'cerrada': $estado_color = 'secondary'; break;
-                                                    }
-                                                    echo $estado_color;
-                                                ?>">
-                                                    <?php echo ucfirst($incidencia['estado']); ?>
+                                                <?php 
+                                                $estado_info = formatearEstado($incidencia['estado']);
+                                                ?>
+                                                <span class="badge <?php echo $estado_info['class']; ?>">
+                                                    <?php echo $estado_info['texto']; ?>
                                                 </span>
                                             </td>
                                             <td>
@@ -890,13 +903,11 @@ mysqli_close($conexion);
                             
                             <div class="form-group">
                                 <label class="form-label">Nuevo Estado *</label>
-                                <select class="form-select" id="nuevo_estado" name="nuevo_estado" required>
+                                <select class="form-select" id="nuevo_estado" name="nuevo_estado" required onchange="handleEstadoChange(this.value)">
                                     <option value="">Seleccione un estado</option>
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="asignada">Asignada</option>
                                     <option value="en_proceso">En Proceso</option>
-                                    <option value="resuelta">Resuelta</option>
                                     <option value="cerrada">Cerrada</option>
+                                    <option value="redirigido">Redirigir a otro técnico</option>
                                 </select>
                             </div>
                             
@@ -990,12 +1001,11 @@ mysqli_close($conexion);
                     if (inc.estado_formateado) {
                         estadoValor = inc.estado_formateado;
                     } else if (inc.estado) {
+                        // Mapear el estado numérico a texto
                         switch (inc.estado) {
-                            case 'pendiente': estadoValor = 'Pendiente'; break;
-                            case 'asignada': estadoValor = 'Asignada'; break;
-                            case 'en_proceso': estadoValor = 'En Proceso'; break;
-                            case 'resuelta': estadoValor = 'Resuelta'; break;
-                            case 'cerrada': estadoValor = 'Cerrada'; break;
+                            case '2': estadoValor = 'En Proceso'; break;
+                            case '3': estadoValor = 'Redirigido'; break;
+                            case '4': estadoValor = 'Cerrada'; break;
                             default: estadoValor = inc.estado;
                         }
                     }
@@ -1109,7 +1119,6 @@ mysqli_close($conexion);
                                     <tr><td><strong>Nombre:</strong></td><td>${incidencia.solicitante_nombre}</td></tr>
                                     <tr><td><strong>Email:</strong></td><td>${incidencia.solicitante_email}</td></tr>
                                     <tr><td><strong>Teléfono:</strong></td><td>${incidencia.solicitante_telefono}</td></tr>
-                                    <tr><td><strong>Extensión:</strong></td><td>${incidencia.solicitante_extension}</td></tr>
                                 </table>
                             </div>
                         </div>
@@ -1165,48 +1174,94 @@ mysqli_close($conexion);
             }
         });
 
+        // Función para manejar el cambio de estado
+        function handleEstadoChange(estado) {
+            const comentariosField = document.getElementById('comentarios_tecnico');
+            if (estado === 'redirigido') {
+                comentariosField.placeholder = 'Explique por qué redirige la incidencia y a quién la está derivando. 50–150 caracteres.';
+            } else {
+                comentariosField.placeholder = 'Describa las acciones realizadas o estado actual de la incidencia. 50–150 caracteres.';
+            }
+        }
+
         // Función para cambiar estado de incidencia
         async function cambiarEstadoIncidencia(event) {
             event.preventDefault();
             
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
+            const isRedirigido = data.nuevo_estado === 'redirigido';
+            
+            // Mostrar indicador de carga
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
             
             try {
-                const response = await fetch('../../php/cambiar_estado_incidencia.php', {
+                const endpoint = isRedirigido 
+                    ? '../../php/redirigir_incidencia.php' 
+                    : '../../php/cambiar_estado_incidencia.php';
+                
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        accion: 'cambiar_estado',
+                        accion: isRedirigido ? 'redirigir' : 'cambiar_estado',
                         ...data
                     })
                 });
                 
-                const result = await response.json();
+                // Verificar si la respuesta es JSON
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // Si la respuesta no es JSON, obtener el texto para mostrar el error
+                    const text = await response.text();
+                    console.error('Respuesta no JSON recibida:', text);
+                    throw new Error('La respuesta del servidor no es válida');
+                }
+                
+                if (!response.ok) {
+                    throw new Error(result.message || `Error HTTP: ${response.status}`);
+                }
                 
                 if (result.success) {
-                    alert('✅ Estado de incidencia actualizado exitosamente');
+                    alert(`✅ ${isRedirigido ? 'Incidencia redirigida exitosamente' : 'Estado de incidencia actualizado exitosamente'}`);
                     cerrarModalCambiarEstado();
                     // Recargar la página para mostrar los cambios
                     location.reload();
                 } else {
-                    alert('❌ Error: ' + (result.message || 'Error al actualizar el estado'));
+                    throw new Error(result.message || 'Error al procesar la solicitud');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error de conexión. Intente nuevamente.');
+                alert(`❌ ${error.message || 'Error de conexión. Intente nuevamente.'}`);
+            } finally {
+                // Restaurar el botón
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
             }
         }
         
         // Funciones auxiliares para colores
         function getEstadoColor(estado) {
             const colores = {
+                '2': 'primary',     // En Proceso
+                '3': 'warning',     // Redirigido
+                '4': 'success',     // Cerrada
+                '1': 'info',        // Pendiente
                 'pendiente': 'warning',
                 'asignada': 'info',
                 'en_proceso': 'primary',
-                'resuelta': 'success',
+                'redirigido': 'warning',
                 'cerrada': 'secondary'
             };
             return colores[estado] || 'secondary';
