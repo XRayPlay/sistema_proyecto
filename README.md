@@ -22,7 +22,7 @@ El sistema utiliza distintos roles (`id_rol`) para controlar el acceso a las fun
 | ID Rol | Rol | Permisos Principales | Redirección Post-Login | Credenciales Simplificadas |
 | :---: | :--- | :--- | :--- | :--- |
 | **1** | **Admin** | Acceso completo: gestión de todo. | `nuevo_diseno/inicio_completo.php` | `12345678` / `Admin45*` |
-| **2** | **Director** | Gestión de incidencias, técnicos y estadísticas. | `nuevo_diseno/inicio_completo.php` | `87654321` / `director123` |
+| **2** | **Director** | Gestión de incidencias, técnicos y estadísticas. | `nuevo_diseno/inicio_completo.php` | `87654321` / `password` |
 | **3** | **Técnico** | Ver y actualizar incidencias asignadas. | `nuevo_diseno/tecnicos/dashboard_tecnico.php` | `12312312` / `password` |
 | **4** | **Analista** | Visualización de reportes y estadísticas. | `nuevo_diseno/gestionar_incidencias.php` | `12345612` / `password` |
 
