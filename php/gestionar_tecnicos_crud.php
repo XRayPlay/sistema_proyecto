@@ -455,12 +455,12 @@ function obtenerTecnicoPorId($conexion) {
     }
     // Consulta: obtener técnico por su ID y asegurarse de que sea rol técnico (id_rol = 3)
     // Incluimos 'sexo' y 'avatar' para que el frontend pueda prellenar correctamente el modal de edición
-    $query = "SELECT id_user as id, name as nombre, apellido, nacionalidad, cedula, email, birthday, phone as telefono, sexo, code_phone,
-            avatar, id_status_user, id_floor as id_piso, 
-            CASE id_status_user WHEN 1 THEN 'Activo' WHEN 2 THEN 'Ocupado' WHEN 3 THEN 'Ausente' ELSE 'Inactivo' END as estado, id_cargo as especialidad,
-            last_connection as fecha_registro
-        FROM user
-        WHERE id_user = ? AND id_rol = 3
+    $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, u.birthday, u.phone as telefono, u.sexo, u.code_phone,
+            u.avatar, u.id_status_user, u.id_floor as id_piso, 
+            CASE u.id_status_user WHEN 1 THEN 'Activo' WHEN 2 THEN 'Ocupado' WHEN 3 THEN 'Ausente' ELSE 'Inactivo' END as estado, u.id_cargo as especialidad, c.description as description_cargo,
+            u.last_connection as fecha_registro
+        FROM user u INNER JOIN cargo c ON c.id_cargo=u.id_cargo
+        WHERE u.id_user = ? AND u.id_rol = 3
         LIMIT 1";
 
     $stmt = mysqli_prepare($conexion, $query);
@@ -490,6 +490,7 @@ function obtenerTecnicoPorId($conexion) {
                 'nacionalidad' => $tecnico['nacionalidad'],
                 'cedula' => $tecnico['cedula'],
                 'especialidad' => $tecnico['especialidad'],
+                'description_cargo' => $tecnico['description_cargo'],
                 'email' => $tecnico['email'],
                 'birthday' => $tecnico['birthday'],
                 'telefono' => $tecnico['telefono'],

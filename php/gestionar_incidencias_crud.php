@@ -285,7 +285,7 @@ function obtenerIncidencias($conexion) {
     $q = trim($_POST['q'] ?? '');
     if ($q !== '') {
         $like = '%' . $q . '%';
-        $query = "SELECT i.id, c.id_cargo as tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
+        $query = "SELECT i.id, c.description as tipo_incidencia, i.solicitante_nombre, i.solicitante_apellido, i.solicitante_code, i.solicitante_telefono, i.descripcion, i.estado, i.fecha_creacion, 
             u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre 
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
@@ -298,10 +298,10 @@ function obtenerIncidencias($conexion) {
             $resultado = mysqli_stmt_get_result($stmt);
         } else {
             // Fallback a consulta sin filtro si falla la preparación
-            $resultado = mysqli_query($conexion, "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre FROM incidencias i LEFT JOIN user u ON i.tecnico_asignado = u.id_user ORDER BY i.fecha_creacion DESC");
+            $resultado = mysqli_query($conexion, "SELECT i.id, i.tipo_incidencia, i.solicitante_nombre, i.solicitante_apellido, i.solicitante_code, i.solicitante_telefono, i.descripcion, i.estado, i.fecha_creacion, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre FROM incidencias i LEFT JOIN user u ON i.tecnico_asignado = u.id_user ORDER BY i.fecha_creacion DESC");
         }
     } else {
-        $query = "SELECT i.id, c.id_cargo as tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
+        $query = "SELECT i.id, c.description as tipo_incidencia,  i.descripcion, i.estado, i.fecha_creacion, 
             i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, i.solicitante_email, 
             i.solicitante_telefono, i.solicitante_code,
             i.departamento, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
@@ -352,7 +352,7 @@ function obtenerIncidenciaPorId($conexion) {
                      i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, 
                      i.solicitante_email, i.solicitante_code, i.solicitante_telefono, 
                      i.solicitante_piso, i.departamento, c.description as depart_name,
-                     i.fecha_creacion, i.tecnico_asignado as tecnico_id, 
+                     i.fecha_creacion, i.tecnico_asignado as tecnico_id, r.name as tipo_incidencia_name,
                      u.cedula as tecnico_cedula, u.name as tecnico_nombre, f.name as name_piso
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo INNER JOIN floors f ON f.id_floors = i.solicitante_piso
@@ -375,6 +375,7 @@ function obtenerIncidenciaPorId($conexion) {
             'incidencia' => [
                 'id' => $incidencia['id'],
                 'tipo_incidencia' => $incidencia['tipo_incidencia'],
+                'tipo_incidencia_name' => $incidencia['tipo_incidencia_name'],
                 'descripcion' => $incidencia['descripcion'],
                 'estado' => $incidencia['estado'],
                 'solicitante_nombre' => $incidencia['solicitante_nombre'],

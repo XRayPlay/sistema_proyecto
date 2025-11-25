@@ -664,12 +664,9 @@ function mostrarDetallesTecnico(tecnico) {
             <tr><td><strong>Nombre:</strong></td><td>${tecnico.nombre} ${tecnico.apellido}</td></tr>
             <tr><td><strong>Cédula:</strong></td><td>${tecnico.nacionalidad === 'venezolano' ? 'V' : ''}${tecnico.nacionalidad === 'extranjero' ? 'E' : ''}-${tecnico.cedula}</td></tr>
             
-            <tr><td><strong>F. Nacimiento:</strong></td><td>${tecnico.birthday || 'No especificado'}</td></tr>
-            <tr><td><strong>Sexo:</strong></td><td>${tecnico.sexo || 'No especificado'}</td></tr>
-            
             <tr><td><strong>Email:</strong></td><td>${tecnico.email}</td></tr>
             <tr><td><strong>Teléfono:</strong></td><td>${tecnico.code_phone ? `(${tecnico.code_phone}) ` : ''}${tecnico.telefono}</td></tr>
-            <tr><td><strong>Especialidad:</strong></td><td>${tecnico.especialidad}</td></tr>
+            <tr><td><strong>Área de Atención:</strong></td><td>${tecnico.description_cargo}</td></tr>
             <tr><td><strong>Status:</strong></td><td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td></tr>
             <tr><td><strong>Fecha de Registro:</strong></td><td>${formatearFecha(tecnico.fecha_registro)}</td></tr>
         </table>

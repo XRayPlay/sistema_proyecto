@@ -527,9 +527,6 @@ try {
                             <tr><td><strong>Cédula:</strong></td><td>${analista.nacionalidad === 'venezolano' ? 'V' : ''}${analista.nacionalidad === 'extranjero' ? 'E' : ''}-${analista.cedula}</td></tr>
                             <tr><td><strong>Email:</strong></td><td>${analista.email}</td></tr>
             <tr><td><strong>Teléfono:</strong></td><td>${analista.code_phone ? `(${analista.code_phone}) ` : ''}${analista.telefono || 'N/A'}</td></tr>
-
-                            <tr><td><strong>Sexo:</strong></td><td>${analista.sexo === 'M' ? 'Masculino' : 'Femenino'}</td></tr>
-                            <tr><td><strong>Fecha Nac.:</strong></td><td>${formatearFechaCorta(analista.birthday)}</td></tr>
                             <tr><td><strong>Status:</strong></td><td><span class="badge-status ${analista.id_status_user == 1 ? 'activo' : 'inactivo'}">${analista.id_status_user == 1 ? 'Activo' : 'Inactivo'}</span></td></tr>
                         </table>
                     </div>

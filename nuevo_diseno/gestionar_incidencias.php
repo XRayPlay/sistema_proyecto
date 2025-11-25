@@ -127,7 +127,7 @@ try {
             
         <!-- Search Bar -->
         <div class="mb-3">
-            <input type="text" id="searchIncidencias" class="form-control modern-input" placeholder="Buscar incidencias por tipo, descripción o solicitante...">
+            <input type="text" id="searchIncidencias" class="form-control modern-input" placeholder="Buscar incidencias por descripción o status...">
         </div>
 
         <!-- Table Card -->
@@ -140,6 +140,8 @@ try {
                             <th>ID</th>
                             <th>Área de Atención</th>
                             <th>DESCRIPCIÓN</th>
+                            <th>SOLICITANTE</th>
+                            <th>TELEFONO</th>
                             <th>STATUS</th>
                             <th>TÉCNICO</th>
                             <th>FECHA CREACIÓN</th>
@@ -412,6 +414,8 @@ try {
                         <td>${incidencia.id}</td>
                         <td>${incidencia.tipo_incidencia}</td>
                         <td>${incidencia.descripcion.substring(0, 50)}...</td>
+                        <td>${incidencia.solicitante_nombre}...</td>
+                        <td>(${incidencia.solicitante_code}) ${incidencia.solicitante_telefono}</td>
                         <td><span class="badge-status ${incidencia.estado.toLowerCase().replace(' ', '-')}">${incidencia.estado}</span></td>
                         <td>${incidencia.tecnico_nombre || 'Sin asignar'}</td>
                         <td>${formatearFecha(incidencia.fecha_creacion)}</td>
@@ -940,14 +944,14 @@ async function buscarUsuarioPorCedula() {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Área de Atención</span>
-                            <span class="detail-value">${incidencia.tipo_incidencia}</span>
+                            <span class="detail-value">${incidencia.tipo_incidencia_name}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Status</span>
                             <span class="badge-status ${incidencia.estado.toLowerCase().replace(' ', '-')}">${incidencia.estado}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Ubicación del usuario</span>
+                            <span class="detail-label">Departamento</span>
                             <span class="detail-value">${incidencia.depart_name}</span>
                         </div>
                         <div class="detail-item">
@@ -997,7 +1001,7 @@ async function buscarUsuarioPorCedula() {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Teléfono</span>
-                            <span class="detail-value">${incidencia.solicitante_telefono || 'N/A'}</span>
+                            <span class="detail-value">(0${incidencia.solicitante_code}) ${incidencia.solicitante_telefono || 'N/A'}</span>
                         </div>
                     </div>
                 </div>

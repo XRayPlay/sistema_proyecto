@@ -35,9 +35,9 @@ $tecnico_id = (int)$_SESSION['usuario']['id_user'];
 
 try {
     // Obtener detalles de la incidencia, verificando que pertenece o perteneció al técnico
-    $query = "SELECT i.id, i.tipo_incidencia, i.descripcion, i.estado, i.solicitante_nombre, 
-                     i.solicitante_cedula, i.solicitante_email, i.solicitante_telefono, 
-                     i.departamento, 
+    $query = "SELECT i.id, rt.name as tipo_incidencia, i.descripcion, i.estado, i.solicitante_nombre, 
+                     i.solicitante_cedula, i.solicitante_email, i.solicitante_code, i.solicitante_telefono, 
+                     c.description as departamento, 
                      i.fecha_creacion, i.fecha_asignacion, i.comentarios_tecnico, 
                      u.name as nombre_tecnico,
                      CASE 
@@ -48,7 +48,9 @@ try {
                          ELSE i.estado
                      END as estado_formateado
               FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user
+              INNER JOIN reports_type rt ON rt.id_reports_type = i.tipo_incidencia
+              INNER JOIN cargo c ON c.id_cargo = i.departamento
               WHERE i.id = ? AND (i.tecnico_asignado = ? OR i.estado = 'redirigido')";
     
     $stmt = mysqli_prepare($conexion, $query);

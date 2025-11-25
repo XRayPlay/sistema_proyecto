@@ -57,27 +57,13 @@ include('../page/menu.php');
                             <input type="email" id="email" name="email" class="form-control" required maxlength="50">
                         </div>
                         <div class="mb-3">
-                            <label for="cedula" class="form-label">Cédula</label>
-                            <input type="text" id="cedula" name="cedula" class="form-control" required pattern="[0-9]{7,8}">
-                        </div>
-                        <div class="mb-3">
-                            <label for="code_phone" class="form-label">Código de Teléfono</label>
-                            <select class="form-select" id="code_phone" name="code_phone" required>
-                                <option value="">Seleccionar código</option>
-                                <option value="412">412</option>
-                                <option value="414">414</option>
-                                <option value="416">416</option>
-                                <option value="422">422</option>
-                                <option value="424">424</option>
-                                <option value="426">426</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="text" id="telefono" name="telefono" class="form-control" required pattern="[0-9]{7}">
+                            <label class="form-label">Cambiar contraseña (opcional)</label>
+                            <input type="password" id="password" name="password" class="form-control" minlength="7" maxlength="15" placeholder="Nueva contraseña">
+                            <input type="password" id="confirmar_password" name="confirmar_password" class="form-control mt-2" minlength="7" maxlength="15" placeholder="Confirmar nueva contraseña">
                         </div>
                     </div>
                     <div class="col-md-6">
+                        
                         <div class="mb-3 d-none">
                             <input type="date" id="birthday" name="birthday" class="form-control" value="<?php echo (date('Y')-20) . '-01-01'; ?>" required>
                         </div>
@@ -105,15 +91,31 @@ include('../page/menu.php');
                                 ?>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="code_phone" class="form-label">Código de Teléfono</label>
+                            <select class="form-select" id="code_phone" name="code_phone" required>
+                                <option value="">Seleccionar código</option>
+                                <option value="412">412</option>
+                                <option value="414">414</option>
+                                <option value="416">416</option>
+                                <option value="422">422</option>
+                                <option value="424">424</option>
+                                <option value="426">426</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="text" id="telefono" name="telefono" class="form-control" required pattern="[0-9]{7}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cedula" class="form-label">Cédula</label>
+                            <input type="text" id="cedula" name="cedula" class="form-control" required pattern="[0-9]{7,8}">
+                        </div>
                         <div class="mb-3 d-none">
                             <label for="avatar" class="form-label">Avatar (opcional)</label>
                             <input type="file" id="avatar" name="avatar" accept="image/*" class="form-control">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Cambiar contraseña (opcional)</label>
-                            <input type="password" id="password" name="password" class="form-control" minlength="7" maxlength="15" placeholder="Nueva contraseña">
-                            <input type="password" id="confirmar_password" name="confirmar_password" class="form-control mt-2" minlength="7" maxlength="15" placeholder="Confirmar nueva contraseña">
-                        </div>
+                        
                     </div>
                 </div>
                 <div class="mt-3">
