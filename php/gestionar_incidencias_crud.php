@@ -33,7 +33,7 @@ try {
     switch ($action) {
         case 'crear':
             // Crear solo para Admin/Director
-            if (!esAdmin() && !esDirector()) {
+            if (!esAdmin() && !esDirector() && !esAnalista()) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear incidencias']);
                 return;
@@ -66,6 +66,9 @@ try {
             break;
         case 'obtener_tipos':
             obtenerTiposIncidencia($conexion);
+            break;
+        case 'obtener_tipos_por_departamento':
+            obtenerTiposIncidenciaPorDepartamento($conexion);
             break;
         case 'buscarUsuario':
             buscarUsuario($conexion);
@@ -167,12 +170,12 @@ function crearIncidencia($conexion) {
         $query = "INSERT INTO incidencias (
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
                     solicitante_email, solicitante_code, solicitante_telefono,
-                    departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NULL, NOW(), NOW())";
+                    solicitante_piso, departamento, estado, tecnico_asignado, fecha_creacion, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', NULL, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
-            'ssssssssi',
+            'ssssssssii',
             $tipo_incidencia,
             $descripcion,
             $solicitante_nombre,
@@ -181,6 +184,7 @@ function crearIncidencia($conexion) {
             $solicitante_email,
             $solicitante_code,
             $solicitante_telefono,
+            $piso,
             $departamento
         );
     } else {
@@ -188,7 +192,7 @@ function crearIncidencia($conexion) {
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
                     solicitante_email, solicitante_code, solicitante_telefono, 
                     solicitante_piso, departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'asignada', ?, NOW(), NOW())";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', ?, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
@@ -355,7 +359,10 @@ function obtenerIncidenciaPorId($conexion) {
                      i.fecha_creacion, i.tecnico_asignado as tecnico_id, r.name as tipo_incidencia_name,
                      u.cedula as tecnico_cedula, u.name as tecnico_nombre, f.name as name_piso
               FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo INNER JOIN floors f ON f.id_floors = i.solicitante_piso
+              LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+              LEFT JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type 
+              LEFT JOIN cargo c ON r.id_cargo = c.id_cargo 
+              LEFT JOIN floors f ON f.id_floors = i.solicitante_piso
               WHERE i.id = ?";
     $stmt = mysqli_prepare($conexion, $query);
     mysqli_stmt_bind_param($stmt, 'i', $id);
@@ -413,6 +420,7 @@ function actualizarIncidencia($conexion) {
     $solicitante_code = mysqli_real_escape_string($conexion, $_POST['solicitante_code'] ?? '');
     $solicitante_telefono = mysqli_real_escape_string($conexion, $_POST['solicitante_telefono'] ?? '');
     $piso = mysqli_real_escape_string($conexion, $_POST['piso'] ?? '');
+    $estado = mysqli_real_escape_string($conexion, $_POST['estado'] ?? '');
     
     $departamento = 1;
     $sqlde = "SELECT tipo_incidencia FROM incidencias WHERE id = ?";
@@ -463,25 +471,25 @@ function actualizarIncidencia($conexion) {
     if ($tecnico_id === null) {
         $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
                     solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_code = ?, solicitante_telefono = ?, 
-                    solicitante_piso = ?, departamento = ?, estado = 'pendiente', tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
+                    solicitante_piso = ?, departamento = ?, estado = ?, tecnico_asignado = NULL, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conexion, $query);
         // Bind: 10 strings + id (int)
-        mysqli_stmt_bind_param($stmt, 'sssssssssii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+        mysqli_stmt_bind_param($stmt, 'sssssssssisi', $tipo_incidencia, $descripcion, $solicitante_nombre, 
                                     $solicitante_apellido, $solicitante_cedula, $solicitante_email, $solicitante_code,
                                     $solicitante_telefono, 
-                                    $piso,
-                                    $departamento, $id);
+                                    $piso, 
+                                    $departamento, $estado, $id);
     } else {
         $query = "UPDATE incidencias SET tipo_incidencia = ?, descripcion = ?, solicitante_nombre = ?, 
                     solicitante_apellido = ?, solicitante_cedula = ?, solicitante_email = ?, solicitante_code = ?, solicitante_telefono = ?, 
-                    solicitante_piso = ?, departamento = ?, estado = 'asignada', tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
+                    solicitante_piso = ?, departamento = ?, estado = ?, tecnico_asignado = ?, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conexion, $query);
         // Bind actualizado: 10 strings, 1 entero (tecnico_id), 1 entero (id)
-        mysqli_stmt_bind_param($stmt, 'sssssssssiii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
+        mysqli_stmt_bind_param($stmt, 'sssssssssisii', $tipo_incidencia, $descripcion, $solicitante_nombre, 
                                     $solicitante_apellido, $solicitante_cedula, $solicitante_email, $solicitante_code,
                                     $solicitante_telefono, 
                                     $piso,
-                                    $departamento, $tecnico_id, $id);
+                                    $departamento, $estado, $tecnico_id, $id);
     }
 
     if (mysqli_stmt_execute($stmt)) {
@@ -537,5 +545,54 @@ function obtenerTiposIncidencia($conexion) {
     }
     
     echo json_encode(['success' => true, 'tipos' => $tipos]);
+}
+
+function obtenerTiposIncidenciaPorDepartamento($conexion) {
+    try {
+        $departamentoId = $_POST['departamento_id'] ?? 0;
+        
+        if (empty($departamentoId)) {
+            throw new Exception("ID de departamento no proporcionado");
+        }
+        
+        $query = "SELECT id_reports_type as id, name as nombre 
+                 FROM reports_type 
+                 WHERE id_cargo = ? 
+                 ORDER BY name ASC";
+        
+        $stmt = mysqli_prepare($conexion, $query);
+        
+        if (!$stmt) {
+            throw new Exception("Error en la preparación de la consulta: " . mysqli_error($conexion));
+        }
+        
+        mysqli_stmt_bind_param($stmt, 'i', $departamentoId);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception("Error al ejecutar la consulta: " . mysqli_stmt_error($stmt));
+        }
+        
+        $result = mysqli_stmt_get_result($stmt);
+        $tipos = [];
+        
+        while ($row = mysqli_fetch_assoc($result)) {
+            $tipos[] = [
+                'id' => $row['id'],
+                'nombre' => $row['nombre']
+            ];
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'tipos' => $tipos
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Error en obtenerTiposIncidenciaPorDepartamento: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error al obtener los tipos de incidencia: ' . $e->getMessage()
+        ]);
+    }
 }
 ?>

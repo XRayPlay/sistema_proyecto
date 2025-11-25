@@ -74,7 +74,7 @@ try {
             'codigo_telefono' => $incidente_data['solicitante_code'],
             'telefono' => $incidente_data['solicitante_telefono'], 
             'departamento' => $incidente_data['departamento'],
-            'piso' => $incidente_data['piso']
+            'piso' => $incidente_data['solicitante_piso']
         ];
     } else {
         // Cédula NO encontrada en el historial de incidencias

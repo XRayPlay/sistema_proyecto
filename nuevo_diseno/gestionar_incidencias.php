@@ -87,6 +87,15 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="assets/css/panel_incidencia.css">
+    <style>
+        /* Estilo para filas con estado certificado */
+        .certificado-row {
+            background-color: #e8f5e9 !important; /* Fondo verde claro */
+        }
+        .certificado-row:hover {
+            background-color: #c8e6c9 !important; /* Un tono un poco más oscuro al pasar el mouse */
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -253,16 +262,36 @@ try {
 
                     <div class="form-section">
                         <h3 class="section-title">Detalles de la Incidencia</h3>
-                        <div class="mb-3">
-                            <label for="tipo_incidencia" class="form-label required-field">Área de Atención</label>
-                            <select class="form-control modern-input" id="tipo_incidencia" name="tipo_incidencia" required>
-                                <option value="">Seleccionar tipo</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="departamento" class="form-label required-field">Departamento</label>
+                                <select class="form-control modern-input" id="departamento" name="departamento" required>
+                                    <option value="">Seleccionar departamento</option>
+                                    <option value="1">Soporte</option>
+                                    <option value="2">Sistema</option>
+                                    <option value="3">Redes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3" id="tipo-incidencia-container" style="display: none;">
+                                <label for="tipo_incidencia" class="form-label required-field">Tipo de Incidencia</label>
+                                <select class="form-control modern-input" id="tipo_incidencia" name="tipo_incidencia" required>
+                                    <option value="">Seleccione un departamento primero</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="tecnico_asignado_id" class="form-label">Técnico Asignado (Opcional)</label>
                             <select class="form-control modern-input" id="tecnico_asignado_id" name="tecnico_asignado_id">
                                 <option value="">Sin asignar</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="estado" class="form-label required-field">Estado</label>
+                            <select class="form-control modern-input" id="estado" name="estado" required>
+                                <option value="en_proceso">En Proceso</option>
+                                <option value="cerrada">Cerrado</option>
+                                <option value="redirigido">redirigido</option>
+                                <option value="certificado">certificado</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -390,6 +419,63 @@ try {
 
     // --- Funciones de Carga Inicial ---
 
+    // Manejar cambio de departamento
+    document.addEventListener('DOMContentLoaded', function() {
+        const departamentoSelect = document.getElementById('departamento');
+        const tipoIncidenciaContainer = document.getElementById('tipo-incidencia-container');
+        const tipoIncidenciaSelect = document.getElementById('tipo_incidencia');
+
+        if (departamentoSelect) {
+            departamentoSelect.addEventListener('change', async function() {
+                const departamentoId = this.value;
+                
+                // Mostrar/ocultar el select de tipos de incidencia
+                if (departamentoId) {
+                    tipoIncidenciaContainer.style.display = 'block';
+                    // Cargar tipos de incidencia para el departamento seleccionado
+                    await cargarTiposIncidenciaPorDepartamento(departamentoId);
+                } else {
+                    tipoIncidenciaContainer.style.display = 'none';
+                    tipoIncidenciaSelect.innerHTML = '<option value="">Seleccione un departamento primero</option>';
+                }
+            });
+        }
+    });
+
+    // Función para cargar tipos de incidencia por departamento
+    async function cargarTiposIncidenciaPorDepartamento(departamentoId) {
+        try {
+            const formData = new FormData();
+            formData.append('action', 'obtener_tipos_por_departamento');
+            formData.append('departamento_id', departamentoId);
+            
+            const response = await fetch('../php/gestionar_incidencias_crud.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            const select = document.getElementById('tipo_incidencia');
+            
+            select.innerHTML = '<option value="">Seleccionar tipo de incidencia</option>';
+            
+            if (data.success && data.tipos && data.tipos.length > 0) {
+                data.tipos.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo.id;
+                    option.textContent = tipo.nombre; // Asegúrate de que el backend devuelva 'nombre'
+                    select.appendChild(option);
+                });
+            } else {
+                select.innerHTML = '<option value="">No hay tipos disponibles</option>';
+            }
+        } catch (error) {
+            console.error('Error al cargar tipos de incidencia:', error);
+            const select = document.getElementById('tipo_incidencia');
+            select.innerHTML = '<option value="">Error al cargar tipos</option>';
+        }
+    }
+
     // Función para cargar incidencias (Mantenida igual)
     async function cargarIncidencias(q = '') {
         // ... (El código de esta función se mantiene igual)
@@ -410,6 +496,10 @@ try {
             if (data.success && data.incidencias && data.incidencias.length > 0) {
                 data.incidencias.forEach(incidencia => {
                     const row = document.createElement('tr');
+                    // Add 'certificado-row' class if status is 'certificado'
+                    if (incidencia.estado.toLowerCase() === 'certificado') {
+                        row.classList.add('certificado-row');
+                    }
                     row.innerHTML = `
                         <td>${incidencia.id}</td>
                         <td>${incidencia.tipo_incidencia}</td>
@@ -592,6 +682,7 @@ async function buscarUsuarioPorCedula() {
                 
                 // Rellenar número de teléfono
                 document.getElementById('solicitante_telefono').value = usuario.telefono || '';
+                document.getElementById('piso').value = usuario.piso || '';
                 
                 
 
@@ -699,6 +790,10 @@ async function buscarUsuarioPorCedula() {
             const piso = document.getElementById('piso').value;
             formData.set('piso', piso);
             
+            // Obtener y guardar el estado seleccionado
+            const estado = document.getElementById('estado').value;
+            formData.set('estado', estado);
+            
             // Obtener código de teléfono y número por separado
             const codigoTelefono = document.getElementById('solicitante_codigo_telefono').value;
             const telefono = document.getElementById('solicitante_telefono').value;
@@ -750,53 +845,62 @@ async function buscarUsuarioPorCedula() {
             const formData = new FormData();
             formData.append('action', 'obtener_por_id');
             formData.append('id', id);
-            
+
             const response = await fetch('../php/gestionar_incidencias_crud.php', {
                 method: 'POST',
                 body: formData
             });
-            
+
+            if (!response.ok) {
+                throw new Error('Error al obtener los datos de la incidencia');
+            }
+
             const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Error al obtener los datos de la incidencia');
+            }
+
+            const incidencia = data.incidencia;
+            const modal = new bootstrap.Modal(document.getElementById('modalIncidencia'));
+            const form = document.getElementById('formIncidencia');
+            const tipoIncidenciaContainer = document.getElementById('tipo-incidencia-container');
             
-            if (data.success && data.incidencia) {
-                const incidencia = data.incidencia;
-                
-                // Debug: Ver los datos recibidos
-                console.log('Datos de la incidencia:', JSON.stringify(incidencia, null, 2));
-                
-                // Rellenar el formulario
-                document.getElementById('incidencia_id').value = incidencia.id;
-                
-                // Información del Solicitante
-                document.getElementById('solicitante_cedula').value = incidencia.solicitante_cedula;
-                document.getElementById('solicitante_nombre').value = incidencia.solicitante_nombre;
-                document.getElementById('solicitante_apellido').value = incidencia.solicitante_apellido || '';
-                document.getElementById('solicitante_email').value = incidencia.solicitante_email;
-                
-                // Establecer el número de teléfono directamente desde solicitante_telefono
-                if (incidencia.solicitante_telefono) {
-                    document.getElementById('solicitante_telefono').value = incidencia.solicitante_telefono;
-                }
-                
-                // Establecer el código de teléfono si está disponible
-                console.log('Intentando establecer código de teléfono con valor:', incidencia.solicitante_code);
-                const codigoTelefonoSelect = document.getElementById('solicitante_codigo_telefono');
-                if (codigoTelefonoSelect) {
-                    console.log('Opciones disponibles:', Array.from(codigoTelefonoSelect.options).map(opt => `${opt.value} (${opt.text})`));
-                    if (incidencia.solicitante_code) {
-                        console.log('Estableciendo valor del select a:', incidencia.solicitante_code);
-                        codigoTelefonoSelect.value = incidencia.solicitante_code;
-                        console.log('Valor después de establecer:', codigoTelefonoSelect.value);
-                    } else {
-                        console.warn('solicitante_code está vacío o no está definido');
+            // Limpiar el formulario primero
+            form.reset();
+            
+            // Establecer el título del modal
+            document.getElementById('modalTitulo').textContent = 'Editar Incidencia';
+            document.getElementById('incidencia_id').value = incidencia.id;
+            
+            // Llenar los campos del formulario con los datos de la incidencia
+            document.getElementById('solicitante_cedula').value = incidencia.solicitante_cedula || '';
+            document.getElementById('solicitante_nombre').value = incidencia.solicitante_nombre || '';
+            document.getElementById('solicitante_apellido').value = incidencia.solicitante_apellido || '';
+            document.getElementById('solicitante_email').value = incidencia.solicitante_email || '';
+            document.getElementById('solicitante_telefono').value = incidencia.solicitante_telefono || '';
+            document.getElementById('solicitante_codigo_telefono').value = incidencia.solicitante_code || '';
+            
+            // Seleccionar el piso
+            if (incidencia.solicitante_piso) {
+                const pisoSelect = document.getElementById('piso');
+                for (let i = 0; i < pisoSelect.options.length; i++) {
+                    if (pisoSelect.options[i].value === incidencia.solicitante_piso) {
+                        pisoSelect.selectedIndex = i;
+                        break;
                     }
-                } else {
-                    console.error('No se encontró el elemento select con ID "solicitante_codigo_telefono"');
                 }
+            }
+            
+            // Establecer el departamento si está disponible
+            if (incidencia.departamento) {
+                const departamentoSelect = document.getElementById('departamento');
+                departamentoSelect.value = incidencia.departamento;
                 
+                // Cargar los tipos de incidencia para el departamento seleccionado
+                await cargarTiposIncidenciaPorDepartamento(incidencia.departamento);
                 
-                
-                // Establecer el Área de Atención
+                // Una vez cargados los tipos, seleccionar el tipo de incidencia
                 if (incidencia.tipo_incidencia) {
                     document.getElementById('tipo_incidencia').value = incidencia.tipo_incidencia;
                 }
@@ -823,6 +927,25 @@ async function buscarUsuarioPorCedula() {
                         selectTecnico.appendChild(tempOption);
                     }
                     selectTecnico.value = desiredValue;
+                }
+
+                // Establecer el Estado
+                if (incidencia.estado) {
+                    const estadoSelect = document.getElementById('estado');
+                    if (estadoSelect) {
+                        // Verificar si el estado existe en las opciones
+                        const estadoExists = Array.from(estadoSelect.options).some(opt => opt.value === incidencia.estado);
+                        if (estadoExists) {
+                            estadoSelect.value = incidencia.estado;
+                        } else if (incidencia.estado) {
+                            // Si el estado no existe en las opciones, agregarlo
+                            const option = document.createElement('option');
+                            option.value = incidencia.estado;
+                            option.textContent = incidencia.estado.charAt(0).toUpperCase() + incidencia.estado.slice(1).replace('_', ' ');
+                            estadoSelect.appendChild(option);
+                            estadoSelect.value = incidencia.estado;
+                        }
+                    }
                 }
                 
                 // Cambiar el modal a modo edición

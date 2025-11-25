@@ -394,8 +394,6 @@ mysqli_close($conexion);
                     }
 
                     // Si ya hay comentarios del técnico, mostrarlos para edición / referencia
-                    document.getElementById('comentarios_tecnico').value = inc.comentarios_tecnico || '';
-                    const count = (inc.comentarios_tecnico || '').length;
                     document.getElementById('wordCount').textContent = count + ' caracteres';
                     const btnGuardar = document.getElementById('btnGuardarEstado');
                     btnGuardar.disabled = count < parseInt(document.getElementById('comentarios_tecnico').getAttribute('minlength') || 0);

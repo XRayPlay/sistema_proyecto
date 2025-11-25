@@ -247,19 +247,36 @@
             color: #d97706;
         }
 
-        .badge-status.en-proceso {
-            background: #dbeafe;
-            color: #2563eb;
+        /* Estilo para estado 'en_proceso' - Azul */
+        .badge-status.en_proceso {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #0ea5e9;
+            font-weight: 600;
         }
 
-        .badge-status.resuelta {
-            background: var(--light-green);
-            color: var(--primary-green-dark);
+        /* Estilo para estado 'redirigido' - Rojo */
+        .badge-status.redirigido {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #ef4444;
+            font-weight: 600;
         }
 
-        .badge-status.cancelada {
-            background: #fef2f2;
-            color: #dc2626;
+        /* Estilo para estado 'cerrada' - Naranja */
+        .badge-status.cerrada {
+            background: #ffedd5;
+            color: #c2410c;
+            border: 1px solid #f97316;
+            font-weight: 600;
+        }
+
+        /* Estilo para estado 'certificado' - Verde */
+        .badge-status.certificado {
+            background: #e6f7e6;
+            color: #1a7f1a;
+            border: 1px solid #4caf50;
+            font-weight: 600;
         }
 
         .btn-action {
