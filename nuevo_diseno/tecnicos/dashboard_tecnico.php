@@ -103,7 +103,7 @@ mysqli_close($conexion);
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-icon">
-                        <img src="../assets/images/Minec_logo.png" alt="Logo MINEC" style="width: 32px; height: 32px; object-fit: contain; background: white; border-radius: 50%; padding: 4px;">
+                        <img src="../../resources/image/logoMinec.jpg" alt="Logo MINEC" style="width: 250px; height: 60px; object-fit: contain; background: white; border-radius: 5%; padding: 4px;">
                     </div>
                     <span>Soporte Técnico</span>
                 </div>
@@ -276,15 +276,15 @@ mysqli_close($conexion);
                                     <option value="">Seleccione un estado</option>
                                     <option value="en_proceso">En Proceso</option>
                                     <option value="cerrada">Cerrada</option>
-                                    <option value="redirigido">Redirigir a otro técnico</option>
+                                    <option value="redirigido">Redirigir a CAU</option>
                                 </select>
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Comentarios del Técnico *</label>
                                 <textarea class="form-control form-textarea" id="comentarios_tecnico" name="comentarios_tecnico" 
-                                          placeholder="Describa las acciones realizadas o estado actual de la incidencia. 50–150 caracteres." 
-                                          required minlength="50" maxlength="150"></textarea>
+                                          placeholder="Describa las acciones realizadas o estado actual de la incidencia. 20–150 caracteres." 
+                                          required minlength="20" maxlength="150"></textarea>
                                 <div class="word-count" id="wordCount">0 caracteres</div>
                             </div>
                             
@@ -426,12 +426,12 @@ mysqli_close($conexion);
             }
         });
 
-        // Contador de caracteres (límite 50-150)
+        // Contador de caracteres (límite 20-150)
         document.getElementById('comentarios_tecnico').addEventListener('input', function() {
             const text = this.value;
             const charCount = text.length;
             const wordCountElement = document.getElementById('wordCount');
-            const min = parseInt(this.getAttribute('minlength') || '50', 10);
+            const min = parseInt(this.getAttribute('minlength') || '20', 10);
             const max = parseInt(this.getAttribute('maxlength') || '150', 10);
             
             wordCountElement.textContent = charCount + ' caracteres';
@@ -545,9 +545,9 @@ mysqli_close($conexion);
         function handleEstadoChange(estado) {
             const comentariosField = document.getElementById('comentarios_tecnico');
             if (estado === 'redirigido') {
-                comentariosField.placeholder = 'Explique por qué redirige la incidencia y a quién la está derivando. 50–150 caracteres.';
+                comentariosField.placeholder = 'Explique por qué redirige la incidencia y a quién la está derivando. 20–150 caracteres.';
             } else {
-                comentariosField.placeholder = 'Describa las acciones realizadas o estado actual de la incidencia. 50–150 caracteres.';
+                comentariosField.placeholder = 'Describa las acciones realizadas o estado actual de la incidencia. 20–150 caracteres.';
             }
             
             // Limpiar el campo de descripción cuando cambia el estado
@@ -659,7 +659,7 @@ mysqli_close($conexion);
             });
         }
     </script>
-        <?php include_once('../../page/footer.php'); ?>
+        <?php $footer = "tecnico"; include_once('../../page/footer.php'); ?>
     </body>
     </html>
 

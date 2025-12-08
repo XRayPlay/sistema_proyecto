@@ -22,7 +22,7 @@ $conexion = $c->conexion();
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Devolver datos básicos del usuario
-        $query = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, address, avatar, id_rol, id_floor as id_piso FROM user WHERE id_user = ?";
+        $query = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, avatar, id_rol, id_floor as id_piso FROM user WHERE id_user = ?";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param($stmt, 'i', $userId);
         mysqli_stmt_execute($stmt);
@@ -48,7 +48,6 @@ try {
         $code_phone = mysqli_real_escape_string($conexion, $_POST['code_phone'] ?? '');
         $birthday = mysqli_real_escape_string($conexion, $_POST['birthday'] ?? '');
         $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'Sin Definir');
-        $address = mysqli_real_escape_string($conexion, $_POST['address'] ?? '');
         $id_piso = isset($_POST['piso']) ? (int)$_POST['piso'] : 0;
         $password = mysqli_real_escape_string($conexion, $_POST['password'] ?? '');
         $confirm_password = mysqli_real_escape_string($conexion, $_POST['confirmar_password'] ?? '');
@@ -89,7 +88,6 @@ try {
         if (!in_array($code_phone, $codigosPermitidos, true)) {
             echo json_encode(['success' => false, 'message' => 'Código de teléfono inválido']); exit();
         }
-        // Address validation removed as requested
         if (empty($birthday)) { echo json_encode(['success' => false, 'message' => 'La Fecha de Nacimiento es obligatoria']); exit(); }
         $dob = new DateTime($birthday);
         $age = (new DateTime())->diff($dob)->y;
@@ -157,7 +155,6 @@ try {
         $update_fields[] = 'phone = ?'; $types .= 's'; $params[] = $telefono;
         $update_fields[] = 'birthday = ?'; $types .= 's'; $params[] = $birthday;
         $update_fields[] = 'sexo = ?'; $types .= 's'; $params[] = $sexo;
-        $update_fields[] = 'address = ?'; $types .= 's'; $params[] = $address;
         if ($avatar !== null) { $update_fields[] = 'avatar = ?'; $types .= 's'; $params[] = $avatar; }
         if ($update_pass) { $update_fields[] = 'pass = ?'; $types .= 's'; $params[] = $pass_hash; }
 
@@ -179,7 +176,7 @@ try {
 
         if (mysqli_stmt_execute($stmt_upd)) {
             // Devolver usuario actualizado
-            $query_sel = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, address, avatar FROM user WHERE id_user = ?";
+            $query_sel = "SELECT id_user as id, username, name, apellido, nacionalidad, cedula, email, phone as telefono, code_phone, birthday, sexo, avatar FROM user WHERE id_user = ?";
             $s2 = mysqli_prepare($conexion, $query_sel);
             mysqli_stmt_bind_param($s2, 'i', $userId);
             mysqli_stmt_execute($s2);
@@ -192,7 +189,6 @@ try {
                 $_SESSION['usuario']['apellido'] = $row['apellido'] ?? $apellido;
                 $_SESSION['usuario']['email'] = $row['email'] ?? $email;
                 $_SESSION['usuario']['telefono'] = $row['telefono'] ?? $telefono;
-                $_SESSION['usuario']['address'] = $row['address'] ?? $address;
                 $_SESSION['usuario']['username'] = $row['username'] ?? $username;
             }
             // Mantener variables de compatibilidad

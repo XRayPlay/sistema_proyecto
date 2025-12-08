@@ -233,8 +233,25 @@ function crearTecnico($conexion) {
 }
 
 function obtenerTecnicos($conexion) {
-    // Obtener todos los técnicos registrados
-    $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, u.phone as telefono, u.code_phone,
+    // Obtener el ID del piso del director si es necesario
+    $id_floor = null;
+    if (esDirector() && !esAdmin()) {
+        // Obtener el ID del piso del director actual
+        $id_usuario = $_SESSION['id_user'];
+        $query_floor = "SELECT id_cargo FROM user WHERE id_user = ?";
+        $stmt = mysqli_prepare($conexion, $query_floor);
+        mysqli_stmt_bind_param($stmt, 'i', $id_usuario);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($row = mysqli_fetch_assoc($result)) {
+            $id_floor = $row['id_cargo'];
+        }
+        mysqli_stmt_close($stmt);
+    }
+
+    // Construir la consulta base
+    $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, 
+                     u.phone as telefono, u.code_phone, u.id_cargo,
                      u.id_status_user,
                      CASE u.id_status_user 
                         WHEN 1 THEN 'Activo' 
@@ -245,8 +262,14 @@ function obtenerTecnicos($conexion) {
                      'Soporte Técnico' as especialidad,
                      u.last_connection as fecha_registro
               FROM user u
-              WHERE u.id_rol = 3
-              ORDER BY u.name";
+              WHERE u.id_rol = 3";
+    
+    // Si es director (y no admin), filtrar por su piso
+    if ($id_floor !== null) {
+        $query .= " AND u.id_cargo = " . (int)$id_floor;
+    }
+    
+    $query .= " ORDER BY u.name";
     
     $resultado = mysqli_query($conexion, $query);
     
@@ -260,7 +283,7 @@ function obtenerTecnicos($conexion) {
         $tecnicos[] = [
             'id' => $row['id'],
             'nacionalidad' => $row['nacionalidad'],
-            'cedula' => $row['cedula'], // Agregamos la cédula para la asignación
+            'cedula' => $row['cedula'],
             'nombre' => $row['nombre'],
             'apellido' => $row['apellido'],
             'especialidad' => $row['especialidad'],

@@ -82,17 +82,17 @@
                                 error_log("[LOGIN] usuario_id={$user_id} id_rol={$row['id_rol']}");
                                 if ($row['id_rol'] == 3) {
                                         // TÉCNICO - Redirigir al panel principal de técnicos (ruta absoluta)
-                                        $target = '/sistema_proyecto/nuevo_diseno/tecnicos/dashboard_tecnico.php';
+                                        $target = '../nuevo_diseno/tecnicos/dashboard_tecnico.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } elseif ($row['id_rol'] == 4) {
                                         // ANALISTA - Redirigir directamente a la gestión de incidencias (ruta absoluta)
-                                        $target = '/sistema_proyecto/nuevo_diseno/gestionar_incidencias.php';
+                                        $target = '../nuevo_diseno/gestionar_incidencias.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } else {
                                         // ADMINISTRADOR/DIRECTOR - Redirigir al panel principal (ruta absoluta)
-                                        $target = '/sistema_proyecto/nuevo_diseno/inicio_completo.php';
+                                        $target = '../nuevo_diseno/inicio_completo.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     }

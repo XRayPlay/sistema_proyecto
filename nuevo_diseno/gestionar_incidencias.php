@@ -64,6 +64,23 @@ if (!esAdmin() && !esDirector() && !esAnalista()) {
 
 try {
     $conexion = new conectar();
+    $conexion = $conexion->conexion();
+    
+    // Obtener el ID del cargo del director si es director
+    $id_cargo_director = null;
+    if (esDirector()) {
+        $id_usuario = $_SESSION['usuario']['id_user'] ?? $_SESSION['id_user'];
+        $query_cargo = "SELECT id_cargo FROM user WHERE id_user = ?";
+        if ($stmt = $conexion->prepare($query_cargo)) {
+            $stmt->bind_param('i', $id_usuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $id_cargo_director = $row['id_cargo'];
+            }
+            $stmt->close();
+        }
+    }
 } catch (Exception $e) {
     error_log("Error de conexión en gestionar_incidencias.php: " . $e->getMessage());
     die("Error de conexión a la base de datos");
@@ -102,7 +119,7 @@ try {
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <span>ecosocialismo</span>
+                <img src="../resources/image/logoMinec.jpg" alt="Logo MINEC" style="width: 250px; height: 60px; object-fit: contain; background: white; border-radius: 5%; padding: 4px;">
             </div>
             <div class="user-info">
                 <div class="user-avatar">A</div>
@@ -281,17 +298,20 @@ try {
                         </div>
                         <div class="mb-3">
                             <label for="tecnico_asignado_id" class="form-label">Técnico Asignado (Opcional)</label>
-                            <select class="form-control modern-input" id="tecnico_asignado_id" name="tecnico_asignado_id">
+                            <select class="form-control modern-input" id="tecnico_asignado_id" name="tecnico_asignado_id" onchange="actualizarVisibilidadTipoIncidencia()">
                                 <option value="">Sin asignar</option>
                             </select>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="asignar_automaticamente" name="asignar_automaticamente" onchange="manejarCambioAsignacion()">
+                                <label class="form-check-label" for="asignar_automaticamente">
+                                    Asignar automáticamente al técnico con menos incidencias
+                                </label>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="estado" class="form-label required-field">Estado</label>
                             <select class="form-control modern-input" id="estado" name="estado" required>
-                                <option value="en_proceso">En Proceso</option>
-                                <option value="cerrada">Cerrado</option>
-                                <option value="redirigido">redirigido</option>
-                                <option value="certificado">certificado</option>
+                                <option value="en_proceso" selected>En Proceso</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -419,6 +439,61 @@ try {
 
     // --- Funciones de Carga Inicial ---
 
+    // Manejar el checkbox de asignación automática
+    document.addEventListener('DOMContentLoaded', function() {
+        const asignarAutomaticamente = document.getElementById('asignar_automaticamente');
+        const tecnicoSelect = document.getElementById('tecnico_asignado_id');
+
+        if (asignarAutomaticamente && tecnicoSelect) {
+            // Configurar el estado inicial
+            tecnicoSelect.disabled = asignarAutomaticamente.checked;
+            
+            // Manejar cambios en el checkbox
+            asignarAutomaticamente.addEventListener('change', function() {
+                tecnicoSelect.disabled = this.checked;
+                if (this.checked) {
+                    tecnicoSelect.value = '';
+                }
+            });
+        }
+    });
+
+    // Función para manejar cambios en la asignación automática
+    function manejarCambioAsignacion() {
+        const asignarAutomaticamente = document.getElementById('asignar_automaticamente');
+        const tecnicoSelect = document.getElementById('tecnico_asignado_id');
+        
+        if (asignarAutomaticamente.checked) {
+            // Si se marca la casilla, limpiar la selección manual
+            tecnicoSelect.value = '';
+        }
+        // No deshabilitar el select para permitir selección manual
+        // tecnicoSelect.disabled = asignarAutomaticamente.checked;
+        
+        // Actualizar visibilidad del tipo de incidencia
+        actualizarVisibilidadTipoIncidencia();
+    }
+
+    // Función para actualizar la visibilidad del tipo de incidencia
+    function actualizarVisibilidadTipoIncidencia() {
+        const tecnicoSelect = document.getElementById('tecnico_asignado_id');
+        const departamentoSelect = document.getElementById('departamento');
+        const tipoIncidenciaContainer = document.getElementById('tipo-incidencia-container');
+        
+        // Mostrar tipo de incidencia si hay un técnico seleccionado o si hay un departamento seleccionado
+        if ((tecnicoSelect && tecnicoSelect.value) || (departamentoSelect && departamentoSelect.value)) {
+            tipoIncidenciaContainer.style.display = 'block';
+            // Si hay departamento seleccionado pero no tipo de incidencia, cargarlos
+            if (departamentoSelect && departamentoSelect.value && 
+                (!document.getElementById('tipo_incidencia').options || 
+                 document.getElementById('tipo_incidencia').options.length <= 1)) {
+                cargarTiposIncidenciaPorDepartamento(departamentoSelect.value);
+            }
+        } else {
+            tipoIncidenciaContainer.style.display = 'none';
+        }
+    }
+
     // Manejar cambio de departamento
     document.addEventListener('DOMContentLoaded', function() {
         const departamentoSelect = document.getElementById('departamento');
@@ -429,11 +504,11 @@ try {
             departamentoSelect.addEventListener('change', async function() {
                 const departamentoId = this.value;
                 
-                // Mostrar/ocultar el select de tipos de incidencia
                 if (departamentoId) {
-                    tipoIncidenciaContainer.style.display = 'block';
                     // Cargar tipos de incidencia para el departamento seleccionado
                     await cargarTiposIncidenciaPorDepartamento(departamentoId);
+                    // Actualizar visibilidad basada en la selección actual
+                    actualizarVisibilidadTipoIncidencia();
                 } else {
                     tipoIncidenciaContainer.style.display = 'none';
                     tipoIncidenciaSelect.innerHTML = '<option value="">Seleccione un departamento primero</option>';
@@ -478,10 +553,13 @@ try {
 
     // Función para cargar incidencias (Mantenida igual)
     async function cargarIncidencias(q = '') {
-        // ... (El código de esta función se mantiene igual)
         try {
             const formData = new FormData();
             formData.append('action', 'obtener');
+            // Si es director, agregar el filtro de departamento
+            <?php if (isset($id_cargo_director) && $id_cargo_director !== null): ?>
+            formData.append('id_cargo', '<?php echo $id_cargo_director; ?>');
+            <?php endif; ?>
             if (q && q.trim() !== '') formData.append('q', q.trim());
             
             const response = await fetch('../php/gestionar_incidencias_crud.php', {
@@ -714,6 +792,45 @@ async function buscarUsuarioPorCedula() {
 
     // --- Funciones de CRUD (Crear/Editar) ---
 
+    // Función para obtener el técnico con menos incidencias asignadas en un departamento específico
+    async function obtenerTecnicoConMenosIncidencias(departamentoId) {
+        console.log('Obteniendo técnico con menos incidencias para departamento:', departamentoId);
+        try {
+            if (!departamentoId) {
+                console.error('No se proporcionó un ID de departamento');
+                return null;
+            }
+            
+            const url = `../php/obtener_tecnico_menos_incidencias.php?departamento_id=${departamentoId}`;
+            console.log('Realizando petición a:', url);
+            
+            const response = await fetch(url);
+            console.log('Respuesta recibida, estado:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`Error en la petición: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('Datos recibidos:', data);
+            
+            if (data.success && data.tecnico_id) {
+                console.log('Técnico encontrado:', data);
+                return {
+                    id: data.tecnico_id,
+                    nombre: data.nombre || 'Técnico',
+                    departamento_id: data.departamento_id
+                };
+            } else {
+                console.warn('No se pudo obtener un técnico. Respuesta del servidor:', data);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error al obtener técnico con menos incidencias:', error);
+            return null;
+        }
+    }
+
     // Función para crear/editar incidencia (MODIFICADA para incluir tecnico_asignado_id y quitar solicitante_extension)
     async function guardarIncidencia() {
         const form = document.getElementById('formIncidencia');
@@ -775,6 +892,42 @@ async function buscarUsuarioPorCedula() {
         document.getElementById('solicitante_email').focus();
         return false;
     }
+
+        // Verificar si la asignación automática está habilitada
+        const asignarAutomaticamente = document.getElementById('asignar_automaticamente').checked;
+        const departamentoId = document.getElementById('departamento').value;
+        console.log('Validando asignación automática:', { asignarAutomaticamente, departamentoId });
+        
+        if (asignarAutomaticamente && departamentoId) {
+            console.log('Iniciando asignación automática para departamento:', departamentoId);
+            try {
+                // Obtener el técnico con menos incidencias para este departamento
+                console.log('Llamando a obtenerTecnicoConMenosIncidencias...');
+                const tecnico = await obtenerTecnicoConMenosIncidencias(departamentoId);
+                console.log('Respuesta de obtenerTecnicoConMenosIncidencias:', tecnico);
+                
+                if (tecnico && tecnico.id) {
+                    // Establecer el ID del técnico en el formulario
+                    const tecnicoId = tecnico.id;
+                    console.log('Asignando técnico ID:', tecnicoId, 'Nombre:', tecnico.nombre);
+                    
+                    // Actualizar tanto el FormData como el select visible
+                    formData.set('tecnico_asignado_id', tecnicoId);
+                    const selectTecnico = document.getElementById('tecnico_asignado_id');
+                    if (selectTecnico) {
+                        selectTecnico.value = tecnicoId;
+                        console.log('Select de técnico actualizado a:', tecnicoId);
+                    }
+                    
+                    console.log(`Asignando automáticamente al técnico ${tecnico.nombre} (ID: ${tecnicoId}) del departamento ${departamentoId}`);
+                } else {
+                    console.warn('No se pudo asignar un técnico automáticamente. No hay técnicos disponibles para este departamento.');
+                }
+            } catch (error) {
+                console.error('Error al asignar técnico automáticamente:', error);
+                // Continuar sin asignar técnico en caso de error
+            }
+        }
 
         if (modoEdicion) {
             formData.append('action', 'actualizar');
@@ -897,12 +1050,24 @@ async function buscarUsuarioPorCedula() {
                 const departamentoSelect = document.getElementById('departamento');
                 departamentoSelect.value = incidencia.departamento;
                 
+                // Mostrar el contenedor del tipo de incidencia
+                const tipoIncidenciaContainer = document.getElementById('tipo-incidencia-container');
+                tipoIncidenciaContainer.style.display = 'block';
+                
                 // Cargar los tipos de incidencia para el departamento seleccionado
                 await cargarTiposIncidenciaPorDepartamento(incidencia.departamento);
                 
                 // Una vez cargados los tipos, seleccionar el tipo de incidencia
                 if (incidencia.tipo_incidencia) {
-                    document.getElementById('tipo_incidencia').value = incidencia.tipo_incidencia;
+                    // Esperar un momento para asegurar que el select se haya actualizado
+                    setTimeout(() => {
+                        const tipoIncidenciaSelect = document.getElementById('tipo_incidencia');
+                        if (tipoIncidenciaSelect) {
+                            tipoIncidenciaSelect.value = incidencia.tipo_incidencia;
+                            // Disparar evento change para asegurar que cualquier listener se active
+                            tipoIncidenciaSelect.dispatchEvent(new Event('change'));
+                        }
+                    }, 100);
                 }
                 // Establecer el Área de Atención
                 if (incidencia.solicitante_piso) {
@@ -929,22 +1094,43 @@ async function buscarUsuarioPorCedula() {
                     selectTecnico.value = desiredValue;
                 }
 
+                // Agregar información del creador
+                const estadoContainer = document.getElementById('estado').parentNode;
+                const creadorInfo = document.createElement('div');
+                creadorInfo.className = 'mb-3';
+                creadorInfo.innerHTML = `
+                    <label class="form-label">Creado por</label>
+                    <input type="text" class="form-control modern-input" 
+                           value="${incidencia.creador_nombre || 'No especificado'} ${incidencia.creador_apellido || ''} (${incidencia.creador_cedula || 'N/A'})" 
+                           readonly>
+                `;
+                estadoContainer.parentNode.insertBefore(creadorInfo, estadoContainer);
+
                 // Establecer el Estado
                 if (incidencia.estado) {
                     const estadoSelect = document.getElementById('estado');
                     if (estadoSelect) {
-                        // Verificar si el estado existe en las opciones
-                        const estadoExists = Array.from(estadoSelect.options).some(opt => opt.value === incidencia.estado);
-                        if (estadoExists) {
-                            estadoSelect.value = incidencia.estado;
-                        } else if (incidencia.estado) {
-                            // Si el estado no existe en las opciones, agregarlo
+                        // Limpiar opciones actuales
+                        estadoSelect.innerHTML = '';
+                        
+                        // Agregar todas las opciones de estado
+                        const estados = [
+                            {value: 'en_proceso', text: 'En Proceso'},
+                            {value: 'redirigido', text: 'Redirigido'},
+                            {value: 'cerrada', text: 'Cerrado'},
+                            {value: 'certificado', text: 'Certificado'}
+                        ];
+                        
+                        // Agregar las opciones al select
+                        estados.forEach(estado => {
                             const option = document.createElement('option');
-                            option.value = incidencia.estado;
-                            option.textContent = incidencia.estado.charAt(0).toUpperCase() + incidencia.estado.slice(1).replace('_', ' ');
+                            option.value = estado.value;
+                            option.textContent = estado.text;
+                            if (estado.value === incidencia.estado) {
+                                option.selected = true;
+                            }
                             estadoSelect.appendChild(option);
-                            estadoSelect.value = incidencia.estado;
-                        }
+                        });
                     }
                 }
                 
@@ -1090,6 +1276,10 @@ async function buscarUsuarioPorCedula() {
                         <div class="detail-item">
                             <span class="detail-label">Fecha de Creación</span>
                             <span class="detail-value">${formatearFecha(incidencia.fecha_creacion)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Creado por</span>
+                            <span class="detail-value">${incidencia.creador_nombre} ${incidencia.creador_apellido || ''} (${incidencia.creador_cedula || 'N/A'})</span>
                         </div>
                     </div>
                 </div>

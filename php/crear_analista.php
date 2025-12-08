@@ -78,8 +78,8 @@ try {
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
     
     // Insertar nuevo analista
-    $sql = "INSERT INTO user (name, email, pass, id_rol, id_status_user, username, cedula, sexo, phone, birthday, address, avatar, last_connection) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())";
+    $sql = "INSERT INTO user (name, email, pass, id_rol, id_status_user, username, cedula, sexo, phone, birthday, avatar, last_connection) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())";
     
     error_log("SQL Query: " . $sql);
     error_log("Parámetros - nombre: '$nombre', email: '$email', password_hash: '$password_hash', rol: '$rol', estado: '$estado', username: '$username'");
@@ -89,7 +89,6 @@ try {
     $sexo = 'No especificado';
     $phone = '00000000000';
     $birthday = '1990-01-01';
-    $address = 'No especificado';
     $avatar = 'default.jpg';
     
     $stmt = mysqli_prepare($conexion, $sql);
@@ -97,7 +96,7 @@ try {
         throw new Exception("Error al preparar la consulta: " . mysqli_error($conexion));
     }
     
-    $bind_result = mysqli_stmt_bind_param($stmt, "sssississsss", $nombre, $email, $password_hash, $rol, $estado, $username, $cedula, $sexo, $phone, $birthday, $address, $avatar);
+    $bind_result = mysqli_stmt_bind_param($stmt, "sssississss", $nombre, $email, $password_hash, $rol, $estado, $username, $cedula, $sexo, $phone, $birthday, $avatar);
     if (!$bind_result) {
         throw new Exception("Error al vincular parámetros: " . mysqli_stmt_error($stmt));
     }

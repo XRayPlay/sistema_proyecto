@@ -96,6 +96,7 @@ function crearIncidencia($conexion) {
     $solicitante_code = $_POST['solicitante_code'] ?? '';
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
     $piso = $_POST['piso'] ?? '';
+    $creador_incidencia = $_SESSION['id_user'];
     
     $departamento = 1;
     $sqlde = "SELECT tipo_incidencia FROM incidencias WHERE id = ?";
@@ -170,33 +171,12 @@ function crearIncidencia($conexion) {
         $query = "INSERT INTO incidencias (
                     tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
                     solicitante_email, solicitante_code, solicitante_telefono,
-                    solicitante_piso, departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', NULL, NOW(), NOW())";
+                    solicitante_piso, departamento, estado, tecnico_asignado, usuario_creador, fecha_creacion, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', NULL, ?, NOW(), NOW())";
         $stmt = mysqli_prepare($conexion, $query);
         mysqli_stmt_bind_param(
             $stmt,
-            'ssssssssii',
-            $tipo_incidencia,
-            $descripcion,
-            $solicitante_nombre,
-            $solicitante_apellido,
-            $solicitante_cedula,
-            $solicitante_email,
-            $solicitante_code,
-            $solicitante_telefono,
-            $piso,
-            $departamento
-        );
-    } else {
-        $query = "INSERT INTO incidencias (
-                    tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
-                    solicitante_email, solicitante_code, solicitante_telefono, 
-                    solicitante_piso, departamento, estado, tecnico_asignado, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', ?, NOW(), NOW())";
-        $stmt = mysqli_prepare($conexion, $query);
-        mysqli_stmt_bind_param(
-            $stmt,
-            'sssssssssii',
+            'ssssssssiii',
             $tipo_incidencia,
             $descripcion,
             $solicitante_nombre,
@@ -207,7 +187,30 @@ function crearIncidencia($conexion) {
             $solicitante_telefono,
             $piso,
             $departamento,
-            $tecnico_id
+            $creador_incidencia
+        );
+    } else {
+        $query = "INSERT INTO incidencias (
+                    tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
+                    solicitante_email, solicitante_code, solicitante_telefono, 
+                    solicitante_piso, departamento, estado, tecnico_asignado, usuario_creador, fecha_creacion, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', ?, ?, NOW(), NOW())";
+        $stmt = mysqli_prepare($conexion, $query);
+        mysqli_stmt_bind_param(
+            $stmt,
+            'ssssssssssii',
+            $tipo_incidencia,
+            $descripcion,
+            $solicitante_nombre,
+            $solicitante_apellido,
+            $solicitante_cedula,
+            $solicitante_email,
+            $solicitante_code,
+            $solicitante_telefono,
+            $piso,
+            $departamento,
+            $tecnico_id,
+            $creador_incidencia
         );
     }
     
@@ -285,33 +288,63 @@ function buscarUsuario($conexion) {
 }
 
 function obtenerIncidencias($conexion) {
+    // Obtener el ID del usuario actual
+    $usuario_id = $_SESSION['usuario']['id_user'] ?? null;
+    $id_cargo_director = null;
+    
+    // Si es director, obtener su departamento
+    if (esDirector() && $usuario_id) {
+        $query_cargo = "SELECT id_cargo FROM user WHERE id_user = ?";
+        if ($stmt = $conexion->prepare($query_cargo)) {
+            $stmt->bind_param('i', $usuario_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $id_cargo_director = $row['id_cargo'];
+            }
+            $stmt->close();
+        }
+    }
+    
     // Soportar búsqueda por texto (q) en tiempo real: tipo_incidencia, descripcion o solicitante_nombre
     $q = trim($_POST['q'] ?? '');
     if ($q !== '') {
         $like = '%' . $q . '%';
         $query = "SELECT i.id, c.description as tipo_incidencia, i.solicitante_nombre, i.solicitante_apellido, i.solicitante_code, i.solicitante_telefono, i.descripcion, i.estado, i.fecha_creacion, 
-            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre 
-              FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
-              WHERE (i.tipo_incidencia LIKE ? OR i.descripcion LIKE ? OR i.solicitante_nombre LIKE ?)
-              ORDER BY i.fecha_creacion DESC";
-        $stmt = mysqli_prepare($conexion, $query);
-        if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 'sss', $like, $like, $like);
-            mysqli_stmt_execute($stmt);
-            $resultado = mysqli_stmt_get_result($stmt);
-        } else {
-            // Fallback a consulta sin filtro si falla la preparación
-            $resultado = mysqli_query($conexion, "SELECT i.id, i.tipo_incidencia, i.solicitante_nombre, i.solicitante_apellido, i.solicitante_code, i.solicitante_telefono, i.descripcion, i.estado, i.fecha_creacion, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre FROM incidencias i LEFT JOIN user u ON i.tecnico_asignado = u.id_user ORDER BY i.fecha_creacion DESC");
+            u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre,
+            i.solicitante_cedula, i.solicitante_email, i.departamento
+            FROM incidencias i 
+            LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+            INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type 
+            INNER JOIN cargo c ON r.id_cargo = c.id_cargo
+            WHERE (i.tipo_incidencia LIKE ? OR i.descripcion LIKE ? OR i.solicitante_nombre LIKE ?)";
+        
+        // Si es director, filtrar por su departamento
+        if ($id_cargo_director) {
+            $query .= " AND c.id_cargo = " . intval($id_cargo_director);
         }
+        
+        $query .= " ORDER BY i.fecha_creacion DESC";
+        $stmt = mysqli_prepare($conexion, $query);
+        mysqli_stmt_bind_param($stmt, 'sss', $like, $like, $like);
+        mysqli_stmt_execute($stmt);
+        $resultado = mysqli_stmt_get_result($stmt);
     } else {
-        $query = "SELECT i.id, c.description as tipo_incidencia,  i.descripcion, i.estado, i.fecha_creacion, 
+        $query = "SELECT i.id, c.description as tipo_incidencia, i.descripcion, i.estado, i.fecha_creacion, 
             i.solicitante_nombre, i.solicitante_apellido, i.solicitante_cedula, i.solicitante_email, 
             i.solicitante_telefono, i.solicitante_code,
             i.departamento, u.id_user as tecnico_id, u.cedula as tecnico_cedula, u.name as tecnico_nombre
-              FROM incidencias i 
-              LEFT JOIN user u ON i.tecnico_asignado = u.id_user INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type INNER JOIN cargo c ON r.id_cargo = c.id_cargo
-              ORDER BY i.fecha_creacion DESC";
+            FROM incidencias i 
+            LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
+            INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type 
+            INNER JOIN cargo c ON r.id_cargo = c.id_cargo";
+            
+        // Si es director, filtrar por su departamento
+        if ($id_cargo_director) {
+            $query .= " WHERE c.id_cargo = " . intval($id_cargo_director);
+        }
+        
+        $query .= " ORDER BY i.fecha_creacion DESC";
         $resultado = mysqli_query($conexion, $query);
     }
     
@@ -357,12 +390,14 @@ function obtenerIncidenciaPorId($conexion) {
                      i.solicitante_email, i.solicitante_code, i.solicitante_telefono, 
                      i.solicitante_piso, i.departamento, c.description as depart_name,
                      i.fecha_creacion, i.tecnico_asignado as tecnico_id, r.name as tipo_incidencia_name,
-                     u.cedula as tecnico_cedula, u.name as tecnico_nombre, f.name as name_piso
+                     u.cedula as tecnico_cedula, u.name as tecnico_nombre, f.name as name_piso,
+                     uc.name as creador_nombre, uc.apellido as creador_apellido, uc.cedula as creador_cedula
               FROM incidencias i 
               LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
               LEFT JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type 
               LEFT JOIN cargo c ON r.id_cargo = c.id_cargo 
               LEFT JOIN floors f ON f.id_floors = i.solicitante_piso
+              LEFT JOIN user uc ON i.usuario_creador = uc.id_user
               WHERE i.id = ?";
     $stmt = mysqli_prepare($conexion, $query);
     mysqli_stmt_bind_param($stmt, 'i', $id);
@@ -399,7 +434,10 @@ function obtenerIncidenciaPorId($conexion) {
                 'tecnico_id' => $incidencia['tecnico_id'] ?? null,
                 'tecnico_cedula' => $incidencia['tecnico_cedula'] ?? null,
                 'tecnico_nombre' => $incidencia['tecnico_nombre'],
-                'fecha_creacion' => $incidencia['fecha_creacion']
+                'fecha_creacion' => $incidencia['fecha_creacion'],
+                'creador_nombre' => $incidencia['creador_nombre'] ?? 'No especificado',
+                'creador_apellido' => $incidencia['creador_apellido'] ?? '',
+                'creador_cedula' => $incidencia['creador_cedula'] ?? ''
             ]
         ]);
     } else {

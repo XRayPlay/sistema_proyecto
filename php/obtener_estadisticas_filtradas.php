@@ -85,16 +85,28 @@ try {
         $where_clause = "WHERE " . implode(" AND ", $where_conditions);
     }
     
-    // Agregar filtro de fecha a las condiciones
+    // Determinar si se ha especificado un rango de fechas personalizado
+    $fecha_desde_especificada = !empty($input['fecha_desde']);
+    $fecha_hasta_especificada = !empty($input['fecha_hasta']);
+    $rango_personalizado = $fecha_desde_especificada || $fecha_hasta_especificada;
+    
+    // Si no hay rango personalizado, mostrar el mes actual
     $where_conditions_fecha = $where_conditions;
-    $where_conditions_fecha[] = "fecha_creacion >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+    if (!$rango_personalizado) {
+        $primer_dia_mes = date('Y-m-01');
+        $ultimo_dia_mes = date('Y-m-t');
+        $where_conditions_fecha[] = "fecha_creacion BETWEEN '$primer_dia_mes' AND '$ultimo_dia_mes 23:59:59'";
+    } else {
+        // Si hay rango personalizado, usar ese rango
+        $where_conditions_fecha = $where_conditions;
+    }
     
     $where_clause_fecha = "";
     if (!empty($where_conditions_fecha)) {
         $where_clause_fecha = "WHERE " . implode(" AND ", $where_conditions_fecha);
     }
     
-    // Consulta para incidencias por fecha (últimos 7 días)
+    // Consulta para incidencias por fecha
     $query_fecha = "SELECT DATE(fecha_creacion) as fecha, COUNT(*) as cantidad 
                     FROM incidencias 
                     $where_clause_fecha
@@ -102,8 +114,8 @@ try {
                     ORDER BY fecha_creacion";
     
     // Consulta para incidencias por tipo
-    $query_tipo = "SELECT tipo_incidencia, COUNT(*) as cantidad 
-                   FROM incidencias 
+    $query_tipo = "SELECT r.name as tipo_incidencia, COUNT(*) as cantidad 
+                   FROM incidencias i INNER JOIN reports_type r ON r.id_reports_type = i.tipo_incidencia
                    $where_clause 
                    GROUP BY tipo_incidencia 
                    ORDER BY cantidad DESC 

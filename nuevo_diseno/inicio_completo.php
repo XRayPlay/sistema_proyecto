@@ -8,11 +8,10 @@ if (!isset($_SESSION['usuario'])) {
 require_once "../php/permisos.php";
 require_once "../php/clases.php";
 require_once "../php/conexion_be.php";
-
+$mes[]=null;
 $rol_usuario = obtenerNombreRol();
 $nombre_usuario = $_SESSION['usuario']['name'];
 $id_rol = $_SESSION['usuario']['id_rol'];
-
 // Solo Admin y Director pueden acceder
 if (!esAdmin() && !esDirector()) {
     header("location: ../login.php?error=acceso_denegado");
@@ -36,7 +35,7 @@ $conexion = $c->conexion();
 $query_tecnicos = "SELECT id_user as id, name as nombre, 'Soporte Técnico' as especialidad 
                    FROM user 
                    WHERE id_rol = 3 AND id_status_user = 1 
-                   ORDER BY name LIMIT 8";
+                   ";
 $result_tecnicos = mysqli_query($conexion, $query_tecnicos);
 $tecnicos = [];
 if ($result_tecnicos) {
@@ -45,8 +44,35 @@ while($row = mysqli_fetch_assoc($result_tecnicos)) {
 }
 }
 
+// Obtener el ID y nombre del cargo del director si es director
+$id_cargo_director = null;
+$nombre_cargo_director = '';
+if (esDirector()) {
+    $id_usuario = $_SESSION['usuario']['id_user'] ?? $_SESSION['id_user'];
+    $query_cargo = "SELECT u.id_cargo, c.name as nombre_cargo 
+                   FROM user u 
+                   LEFT JOIN cargo c ON u.id_cargo = c.id_cargo 
+                   WHERE u.id_user = ?";
+    if ($stmt = $conexion->prepare($query_cargo)) {
+        $stmt->bind_param('i', $id_usuario);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $id_cargo_director = $row['id_cargo'];
+            $nombre_cargo_director = $row['nombre_cargo'];
+        }
+        if ($row = $result->fetch_assoc()) {
+            $id_cargo_director = $row['id_cargo'];
+        }
+        $stmt->close();
+    }
+}
+
 // Obtener estadísticas del dashboard
 $query_incidencias = "SELECT COUNT(*) as total FROM incidencias";
+if ($id_cargo_director !== null) {
+    $query_incidencias .= " WHERE departamento = $id_cargo_director";
+}
 $resultado_incidencias = mysqli_query($conexion, $query_incidencias);
 $total_incidencias = 0;
 if ($resultado_incidencias) {
@@ -55,6 +81,9 @@ if ($resultado_incidencias) {
 }
 
 $query_pendientes = "SELECT COUNT(*) as pendientes FROM incidencias WHERE estado = 'pendiente'";
+if ($id_cargo_director !== null) {
+    $query_pendientes .= " AND departamento = $id_cargo_director";
+}
 $resultado_pendientes = mysqli_query($conexion, $query_pendientes);
 $incidencias_pendientes = 0;
 if ($resultado_pendientes) {
@@ -63,6 +92,9 @@ if ($resultado_pendientes) {
 }
 
 $query_resueltas = "SELECT COUNT(*) as resueltas FROM incidencias WHERE estado = 'resuelta'";
+if ($id_cargo_director !== null) {
+    $query_resueltas .= " AND departamento = $id_cargo_director";
+}
 $resultado_resueltas = mysqli_query($conexion, $query_resueltas);
 $incidencias_resueltas = 0;
 if ($resultado_resueltas) {
@@ -81,13 +113,17 @@ if ($resultado_usuarios) {
 
 
 // Obtener datos para gráfica de incidencias por mes (últimos 6 meses)
+// Obtener el primer y último día del mes actual
+$primer_dia_mes = date('Y-m-01');
+$ultimo_dia_mes = date('Y-m-t');
+
 $query_incidencias_fecha = "SELECT 
-                            DATE_FORMAT(fecha_creacion, '%Y-%m') as mes,
-                            COUNT(*) as cantidad 
+                            DATE(fecha_creacion) as fecha,
+                            COUNT(*) as cantidad
                           FROM incidencias 
-                          WHERE fecha_creacion >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-                          GROUP BY DATE_FORMAT(fecha_creacion, '%Y-%m')
-                          ORDER BY mes";
+                          WHERE fecha_creacion BETWEEN '$primer_dia_mes' AND '$ultimo_dia_mes 23:59:59'
+                          GROUP BY DATE(fecha_creacion)
+                          ORDER BY fecha";
 $resultado_fecha = mysqli_query($conexion, $query_incidencias_fecha);
 $datos_fecha = [];
 $labels_fecha = [];
@@ -117,8 +153,8 @@ for ($i = 5; $i >= 0; $i--) {
 // Procesar resultados de la consulta
 if ($resultado_fecha) {
     while ($row = mysqli_fetch_assoc($resultado_fecha)) {
-        if (isset($ultimos_meses[$row['mes']])) {
-            $ultimos_meses[$row['mes']]['cantidad'] = (int)$row['cantidad'];
+        if (isset($ultimos_meses[$row['fecha']])) {
+            $ultimos_meses[$row['fecha']]['cantidad'] = (int)$row['cantidad'];
         }
     }
 }
@@ -130,8 +166,10 @@ foreach ($ultimos_meses as $mes) {
 }
 
 // Obtener datos para gráfica de incidencias por tipo
-$query_incidencias_tipo = "SELECT tipo_incidencia, COUNT(*) as cantidad 
-                           FROM incidencias 
+$query_incidencias_tipo = "SELECT r.name as tipo_incidencia, COUNT(*) as cantidad
+                           FROM incidencias i 
+                           INNER JOIN reports_type r ON r.id_reports_type = i.tipo_incidencia
+                           " . ($id_cargo_director !== null ? " WHERE i.departamento = $id_cargo_director" : "") . "
                            GROUP BY tipo_incidencia 
                            ORDER BY cantidad DESC 
                            LIMIT 6";
@@ -188,7 +226,8 @@ $query_por_mes = "SELECT
                     SUM(CASE WHEN estado = 'en_proceso' THEN 1 ELSE 0 END) as en_proceso,
                     SUM(CASE WHEN estado = 'resuelta' THEN 1 ELSE 0 END) as resueltas
                   FROM incidencias 
-                  WHERE fecha_creacion >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+                  WHERE fecha_creacion >= DATE_SUB(NOW(), INTERVAL 6 MONTH)" . 
+                  ($id_cargo_director !== null ? " AND departamento = $id_cargo_director" : "") . "
                   GROUP BY DATE_FORMAT(fecha_creacion, '%Y-%m')
                   ORDER BY mes DESC";
 $result_por_mes = mysqli_query($conexion, $query_por_mes);
@@ -239,11 +278,9 @@ if ($result_por_mes) {
                         <div class="welcome-message">
                             <i class="fas fa-sun"></i>
                             <span>¡Buenos días, <?php echo $_SESSION['usuario']['name'] ?? 'Usuario'; ?>! Aquí tienes un resumen de la actividad del sistema.</span>
-                </div>
                     </div>
-                </div>
+                 </div>
             </div>
-
             <!-- Mini Tarjetas de Técnicos -->
             <div class="tecnicos-section fade-in-up">
                 <h3 class="section-title">
@@ -322,12 +359,17 @@ if ($result_por_mes) {
                             
                             <div class="form-group">
                                 <label class="form-label">Área de Atención</label>
-                                <select class="form-select" name="departamento">
-                                    <option value="">Todos los departamentos</option>
-                                    <option value="1">Soporte</option>
-                                    <option value="2">Sistema</option>
-                                    <option value="3">Redes</option>
-                                </select>
+                                <?php if (esDirector() && $id_cargo_director): ?>
+                                    <input type="hidden" name="departamento" value="<?php echo $id_cargo_director; ?>">
+                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($nombre_cargo_director); ?>" disabled>
+                                <?php else: ?>
+                                    <select class="form-select" name="departamento">
+                                        <option value="">Todos los departamentos</option>
+                                        <option value="1">Soporte</option>
+                                        <option value="2">Sistema</option>
+                                        <option value="3">Redes</option>
+                                    </select>
+                                <?php endif; ?>
                 </div>
                             
                             <div class="form-group">
