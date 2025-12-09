@@ -60,13 +60,13 @@
                             <span>Gestión de Técnicos</span>
                         </a>
                     </div>
+                    <?php if ($rol_actual == 1): // Admin: opción para configuración y perfil ?>
                     <div class="nav-item">
                         <a href="panel_analista.php" class="nav-link <?php echo ($menu === 'analista') ? 'active' : ''; ?>">
                             <i class="fas fa-user-shield"></i>
                             <span>Gestión de Analistas</span>
                         </a>
-                    </div>
-                    <?php if ($rol_actual == 1): // Admin: opción para configuración y perfil ?>
+                    </div>                    
                     <div class="nav-item">
                         <a href="../nuevo_diseno/gestion_usuarios.php" class="nav-link <?php echo ($menu === 'gestion_usuarios') ? 'active' : ''; ?>">
                             <i class="fas fa-users-cog"></i>

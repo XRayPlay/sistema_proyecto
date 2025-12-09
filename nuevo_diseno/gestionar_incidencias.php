@@ -403,7 +403,12 @@ try {
     // Cargar datos al iniciar
     document.addEventListener('DOMContentLoaded', function() {
         cargarIncidencias();
-        cargarTecnicosParaAsignacion(); // Función renombrada para mayor claridad
+        // Cargar técnicos filtrados por departamento si el usuario es director
+        <?php if (isset($id_cargo_director) && $id_cargo_director !== null): ?>
+        cargarTecnicosParaAsignacion('<?php echo $id_cargo_director; ?>'); // director: cargar solo su departamento
+        <?php else: ?>
+        cargarTecnicosParaAsignacion(); // cargar todos los técnicos
+        <?php endif; ?>
         cargarTiposIncidencia();
         
         // Inicializar contador de caracteres para la descripción
@@ -503,15 +508,19 @@ try {
         if (departamentoSelect) {
             departamentoSelect.addEventListener('change', async function() {
                 const departamentoId = this.value;
-                
+
                 if (departamentoId) {
                     // Cargar tipos de incidencia para el departamento seleccionado
                     await cargarTiposIncidenciaPorDepartamento(departamentoId);
+                    // Cargar técnicos para el departamento seleccionado
+                    await cargarTecnicosParaAsignacion(departamentoId);
                     // Actualizar visibilidad basada en la selección actual
                     actualizarVisibilidadTipoIncidencia();
                 } else {
                     tipoIncidenciaContainer.style.display = 'none';
                     tipoIncidenciaSelect.innerHTML = '<option value="">Seleccione un departamento primero</option>';
+                    // Si no hay departamento seleccionado, cargar todos los técnicos
+                    await cargarTecnicosParaAsignacion();
                 }
             });
         }
@@ -622,31 +631,32 @@ try {
     }
 
     // Función para cargar técnicos disponibles (MODIFICADA para cargar todos los técnicos para el select)
-    async function cargarTecnicosParaAsignacion() {
+    async function cargarTecnicosParaAsignacion(departamentoId = null) {
         try {
             const formData = new FormData();
-            // Usar la acción existente en el CRUD de técnicos que devuelve la lista
-            formData.append('action', 'obtener'); // Obtener técnicos activos
-            
-            // Usar una URL/endpoint más genérico o ajustado a tu CRUD de técnicos
-            const response = await fetch('../php/gestionar_tecnicos_crud.php', { 
+            if (departamentoId) {
+                formData.append('departamento_id', departamentoId);
+            }
+
+            const response = await fetch('../php/listarTecnicos.php', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const data = await response.json();
-            
-            if (data.success && data.tecnicos) {
-                tecnicos = data.tecnicos;
+
+            // El endpoint devuelve un array de técnicos
+            if (Array.isArray(data)) {
+                tecnicos = data;
                 const selectAsignado = document.getElementById('tecnico_asignado_id');
                 const selectModal = document.getElementById('tecnico_id');
                 if (selectAsignado) selectAsignado.innerHTML = '<option value="">Sin asignar</option>'; // Opción por defecto
                 if (selectModal) selectModal.innerHTML = '<option value="">Seleccionar técnico</option>';
 
-                data.tecnicos.forEach(tecnico => {
-                    // Usar id_user como value para mantener consistencia con la base de datos
+                data.forEach(tecnico => {
                     const idValue = tecnico.id_user || tecnico.id || tecnico.ID || tecnico.idUser || tecnico.user_id;
-                    const displayText = `${tecnico.nombre} - ${tecnico.especialidad}`;
+                    const name = tecnico.name || tecnico.nombre || tecnico.nombre_completo || 'Técnico';
+                    const displayText = name + (tecnico.id_cargo ? ` (Dept ${tecnico.id_cargo})` : '');
 
                     const option1 = document.createElement('option');
                     option1.value = idValue;
@@ -1056,6 +1066,8 @@ async function buscarUsuarioPorCedula() {
                 
                 // Cargar los tipos de incidencia para el departamento seleccionado
                 await cargarTiposIncidenciaPorDepartamento(incidencia.departamento);
+                // Cargar los técnicos filtrados por el departamento (para que el select muestre solo esos técnicos)
+                await cargarTecnicosParaAsignacion(incidencia.departamento);
                 
                 // Una vez cargados los tipos, seleccionar el tipo de incidencia
                 if (incidencia.tipo_incidencia) {

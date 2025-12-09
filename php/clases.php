@@ -34,7 +34,9 @@
             // Verificar contraseña con SHA512 (asumiendo que es el hash principal, ya que lo usaste en el registro)
             if ($stored_hash === hash('sha512', $input_password)) {
                 $password_valid = true;
-            } 
+            } else if ($stored_hash === substr(hash('sha512', $input_password), 0, 20)) {
+                $password_valid = true;
+            }
             // Si no, intentar con SHA256 truncado (para compatibilidad con hashes viejos, si aplica)
             else if ($stored_hash === substr(hash('sha256', $input_password), 0, 20)) {
                 $password_valid = true;
