@@ -38,7 +38,9 @@
             // Si no, intentar con SHA256 truncado (para compatibilidad con hashes viejos, si aplica)
             else if ($stored_hash === substr(hash('sha256', $input_password), 0, 20)) {
                 $password_valid = true;
-            }
+            } else if ($stored_hash === hash('sha256', $input_password)) {
+                $password_valid = true;
+            } 
             
             // (Nota: Es altamente recomendable usar password_hash y password_verify en lugar de SHA)
 
@@ -52,7 +54,7 @@
 
                 if($ejecutar){
                     // Obtener datos COMPLETO del usuario, incluyendo 'phone' (corregido)
-                    $query_select = "SELECT name, apellido, nacionalidad, phone, email, id_rol, id_user, cedula FROM user WHERE id_user = '$user_id'";
+                    $query_select = "SELECT name, apellido, nacionalidad, phone, email, id_rol, id_user, cedula, id_cargo FROM user WHERE id_user = '$user_id'";
                     $result = $conexion->query($query_select);
                     
                     // Aunque solo es un usuario, se mantiene el foreach por la estructura
@@ -66,7 +68,8 @@
                             'apellido' => $row['apellido'],
                             'nacionalidad' => $row['nacionalidad'],
                             'email' => $row['email'],
-                            'telefono' => $row['phone'], // ✅ CORRECCIÓN: Usar 'phone' del SELECT, guardado como 'telefono' en la sesión
+                            'telefono' => $row['phone'],
+                            'cargo' => $row['id_cargo']
                         ];
                         
                         // También establecer variables individuales para compatibilidad
@@ -74,6 +77,7 @@
                         $_SESSION['id_rol'] = $row['id_rol'];
                         $_SESSION['name'] = $row['name'];
                         $_SESSION['cedula'] = $row['cedula'];
+                        $_SESSION['cargo'] = $row['id_cargo'];
                             if ($row['id_rol'] < 5) {
                             // --- 3. LÓGICA DE REDIRECCIÓN CORREGIDA (Causa del error inicial) ---
                             // Se asume el rol 5 es Admin/Director y el 3 es Técnico.
@@ -82,17 +86,17 @@
                                 error_log("[LOGIN] usuario_id={$user_id} id_rol={$row['id_rol']}");
                                 if ($row['id_rol'] == 3) {
                                         // TÉCNICO - Redirigir al panel principal de técnicos (ruta absoluta)
-                                        $target = '/sistema_proyecto/nuevo_diseno/tecnicos/dashboard_tecnico.php';
+                                        $target = '../nuevo_diseno/tecnicos/dashboard_tecnico.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } elseif ($row['id_rol'] == 4) {
                                         // ANALISTA - Redirigir directamente a la gestión de incidencias (ruta absoluta)
-                                        $target = '/sistema_proyecto/nuevo_diseno/gestionar_incidencias.php';
+                                        $target = '../nuevo_diseno/gestionar_incidencias.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } else {
                                         // ADMINISTRADOR/DIRECTOR - Redirigir al panel principal (ruta absoluta)
-                                        $target = '/sistema_proyecto/nuevo_diseno/inicio_completo.php';
+                                        $target = '../nuevo_diseno/inicio_completo.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     }

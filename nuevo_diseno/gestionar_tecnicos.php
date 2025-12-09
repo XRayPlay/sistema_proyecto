@@ -67,8 +67,7 @@ try {
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <i class="fas fa-shield-alt"></i>
-                <span>ecosocialismo</span>
+                <img src="../resources/image/logoMinec.jpg" alt="Logo MINEC" style="width: 250px; height: 60px; object-fit: contain; background: white; border-radius: 5%; padding: 4px;">
             </div>
             <div class="user-info">
                 <div class="user-avatar">A</div>

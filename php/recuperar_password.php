@@ -102,8 +102,8 @@ try {
     mysqli_stmt_close($stmt_token);
     
     // Generar enlace de recuperación
-    $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-    $reset_link = $base_url . '/sistema_proyecto/reset_password.php?token=' . $token;
+    // $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    //$reset_link = $base_url . 'reset_password.php?token=' . $token;
     
     // Para desarrollo, mostrar el enlace en lugar de enviar email
     echo json_encode([

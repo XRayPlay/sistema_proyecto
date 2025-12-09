@@ -68,6 +68,12 @@
                     </div>
                     <?php if ($rol_actual == 1): // Admin: opción para configuración y perfil ?>
                     <div class="nav-item">
+                        <a href="../nuevo_diseno/gestion_usuarios.php" class="nav-link <?php echo ($menu === 'gestion_usuarios') ? 'active' : ''; ?>">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Gestión de Usuarios</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
                         <a href="config_db.php" class="nav-link <?php echo ($menu === 'configuracion') ? 'active' : ''; ?>">
                             <i class="fas fa-cog"></i>
                             <span>Configuración del Sistema</span>

@@ -5,17 +5,28 @@ session_start();
 require_once "../php/permisos.php";
 require_once "../php/clases.php";
 
-$conexion = new conectar();
-$conexion = $conexion->conexion();
-
-// Verificar conexión a la base de datos
-if (!isset($conexion) || $conexion->connect_error) {
-    // Clear any output before sending error
-    ob_clean();
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Error de conexión a la base de datos: ' . ($conexion->connect_error ?? 'Variable $conexion no definida')]);
-    exit();
+function getDatabaseConnection() {
+    static $conexion = null;
+    
+    if ($conexion === null) {
+        $conectar = new conectar();
+        $conexion = $conectar->conexion();
+        
+        // Verificar conexión a la base de datos
+        if ($conexion->connect_error) {
+            // Clear any output before sending error
+            ob_clean();
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Error de conexión a la base de datos: ' . $conexion->connect_error]);
+            exit();
+        }
+    }
+    
+    return $conexion;
 }
+
+// Initialize the database connection
+$conexion = getDatabaseConnection();
 
 // Solo Admin puede ver esta página (según solicitud)
 if (!esAdmin()) {
@@ -26,7 +37,7 @@ if (!esAdmin()) {
 
 // Función para obtener datos de una tabla
 function getTableData($table, $idField = null, $id = null) {
-    global $conexion;
+    $conexion = getDatabaseConnection();
     $query = "SELECT * FROM $table";
     
     // Handle specific table ID fields
@@ -205,7 +216,7 @@ include('../page/menu.php');
                     <button class="nav-link" id="status-report-tab" data-bs-toggle="tab" data-bs-target="#status-report" type="button" role="tab">Estados de Reporte</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cargo-tab" data-bs-toggle="tab" data-bs-target="#cargo" type="button" role="tab">Cargos</button>
+                    <button class="nav-link" id="cargo-tab" data-bs-toggle="tab" data-bs-target="#cargo" type="button" role="tab">Areas</button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="floors-tab" data-bs-toggle="tab" data-bs-target="#floors" type="button" role="tab">Pisos</button>
@@ -231,7 +242,7 @@ include('../page/menu.php');
                                     <th>ID</th>
                                     <th>Nombre</th>
                                     <th>Descripción</th>
-                                    <th>Cargo</th>
+                                    <th>Area</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -311,10 +322,10 @@ include('../page/menu.php');
                     </div>
                 </div>
 
-                <!-- Tabla de Cargos -->
+                <!-- Tabla de Areas -->
                 <div class="tab-pane fade" id="cargo" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6>Cargos</h6>
+                        <h6>Areas</h6>
                         <button class="btn btn-primary btn-sm" onclick="openModal('cargo')">
                             <i class="fas fa-plus"></i> Nuevo
                         </button>
@@ -631,7 +642,7 @@ function getTableFields(table) {
             { name: 'description', label: 'Descripción', type: 'text', required: true },
             { 
                 name: 'id_cargo', 
-                label: 'Cargo', 
+                label: 'Area de atencion', 
                 type: 'select', 
                 required: false,
                 options: getCargos()
@@ -662,7 +673,7 @@ function getTableFields(table) {
     return fields[table] || [];
 }
 
-// Función para obtener la lista de cargos (para el select)
+// Función para obtener la lista de áreas (antes cargos) (para el select)
 function getCargos() {
     let cargos = [];
     <?php
@@ -692,8 +703,9 @@ function renderFormFields(container, fields, data) {
             <label for="${field.name}" class="form-label">${field.label} ${field.required ? '<span class="text-danger">*</span>' : ''}</label>`;
         
         if (field.type === 'select') {
-            html += `<select class="form-select" id="${field.name}" name="${field.name}" ${required}>
-                <option value="">Seleccionar...</option>`;
+        const placeholder = field.name === 'id_cargo' ? 'Seleccionar Area de atencion...' : 'Seleccionar...';
+        html += `<select class="form-select" id="${field.name}" name="${field.name}" ${required}>
+            <option value="">${placeholder}</option>`;
                 
             if (field.options) {
                 field.options.forEach(option => {
@@ -736,7 +748,7 @@ function getTableDisplayName(table) {
     const names = {
         'reports_type': 'Tipo de Reporte',
         'status_report': 'Estado de Reporte',
-        'cargo': 'Cargo',
+        'cargo': 'Area',
         'floors': 'Piso',
         'rol': 'Rol'
     };

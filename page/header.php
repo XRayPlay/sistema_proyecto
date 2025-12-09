@@ -2,7 +2,7 @@
 <!-- Top Navigation Bar -->
     <div class="top-navbar">
         <div class="navbar-brand">
-            <span>ecosocialismo</span>
+            <img src="../resources/image/logoMinec.jpg" alt="Logo MINEC" style="width: 250px; height: 60px; object-fit: contain; background: white; border-radius: 5%; padding: 4px;">
                     </div>
         <div class="navbar-user">
             <div class="user-avatar-top">
