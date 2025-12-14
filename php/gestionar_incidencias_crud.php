@@ -98,23 +98,7 @@ function crearIncidencia($conexion) {
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
     $piso = $_POST['piso'] ?? '';
     $creador_incidencia = $_SESSION['id_user'];
-<<<<<<< HEAD
-=======
-    
-    $departamento = 1;
-    $sqlde = "SELECT tipo_incidencia FROM incidencias WHERE id = ?";
-    $stmt_depto = mysqli_prepare($conexion, $sqlde);
-    if ($stmt_depto) {
-        mysqli_stmt_bind_param($stmt_depto, 'i', $tipo_incidencia);
-        if (mysqli_stmt_execute($stmt_depto)) {
-            $result = mysqli_stmt_get_result($stmt_depto);
-            if ($row = mysqli_fetch_assoc($result)) {
-                $departamento = $row['tipo_incidencia'];
-            }
-        }
-        mysqli_stmt_close($stmt_depto);
-    }
->>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
+
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
     // Normalizar el valor del técnico: el frontend a veces envía la cédula,
     // otras veces el id_user. Queremos almacenar el id_user en la tabla incidencias.
@@ -324,19 +308,17 @@ function obtenerIncidencias($conexion) {
             INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type 
             INNER JOIN cargo c ON r.id_cargo = c.id_cargo
             WHERE (i.tipo_incidencia LIKE ? OR i.descripcion LIKE ? OR i.solicitante_nombre LIKE ?)";
-<<<<<<< HEAD
+
 
             if(esAnalista()){
-                $query .= " AND i.departamento = 1 AND i.departamento = 3";
+                $query .= " AND i.departamento IN (1, 3)";
             }
-=======
->>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
         
         // Si es director, filtrar por su departamento
         if ($id_cargo_director) {
             $query .= " AND c.id_cargo = " . intval($id_cargo_director);
         }
-<<<<<<< HEAD
+
         // Aplicar filtros adicionales si vienen
         if ($cedula_filter !== '') {
             $ced_esc = mysqli_real_escape_string($conexion, $cedula_filter);
@@ -350,8 +332,6 @@ function obtenerIncidencias($conexion) {
             $estado_esc = mysqli_real_escape_string($conexion, $estado_filter);
             $query .= " AND i.estado = '" . $estado_esc . "'";
         }
-=======
->>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
         
         $query .= " ORDER BY i.fecha_creacion DESC";
         $stmt = mysqli_prepare($conexion, $query);
@@ -367,7 +347,7 @@ function obtenerIncidencias($conexion) {
             LEFT JOIN user u ON i.tecnico_asignado = u.id_user 
             INNER JOIN reports_type r ON i.tipo_incidencia = r.id_reports_type 
             INNER JOIN cargo c ON r.id_cargo = c.id_cargo";
-<<<<<<< HEAD
+
         // Si es director, filtrar por su departamento
         $whereClauses = [];
         if ($id_cargo_director) {
@@ -391,13 +371,7 @@ function obtenerIncidencias($conexion) {
             }
         if (!empty($whereClauses)) {
             $query .= ' WHERE ' . implode(' AND ', $whereClauses);
-            
-=======
-            
-        // Si es director, filtrar por su departamento
-        if ($id_cargo_director) {
-            $query .= " WHERE c.id_cargo = " . intval($id_cargo_director);
->>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
+
         }
         
         $query .= " ORDER BY i.fecha_creacion DESC";
