@@ -147,6 +147,19 @@ include('../page/menu.php');
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../public/js/login.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.addPasswordToggle) {
+            try {
+                addPasswordToggle('#password');
+                addPasswordToggle('#confirmar_password');
+            } catch (e) {
+                console.warn('No se pudo inicializar toggle de contraseña en mi_perfil:', e);
+            }
+        }
+    });
+</script>
 <script>
 function mostrarModalConfirmacionPerfil({ titulo, mensaje, textoConfirmar = 'Confirmar', textoCancelar = 'Cancelar' }) {
     return new Promise((resolve) => {

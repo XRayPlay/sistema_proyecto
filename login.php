@@ -259,5 +259,16 @@
     </div>
   </div>
   <script src="public/js/login.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.addPasswordToggle) {
+        try {
+          addPasswordToggle('#login-password');
+        } catch (e) {
+          console.warn('No se pudo inicializar toggle de contraseña en login:', e);
+        }
+      }
+    });
+  </script>
 </body>
 </html>

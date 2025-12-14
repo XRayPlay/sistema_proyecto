@@ -391,6 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
         username: document.getElementById('login-username'),
         password: document.getElementById('login-password'),
     };
+
+    // Añadir botón para ver/ocultar contraseña en el modal de login
+    if (window.addPasswordToggle && loginFields.password) {
+        try { window.addPasswordToggle('#login-password'); } catch (e) { console.warn('No se pudo agregar toggle de contraseña al login', e); }
+    }
     
     // ** NUEVAS REFERENCIAS DE CAMPOS DEL MODAL DE INCIDENCIA **
     incidentFields = {
@@ -414,6 +419,57 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showLoginModalBtn) {
         showLoginModalBtn.addEventListener('click', () => openModal(loginModal));
     }
+
+    /**
+     * Añade un botón para mostrar/ocultar la contraseña a un input de tipo password.
+     * @param {string|HTMLElement} selector - selector CSS o elemento input
+     */
+    function addPasswordToggle(selector) {
+        const input = (typeof selector === 'string') ? document.querySelector(selector) : selector;
+        if (!input) return;
+        // Evitar añadir múltiples toggles
+        if (input.dataset.hasPasswordToggle) return;
+        input.dataset.hasPasswordToggle = '1';
+
+        // Crear contenedor relativo para posicionar el botón
+        const wrapper = document.createElement('div');
+        wrapper.className = 'password-wrapper';
+        wrapper.style.position = 'relative';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        // Crear botón
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'password-toggle';
+        btn.setAttribute('aria-label', 'Mostrar contraseña');
+        btn.style.position = 'absolute';
+        btn.style.top = '50%';
+        btn.style.right = '8px';
+        btn.style.transform = 'translateY(-50%)';
+        btn.style.border = 'none';
+        btn.style.background = 'transparent';
+        btn.style.padding = '4px';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
+        wrapper.appendChild(btn);
+
+        btn.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                btn.setAttribute('aria-label', 'Ocultar contraseña');
+            } else {
+                input.type = 'password';
+                btn.innerHTML = '<i class="fas fa-eye"></i>';
+                btn.setAttribute('aria-label', 'Mostrar contraseña');
+            }
+            input.focus();
+        });
+    }
+
+    // Exponer globalmente para que otras páginas (ej. gestionar_tecnicos.php) puedan reutilizarla
+    window.addPasswordToggle = addPasswordToggle;
     if (showIncidentModalBtn) { // NUEVO EVENTO
         showIncidentModalBtn.addEventListener('click', () => openModal(incidentModal));
     }
@@ -445,6 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (field) {
             field.addEventListener('input', () => {
                 applyValidationClass(field, key === 'username' ? validateUsername(field.value) : validatePassword(field.value));
+            });
+            // Enviar formulario con Enter en los campos de login
+            field.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    validateAndSubmitLogin();
+                }
             });
         }
     });

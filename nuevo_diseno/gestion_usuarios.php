@@ -643,6 +643,21 @@ if ($result_estados) {
                             </div>
                         <?php else: ?>
                             <div class="table-responsive">
+                                <div class="mb-3 d-flex gap-2 flex-wrap align-items-center">
+                                    <input type="text" id="users_filter_q" class="form-control" style="min-width:200px; max-width:320px;" placeholder="Buscar nombre o email...">
+                                    <select id="users_filter_role" class="form-select" style="width:180px;">
+                                        <option value="">Todos los roles</option>
+                                        <?php foreach ($roles as $rol): ?>
+                                            <option value="<?php echo (int)$rol['id_roles']; ?>"><?php echo htmlspecialchars($rol['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <select id="users_filter_status" class="form-select" style="width:150px;">
+                                        <option value="">Todos los estados</option>
+                                        <option value="1">Activo</option>
+                                        <option value="2">Inactivo</option>
+                                    </select>
+                                    <button id="users_reset_filters" class="btn btn-outline-secondary">Restablecer</button>
+                                </div>
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
@@ -1349,3 +1364,32 @@ if ($result_estados) {
     </script>
 </body>
 </html>
+            // Filtros cliente-side para la tabla de usuarios
+            const qEl = document.getElementById('users_filter_q');
+            const roleEl = document.getElementById('users_filter_role');
+            const statusEl = document.getElementById('users_filter_status');
+            const resetBtn = document.getElementById('users_reset_filters');
+
+            function filterUsers() {
+                const q = qEl.value.trim().toLowerCase();
+                const role = roleEl.value;
+                const status = statusEl.value;
+                const rows = document.querySelectorAll('#all table tbody tr');
+                rows.forEach(row => {
+                    const name = (row.querySelector('.user-name')?.textContent || '').toLowerCase();
+                    const email = (row.querySelector('.user-email')?.textContent || '').toLowerCase();
+                    const roleBadge = row.querySelector('td:nth-child(2) .badge')?.textContent.trim() || '';
+                    const statusBadge = row.querySelector('td:nth-child(4) .badge')?.textContent.trim() || '';
+
+                    let visible = true;
+                    if (q && !(name.includes(q) || email.includes(q))) visible = false;
+                    if (role && row.querySelector('button[data-rol]') && row.querySelector('button[data-rol]').getAttribute('data-rol') !== role) visible = false;
+                    if (status && status === '1' && statusBadge.toLowerCase() !== 'activo') visible = false;
+                    if (status && status === '2' && statusBadge.toLowerCase() === 'activo') visible = false;
+
+                    row.style.display = visible ? '' : 'none';
+                });
+            }
+
+            [qEl, roleEl, statusEl].forEach(el => { if (!el) return; el.addEventListener('input', filterUsers); el.addEventListener('change', filterUsers); });
+            if (resetBtn) resetBtn.addEventListener('click', () => { if (qEl) qEl.value=''; if (roleEl) roleEl.value=''; if (statusEl) statusEl.value=''; filterUsers(); });

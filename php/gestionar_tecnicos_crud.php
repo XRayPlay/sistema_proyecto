@@ -73,7 +73,7 @@ function crearTecnico($conexion) {
     // Valores que pueden venir del formulario
     $sexo = mysqli_real_escape_string($conexion, $_POST['sexo'] ?? 'No especificado');
     $id_status_user = (int)($_POST['id_status_user'] ?? 1);
-    $piso = (int)($_POST['piso'] ?? 1); // Obtener el piso del formulario
+    $piso = 11;
 
     if (!in_array($id_status_user, [1,2,3], true)) {
         echo json_encode(['success' => false, 'message' => 'Estado inválido']);
@@ -249,7 +249,14 @@ function obtenerTecnicos($conexion) {
         mysqli_stmt_close($stmt);
     }
 
-    // Construir la consulta base
+     // Leer filtros opcionales enviados desde el frontend
+     $q = isset($_POST['q']) ? trim($_POST['q']) : '';
+     $cedula = isset($_POST['cedula']) ? trim($_POST['cedula']) : '';
+     $especialidad_filter = isset($_POST['especialidad']) ? intval($_POST['especialidad']) : 0; // id_cargo
+     $status_filter = isset($_POST['status']) ? intval($_POST['status']) : 0; // id_status_user
+     $piso_filter = isset($_POST['piso']) ? intval($_POST['piso']) : 0; // id_floor
+
+     // Construir la consulta base
     $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, 
                      u.phone as telefono, u.code_phone, u.id_cargo,
                      u.id_status_user,
@@ -268,6 +275,24 @@ function obtenerTecnicos($conexion) {
     if ($id_floor !== null) {
         $query .= " AND u.id_cargo = " . (int)$id_floor;
     }
+    // Aplicar filtros adicionales (si fueron suministrados)
+    if ($q !== '') {
+        $q_esc = mysqli_real_escape_string($conexion, $q);
+        $query .= " AND (u.name LIKE '%" . $q_esc . "%' OR u.apellido LIKE '%" . $q_esc . "%' OR u.email LIKE '%" . $q_esc . "%')";
+    }
+    if ($cedula !== '') {
+        $ced_esc = mysqli_real_escape_string($conexion, $cedula);
+        $query .= " AND u.cedula LIKE '%" . $ced_esc . "%'";
+    }
+    if ($especialidad_filter > 0) {
+        $query .= " AND u.id_cargo = " . (int)$especialidad_filter;
+    }
+    if (in_array($status_filter, [1,2,3], true)) {
+        $query .= " AND u.id_status_user = " . (int)$status_filter;
+    }
+    if ($piso_filter > 0) {
+        $query .= " AND u.id_floor = " . (int)$piso_filter;
+    }
     
     $query .= " ORDER BY u.name";
     
@@ -277,11 +302,12 @@ function obtenerTecnicos($conexion) {
         echo json_encode(['success' => false, 'message' => 'Error al obtener técnicos: ' . mysqli_error($conexion)]);
         return;
     }
-    
+    $idd = 1;
     $tecnicos = [];
     while ($row = mysqli_fetch_assoc($resultado)) {
         $tecnicos[] = [
             'id' => $row['id'],
+            'idd' => $idd,
             'nacionalidad' => $row['nacionalidad'],
             'cedula' => $row['cedula'],
             'nombre' => $row['nombre'],
@@ -294,6 +320,7 @@ function obtenerTecnicos($conexion) {
             'id_status_user' => (int)$row['id_status_user'],
             'fecha_registro' => $row['fecha_registro']
         ];
+        $idd++;
     }
     
     echo json_encode(['success' => true, 'tecnicos' => $tecnicos]);
@@ -316,7 +343,7 @@ function editarTecnico($conexion) {
     // Especialidad como id_cargo
     $id_cargo = (!empty($especialidad) && ctype_digit(strval($especialidad))) ? (int)$especialidad : null;
     $id_status_user = (int)($_POST['id_status_user'] ?? 1);
-    $piso = isset($_POST['piso']) ? (int)$_POST['piso'] : 1;
+    $piso = 11;
 
     // Validar que el piso sea un número entero válido
     if (!is_numeric($piso) || $piso < 1) {
@@ -500,7 +527,6 @@ function obtenerTecnicoPorId($conexion) {
         echo json_encode(['success' => false, 'message' => 'Error al obtener técnico: ' . mysqli_error($conexion)]);
         return;
     }
-    
     $tecnico = mysqli_fetch_assoc($resultado);
     
     if ($tecnico) {

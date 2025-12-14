@@ -400,6 +400,15 @@ h1 {
     padding: 20px 30px 15px 30px;
 }
 
+/* Estilos para el botón de ver/ocultar contraseña */
+.password-wrapper input {
+    padding-right: 40px; /* dejar espacio para el botón */
+}
+.password-toggle i {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
 .modal-header h2 {
     font-size: 22px;
     font-weight: 600;

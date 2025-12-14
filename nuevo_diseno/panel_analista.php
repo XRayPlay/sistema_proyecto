@@ -74,6 +74,18 @@ try {
 
         <div class="table-card">
             <h3 class="table-title">Lista de Analistas</h3>
+            <!-- FILTROS -->
+            <div class="filters mb-3 d-flex gap-2 flex-wrap align-items-center">
+                <input type="text" id="filter_q" class="form-control" style="min-width:220px; max-width:320px;" placeholder="Buscar nombre, apellido o email">
+                <input type="text" id="filter_cedula" class="form-control" style="width:120px;" placeholder="Cédula" maxlength="8">
+                <select id="filter_status" class="form-select" style="width:150px;">
+                    <option value="">Todos los estados</option>
+                    <option value="1">Activo</option>
+                    <option value="2">Ocupado</option>
+                    <option value="3">Ausente</option>
+                </select>
+                <button id="btnResetFilters" class="btn btn-outline-secondary">Restablecer</button>
+            </div>
             <div class="table-responsive">
                 <table class="table" id="tablaAnalistas">
                     <thead>
@@ -121,12 +133,6 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input maxlength="50" type="email" class="form-control" id="email" name="email" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
                                     <label for="code_phone" class="form-label">Código de Teléfono</label>
                                     <select class="form-select" id="code_phone" name="code_phone" required>
                                         <option value="">Seleccionar código</option>
@@ -159,6 +165,12 @@ try {
                                 <div class="mb-3">
                                     <label for="cedula" class="form-label">Cedula</label>
                                     <input maxlength="8" type="tel" class="form-control" id="cedula" name="cedula" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input maxlength="50" type="email" class="form-control" id="email" name="email" required>
                                 </div>
                             </div>
                             <div class="col-md-6 d-none" id="estadoAnalistaGroup">
@@ -251,6 +263,18 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../public/js/login.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.addPasswordToggle) {
+                try {
+                    addPasswordToggle('#password');
+                    addPasswordToggle('#confirmar_password');
+                } catch (e) { console.warn('No se pudo inicializar toggle de contraseña en panel_analista:', e); }
+            }
+        });
+    </script>
 
 <script>
         // Variables globales
@@ -437,16 +461,34 @@ try {
         }
 
         
-        // Cargar analistas al iniciar
+        // Cargar analistas al iniciar y añadir filtros
         document.addEventListener('DOMContentLoaded', function() {
             cargarAnalistas();
+
+            // filtros
+            const qEl = document.getElementById('filter_q');
+            const cedulaEl = document.getElementById('filter_cedula');
+            const statusEl = document.getElementById('filter_status');
+            const resetBtn = document.getElementById('btnResetFilters');
+
+            function debounceLocal(fn, wait = 350) { let t; return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; }
+            const trigger = debounceLocal(() => cargarAnalistas());
+            [qEl, cedulaEl, statusEl].forEach(el => { if (!el) return; el.addEventListener('input', trigger); el.addEventListener('change', trigger); });
+            resetBtn.addEventListener('click', () => { if (qEl) qEl.value=''; if (cedulaEl) cedulaEl.value=''; if (statusEl) statusEl.value=''; cargarAnalistas(); });
         });
 
         // Función para cargar analistas
         async function cargarAnalistas() {
             try {
+                const qEl = document.getElementById('filter_q');
+                const cedulaEl = document.getElementById('filter_cedula');
+                const statusEl = document.getElementById('filter_status');
+
                 const formData = new FormData();
                 formData.append('action', 'obtener');
+                if (qEl && qEl.value.trim()) formData.append('q', qEl.value.trim());
+                if (cedulaEl && cedulaEl.value.trim()) formData.append('cedula', cedulaEl.value.trim());
+                if (statusEl && statusEl.value) formData.append('status', statusEl.value);
                 
                 const response = await fetch('../php/panel_usuarios_crud.php', {
                     method: 'POST',
@@ -465,7 +507,7 @@ try {
                     data.analistas.forEach(analista => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${analista.id}</td>
+                            <td>${analista.idd}</td>
                             <td>${analista.name} ${analista.apellido}</td>
                             <td>${analista.email}</td>
                             <td>${analista.code_phone ? `(${analista.code_phone}) ` : ''}${analista.telefono || 'N/A'}</td>

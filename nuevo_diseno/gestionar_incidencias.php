@@ -153,7 +153,22 @@ try {
             
         <!-- Search Bar -->
         <div class="mb-3">
-            <input type="text" id="searchIncidencias" class="form-control modern-input" placeholder="Buscar incidencias por descripción o status...">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <input type="text" id="searchIncidencias" class="form-control modern-input" style="min-width:240px; max-width:360px;" placeholder="Buscar incidencias por descripción o status...">
+                <input type="text" id="filter_cedula_inc" class="form-control" style="width:120px;" placeholder="Cédula" maxlength="8">
+                <select id="filter_tipo_inc" class="form-select" style="width:180px;">
+                    <option value="">Todos los tipos</option>
+                </select>
+                <select id="filter_estado_inc" class="form-select" style="width:160px;">
+                    <option value="">Todos los estados</option>
+                    <option value="en_proceso">En Proceso</option>
+                    <option value="asignada">Asignada</option>
+                    <option value="en_revision">En Revisión</option>
+                    <option value="cerrada">Cerrada</option>
+                    <option value="certificado">Certificado</option>
+                </select>
+                <button id="btnResetFiltersInc" class="btn btn-outline-secondary">Restablecer</button>
+            </div>
         </div>
 
         <!-- Table Card -->
@@ -280,6 +295,17 @@ try {
                     <div class="form-section">
                         <h3 class="section-title">Detalles de la Incidencia</h3>
                         <div class="row">
+                            
+                        <?php if(esAnalista()){?>
+                            <div class="col-md-6 mb-3">
+                                <label for="departamento" class="form-label required-field">Departamento</label>
+                                <select class="form-control modern-input" id="departamento" name="departamento" required>
+                                    <option value="">Seleccionar departamento</option>
+                                    <option value="1">Soporte</option>
+                                    <option value="3">Redes</option>
+                                </select>
+                            </div>
+                        <?php } if(!esAnalista()){?>
                             <div class="col-md-6 mb-3">
                                 <label for="departamento" class="form-label required-field">Departamento</label>
                                 <select class="form-control modern-input" id="departamento" name="departamento" required>
@@ -289,6 +315,7 @@ try {
                                     <option value="3">Redes</option>
                                 </select>
                             </div>
+                        <?php }?>
                             <div class="col-md-6 mb-3" id="tipo-incidencia-container" style="display: none;">
                                 <label for="tipo_incidencia" class="form-label required-field">Tipo de Incidencia</label>
                                 <select class="form-control modern-input" id="tipo_incidencia" name="tipo_incidencia" required>
@@ -296,6 +323,8 @@ try {
                                 </select>
                             </div>
                         </div>
+
+                        <?php if(!esAnalista()){?>
                         <div class="mb-3">
                             <label for="tecnico_asignado_id" class="form-label">Técnico Asignado (Opcional)</label>
                             <select class="form-control modern-input" id="tecnico_asignado_id" name="tecnico_asignado_id" onchange="actualizarVisibilidadTipoIncidencia()">
@@ -308,8 +337,10 @@ try {
                                 </label>
                             </div>
                         </div>
+                        <?php } ?>
+
                         <div class="mb-3">
-                            <label for="estado" class="form-label required-field">Estado</label>
+                            <label for="estado" class="form-label required-field">Status</label>
                             <select class="form-control modern-input" id="estado" name="estado" required>
                                 <option value="en_proceso" selected>En Proceso</option>
                             </select>
@@ -440,6 +471,27 @@ try {
                 cargarIncidencias(e.target.value);
             }, 300));
         }
+
+        // Inicializar filtros adicionales
+        const cedulaInc = document.getElementById('filter_cedula_inc');
+        const tipoInc = document.getElementById('filter_tipo_inc');
+        const estadoInc = document.getElementById('filter_estado_inc');
+        const resetInc = document.getElementById('btnResetFiltersInc');
+
+        const debounceLocal = (fn, wait = 350) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; };
+        const triggerInc = debounceLocal(() => cargarIncidencias());
+
+        [cedulaInc, tipoInc, estadoInc].forEach(el => { if (!el) return; el.addEventListener('input', triggerInc); el.addEventListener('change', triggerInc); });
+        if (resetInc) resetInc.addEventListener('click', () => { if (cedulaInc) cedulaInc.value = ''; if (tipoInc) tipoInc.value = ''; if (estadoInc) estadoInc.value = ''; cargarIncidencias(); });
+
+        // rellenar select de tipos una vez cargados
+        cargarTiposIncidencia().then(() => {
+            const origen = document.getElementById('tipo_incidencia');
+            const destino = document.getElementById('filter_tipo_inc');
+            if (origen && destino) {
+                Array.from(origen.options).forEach(opt => { if (!opt.value) return; const o = document.createElement('option'); o.value = opt.value; o.textContent = opt.textContent; destino.appendChild(o); });
+            }
+        }).catch(() => {});
     });
 
     // --- Funciones de Carga Inicial ---
@@ -570,6 +622,13 @@ try {
             formData.append('id_cargo', '<?php echo $id_cargo_director; ?>');
             <?php endif; ?>
             if (q && q.trim() !== '') formData.append('q', q.trim());
+            // filtros adicionales
+            const cedulaInc = document.getElementById('filter_cedula_inc');
+            const tipoInc = document.getElementById('filter_tipo_inc');
+            const estadoInc = document.getElementById('filter_estado_inc');
+            if (cedulaInc && cedulaInc.value.trim()) formData.append('cedula', cedulaInc.value.trim());
+            if (tipoInc && tipoInc.value) formData.append('tipo', tipoInc.value);
+            if (estadoInc && estadoInc.value) formData.append('estado', estadoInc.value);
             
             const response = await fetch('../php/gestionar_incidencias_crud.php', {
                 method: 'POST',
@@ -588,7 +647,7 @@ try {
                         row.classList.add('certificado-row');
                     }
                     row.innerHTML = `
-                        <td>${incidencia.id}</td>
+                        <td>${incidencia.idd}</td>
                         <td>${incidencia.tipo_incidencia}</td>
                         <td>${incidencia.descripcion.substring(0, 50)}...</td>
                         <td>${incidencia.solicitante_nombre}...</td>
@@ -1110,12 +1169,6 @@ async function buscarUsuarioPorCedula() {
                 const estadoContainer = document.getElementById('estado').parentNode;
                 const creadorInfo = document.createElement('div');
                 creadorInfo.className = 'mb-3';
-                creadorInfo.innerHTML = `
-                    <label class="form-label">Creado por</label>
-                    <input type="text" class="form-control modern-input" 
-                           value="${incidencia.creador_nombre || 'No especificado'} ${incidencia.creador_apellido || ''} (${incidencia.creador_cedula || 'N/A'})" 
-                           readonly>
-                `;
                 estadoContainer.parentNode.insertBefore(creadorInfo, estadoContainer);
 
                 // Establecer el Estado

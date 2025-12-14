@@ -266,19 +266,37 @@ function crearAnalista($conexion) {
 
 
 function obtenerAnalistas($conexion) {
-    // Consulta simple para obtener analistas
-    $query = "SELECT id_user as id, name, apellido, nacionalidad, cedula, email, birthday, phone as telefono, code_phone, id_status_user, last_connection as created_at FROM user WHERE id_rol = 4 ORDER BY name";
+    // Leer filtros (q: texto, cedula, status)
+    $q = isset($_POST['q']) ? trim($_POST['q']) : '';
+    $cedula = isset($_POST['cedula']) ? trim($_POST['cedula']) : '';
+    $status = isset($_POST['status']) ? intval($_POST['status']) : 0;
+
+    // Construir consulta para obtener analistas con filtros opcionales
+    $query = "SELECT id_user as id, name, apellido, nacionalidad, cedula, email, birthday, phone as telefono, code_phone, id_status_user, last_connection as created_at FROM user WHERE id_rol = 4";
+    if ($q !== '') {
+        $q_esc = mysqli_real_escape_string($conexion, $q);
+        $query .= " AND (name LIKE '%" . $q_esc . "%' OR apellido LIKE '%" . $q_esc . "%' OR email LIKE '%" . $q_esc . "%')";
+    }
+    if ($cedula !== '') {
+        $ced_esc = mysqli_real_escape_string($conexion, $cedula);
+        $query .= " AND cedula LIKE '%" . $ced_esc . "%'";
+    }
+    if (in_array($status, [1,2,3], true)) {
+        $query .= " AND id_status_user = " . (int)$status;
+    }
+    $query .= " ORDER BY name";
     $resultado = mysqli_query($conexion, $query);
     
     if (!$resultado) {
         echo json_encode(['success' => false, 'message' => 'Error al obtener analistas: ' . mysqli_error($conexion)]);
         return;
     }
-    
+    $idd = 1;
     $analistas = [];
     while ($row = mysqli_fetch_assoc($resultado)) {
         $analistas[] = [
             'id' => $row['id'],
+            'idd' => $idd,
             'name' => $row['name'],
             'apellido' => $row['apellido'],
             'nacionalidad' => $row['nacionalidad'],
@@ -291,6 +309,7 @@ function obtenerAnalistas($conexion) {
             'created_at' => $row['created_at']
             
         ];
+        $idd++;
     }
     
     echo json_encode(['success' => true, 'analistas' => $analistas]);

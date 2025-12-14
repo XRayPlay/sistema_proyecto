@@ -102,6 +102,25 @@ try {
         <!-- Table Card -->
         <div class="table-card">
             <h3 class="table-title">Lista de Técnicos</h3>
+            <!-- FILTROS -->
+            <div class="filters mb-3 d-flex gap-2 flex-wrap align-items-center">
+                <input type="text" id="filter_q" class="form-control" style="min-width:220px; max-width:320px;" placeholder="Buscar nombre, apellido o email">
+                <input type="text" id="filter_cedula" class="form-control" style="width:120px;" placeholder="Cédula" maxlength="8">
+                <select id="filter_especialidad" class="form-select" style="width:180px;">
+                    <option value="">Todas las áreas</option>
+                    <option value="1">Soporte</option>
+                    <option value="2">Sistema</option>
+                    <option value="3">Redes</option>
+                </select>
+                <select id="filter_status" class="form-select" style="width:150px;">
+                    <option value="">Todos los estados</option>
+                    <option value="1">Activo</option>
+                    <option value="2">Ocupado</option>
+                    <option value="3">Ausente</option>
+                </select>
+                <!-- El filtro de piso fue eliminado por requerimiento -->
+                <button id="btnResetFilters" class="btn btn-outline-secondary">Restablecer</button>
+            </div>
             <div class="table-responsive">
                 <table class="table" id="tablaTecnicos">
                     <thead>
@@ -152,12 +171,6 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" minlength="13"  required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
                                     <label for="code_phone" class="form-label">Código de Teléfono</label>
                                     <select class="form-select" id="code_phone" name="code_phone" required>
                                         <option value="">Seleccionar código</option>
@@ -194,9 +207,15 @@ try {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" minlength="13"  required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3" hidden>
                                     <label for="piso" class="form-label">Piso</label>
-                                    <select class="form-select" id="piso" name="piso" required>
-                                        <option value="">Seleccionar piso</option>
+                                    <select class="form-select" id="piso" name="piso" required hidden>
+                                        <option value="11">Seleccionar piso</option>
                                         <?php foreach ($pisos as $piso): ?>
                                             <option value="<?php echo (int)$piso['id_floors']; ?>">
                                                 <?php echo htmlspecialchars($piso['name']); ?>
@@ -332,6 +351,8 @@ try {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Reutilizamos utilidades del login (añade toggle para passwords) -->
+    <script src="../public/js/login.js"></script>
 
 <script>
 
@@ -587,7 +608,7 @@ async function cargarTecnicos() {
                 data.tecnicos.forEach(tecnico => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${tecnico.id}</td>
+                        <td>${tecnico.idd}</td>
                         <td>${tecnico.nombre} ${tecnico.apellido}</td>
                         <td>${tecnico.especialidad}</td>
                         <td>${tecnico.email}</td>
@@ -1064,6 +1085,119 @@ function mostrarModalConfirmacion({ titulo, mensaje, textoConfirmar = 'Confirmar
         confirmModal.show();
     });
 }
+</script>
+<script>
+// Filtros: leer elementos y registrar eventos
+document.addEventListener('DOMContentLoaded', function() {
+    const qEl = document.getElementById('filter_q');
+    const cedulaEl = document.getElementById('filter_cedula');
+    const especialidadEl = document.getElementById('filter_especialidad');
+    const statusEl = document.getElementById('filter_status');
+    const resetBtn = document.getElementById('btnResetFilters');
+
+    // Debounce helper (usar la existente si hay una, de lo contrario definimos)
+    function debounceLocal(fn, wait = 350) {
+        let t; return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+    }
+
+    const triggerLoad = debounceLocal(() => cargarTecnicos());
+
+    // Eventos
+    [qEl, cedulaEl, especialidadEl, statusEl].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', triggerLoad);
+        el.addEventListener('change', triggerLoad);
+    });
+
+    resetBtn.addEventListener('click', function() {
+        if (qEl) qEl.value = '';
+        if (cedulaEl) cedulaEl.value = '';
+        if (especialidadEl) especialidadEl.value = '';
+        if (statusEl) statusEl.value = '';
+        // no hay filtro de piso para técnicos
+        cargarTecnicos();
+    });
+});
+
+// Modificamos la función cargarTecnicos para enviar filtros (si existen)
+const _origCargarTecnicos = cargarTecnicos; // conservar referencia
+async function cargarTecnicos(q = '') {
+    // Leer valores de filtros del DOM
+    const qEl = document.getElementById('filter_q');
+    const cedulaEl = document.getElementById('filter_cedula');
+    const especialidadEl = document.getElementById('filter_especialidad');
+    const statusEl = document.getElementById('filter_status');
+
+    const formData = new FormData();
+    formData.append('action', 'obtener');
+    if (qEl && qEl.value.trim()) formData.append('q', qEl.value.trim());
+    if (cedulaEl && cedulaEl.value.trim()) formData.append('cedula', cedulaEl.value.trim());
+    if (especialidadEl && especialidadEl.value) formData.append('especialidad', especialidadEl.value);
+    if (statusEl && statusEl.value) formData.append('status', statusEl.value);
+    // not sending piso filter for técnicos (removed)
+
+    try {
+        const response = await fetch('../php/gestionar_tecnicos_crud.php', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        const tbody = document.querySelector('#tablaTecnicos tbody');
+        tbody.innerHTML = '';
+
+        if (data.success && data.tecnicos && data.tecnicos.length > 0) {
+            data.tecnicos.forEach(tecnico => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tecnico.idd}</td>
+                    <td>${tecnico.nombre} ${tecnico.apellido}</td>
+                    <td>${tecnico.especialidad}</td>
+                    <td>${tecnico.email}</td>
+                    <td>(${tecnico.code_phone}) ${tecnico.telefono}</td>
+                    <td><span class="badge-status ${tecnico.estado.toLowerCase()}">${tecnico.estado}</span></td>
+                    <td>${formatearFecha(tecnico.fecha_registro)}</td>
+                    <td>
+                        <button class="btn-action btn-view" onclick="verDetallesTecnico(${tecnico.id})" title="Ver Detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-action btn-edit" onclick="editarTecnico(${tecnico.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action btn-assign" onclick="verIncidenciasTecnico(${tecnico.id})" title="Ver Incidencias Asignadas">
+                            <i class="fas fa-tasks"></i>
+                        </button>
+                        <button class="btn-action btn-delete" onclick="eliminarTecnico(${tecnico.id})" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-users fa-2x mb-3 d-block"></i>
+                        No hay técnicos registrados con esos filtros
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error('Error al cargar técnicos (filtros):', error);
+        mostrarError('Error al cargar técnicos: ' + error.message);
+    }
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.addPasswordToggle) {
+        try {
+            addPasswordToggle('#password');
+            addPasswordToggle('#confirmar_password');
+        } catch (e) {
+            console.warn('No se pudo inicializar toggle de contraseña en gestionar_tecnicos:', e);
+        }
+    }
+});
 </script>
     <?php include_once('../page/footer.php'); ?>
 </body>
