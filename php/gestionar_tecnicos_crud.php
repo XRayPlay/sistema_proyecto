@@ -249,6 +249,7 @@ function obtenerTecnicos($conexion) {
         mysqli_stmt_close($stmt);
     }
 
+<<<<<<< HEAD
      // Leer filtros opcionales enviados desde el frontend
      $q = isset($_POST['q']) ? trim($_POST['q']) : '';
      $cedula = isset($_POST['cedula']) ? trim($_POST['cedula']) : '';
@@ -257,6 +258,9 @@ function obtenerTecnicos($conexion) {
      $piso_filter = isset($_POST['piso']) ? intval($_POST['piso']) : 0; // id_floor
 
      // Construir la consulta base
+=======
+    // Construir la consulta base
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
     $query = "SELECT u.id_user as id, u.name as nombre, u.apellido, u.nacionalidad, u.cedula, u.email, 
                      u.phone as telefono, u.code_phone, u.id_cargo,
                      u.id_status_user,
@@ -275,6 +279,7 @@ function obtenerTecnicos($conexion) {
     if ($id_floor !== null) {
         $query .= " AND u.id_cargo = " . (int)$id_floor;
     }
+<<<<<<< HEAD
     // Aplicar filtros adicionales (si fueron suministrados)
     if ($q !== '') {
         $q_esc = mysqli_real_escape_string($conexion, $q);
@@ -293,6 +298,8 @@ function obtenerTecnicos($conexion) {
     if ($piso_filter > 0) {
         $query .= " AND u.id_floor = " . (int)$piso_filter;
     }
+=======
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
     
     $query .= " ORDER BY u.name";
     

@@ -212,7 +212,11 @@ try {
     }
     
     // Hashear la contraseña
+<<<<<<< HEAD
     $hashed_password = hash('sha256', $password);
+=======
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
 
     // Valores por defecto para campos obligatorios en la tabla
     $nacionalidad = in_array($nacionalidad_in, ['venezolano','extranjero']) ? $nacionalidad_in : 'venezolano';

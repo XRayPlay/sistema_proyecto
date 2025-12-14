@@ -643,6 +643,7 @@ if ($result_estados) {
                             </div>
                         <?php else: ?>
                             <div class="table-responsive">
+<<<<<<< HEAD
                                 <div class="mb-3 d-flex gap-2 flex-wrap align-items-center">
                                     <input type="text" id="users_filter_q" class="form-control" style="min-width:200px; max-width:320px;" placeholder="Buscar nombre o email...">
                                     <select id="users_filter_role" class="form-select" style="width:180px;">
@@ -658,6 +659,8 @@ if ($result_estados) {
                                     </select>
                                     <button id="users_reset_filters" class="btn btn-outline-secondary">Restablecer</button>
                                 </div>
+=======
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
@@ -940,7 +943,11 @@ if ($result_estados) {
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3" id="nuevo_cargo_container" style="display: none;">
+<<<<<<< HEAD
                                 <label for="nuevo_cargo" class="form-label">Área de atención <span class="text-danger">*</span></label>
+=======
+                                <label for="nuevo_cargo" class="form-label">Cargo <span class="text-danger">*</span></label>
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
                                 <select class="form-select" id="nuevo_cargo" name="id_cargo">
                                     <option value="">Seleccionar Cargo</option>
                                     <?php foreach ($cargos as $cargo): ?>
@@ -1364,6 +1371,7 @@ if ($result_estados) {
     </script>
 </body>
 </html>
+<<<<<<< HEAD
             // Filtros cliente-side para la tabla de usuarios
             const qEl = document.getElementById('users_filter_q');
             const roleEl = document.getElementById('users_filter_role');
@@ -1393,3 +1401,5 @@ if ($result_estados) {
 
             [qEl, roleEl, statusEl].forEach(el => { if (!el) return; el.addEventListener('input', filterUsers); el.addEventListener('change', filterUsers); });
             if (resetBtn) resetBtn.addEventListener('click', () => { if (qEl) qEl.value=''; if (roleEl) roleEl.value=''; if (statusEl) statusEl.value=''; filterUsers(); });
+=======
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60

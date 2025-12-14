@@ -1,0 +1,21 @@
+--- 2025-12-04 16:52:50 ---
+Exception: Cannot add or update a child row: a foreign key constraint fails (`sistema_proyecto`.`user`, CONSTRAINT `user_ibfk_2` FOREIGN KEY (`id_cargo`) REFERENCES `cargo` (`id_cargo`) ON DELETE CASCADE ON UPDATE CASCADE)
+Conexion error: Cannot add or update a child row: a foreign key constraint fails (`sistema_proyecto`.`user`, CONSTRAINT `user_ibfk_2` FOREIGN KEY (`id_cargo`) REFERENCES `cargo` (`id_cargo`) ON DELETE CASCADE ON UPDATE CASCADE)
+Statement error: Cannot add or update a child row: a foreign key constraint fails (`sistema_proyecto`.`user`, CONSTRAINT `user_ibfk_2` FOREIGN KEY (`id_cargo`) REFERENCES `cargo` (`id_cargo`) ON DELETE CASCADE ON UPDATE CASCADE)
+Params: {"username":"carrillonicolas40","email":"carrillonicolas40@gmail.com","nombre":"Nicolas Miguel","apellido":"Perez del Carmen","cedula":30481822,"id_cargo":0,"id_rol":1,"id_status_user":1}
+-------------------------------
+
+--- 2025-12-04 16:55:01 ---
+Exception: Table 'sistema_proyecto.historial_acciones' doesn't exist
+Conexion error: Table 'sistema_proyecto.historial_acciones' doesn't exist
+Statement error: 
+Params: {"username":"carrillonicolas40","email":"carrillonicolas40@gmail.com","nombre":"Nicolas Carrillo M","apellido":"Perez del Carmen","cedula":30481822,"id_cargo":"","id_rol":1,"id_status_user":1}
+-------------------------------
+
+--- 2025-12-08 15:13:18 ---
+Exception: Unknown column 'address' in 'field list'
+Conexion error: Unknown column 'address' in 'field list'
+Statement error: 
+Params: {"username":"michel123","email":"michel123@gmail.com","nombre":"michel","apellido":"mitvhel","cedula":12365487,"id_cargo":"","id_rol":4,"id_status_user":1}
+-------------------------------
+

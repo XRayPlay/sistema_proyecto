@@ -560,12 +560,19 @@ try {
         if (departamentoSelect) {
             departamentoSelect.addEventListener('change', async function() {
                 const departamentoId = this.value;
+<<<<<<< HEAD
 
                 if (departamentoId) {
                     // Cargar tipos de incidencia para el departamento seleccionado
                     await cargarTiposIncidenciaPorDepartamento(departamentoId);
                     // Cargar técnicos para el departamento seleccionado
                     await cargarTecnicosParaAsignacion(departamentoId);
+=======
+                
+                if (departamentoId) {
+                    // Cargar tipos de incidencia para el departamento seleccionado
+                    await cargarTiposIncidenciaPorDepartamento(departamentoId);
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
                     // Actualizar visibilidad basada en la selección actual
                     actualizarVisibilidadTipoIncidencia();
                 } else {
@@ -1169,6 +1176,15 @@ async function buscarUsuarioPorCedula() {
                 const estadoContainer = document.getElementById('estado').parentNode;
                 const creadorInfo = document.createElement('div');
                 creadorInfo.className = 'mb-3';
+<<<<<<< HEAD
+=======
+                creadorInfo.innerHTML = `
+                    <label class="form-label">Creado por</label>
+                    <input type="text" class="form-control modern-input" 
+                           value="${incidencia.creador_nombre || 'No especificado'} ${incidencia.creador_apellido || ''} (${incidencia.creador_cedula || 'N/A'})" 
+                           readonly>
+                `;
+>>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
                 estadoContainer.parentNode.insertBefore(creadorInfo, estadoContainer);
 
                 // Establecer el Estado
