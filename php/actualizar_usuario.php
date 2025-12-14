@@ -143,17 +143,12 @@ try {
     // Actualizar el usuario en la base de datos (incluir nuevos campos)
     if (!empty($password)) {
         // Si se proporcionó una nueva contraseña, hashearla
-<<<<<<< HEAD
+
         $hashed_password = hash('sha256', $password);
         $query = "UPDATE user SET name = ?, apellido = ?, email = ?, username = ?, nacionalidad = ?, cedula = ?, code_phone = ?, phone = ?, id_rol = ?, id_cargo = ?, id_status_user = ?, pass = ? WHERE id_user = ?";
         $stmt = $conexion->prepare($query);
     $stmt->bind_param("sssssiiiiiisi", $nombre, $apellido, $email, $username, $nacionalidad, $cedula, $code_phone, $phone, $id_rol, $id_cargo, $id_status_user, $hashed_password, $id_usuario);
-=======
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $query = "UPDATE user SET name = ?, apellido = ?, email = ?, username = ?, nacionalidad = ?, cedula = ?, code_phone = ?, phone = ?, id_rol = ?, id_cargo = ?, id_status_user = ?, pass = ? WHERE id_user = ?";
-        $stmt = $conexion->prepare($query);
-    $stmt->bind_param("sssssiiiiiiisi", $nombre, $apellido, $email, $username, $nacionalidad, $cedula, $code_phone, $phone, $id_rol, $id_cargo, $id_status_user, $hashed_password, $id_usuario);
->>>>>>> 0c095cb5614c4eb35076deafc2789bc3ef862f60
+
     } else {
         // Si no se proporcionó contraseña, no actualizarla
         $query = "UPDATE user SET name = ?, apellido = ?, email = ?, username = ?, nacionalidad = ?, cedula = ?, code_phone = ?, phone = ?, id_rol = ?, id_cargo = ?, id_status_user = ? WHERE id_user = ?";
