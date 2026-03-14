@@ -83,46 +83,18 @@ try {
 }
 
 function crearIncidencia($conexion) {
-    // 1. Eliminar mysqli_real_escape_string - Capturar directamente
     $tipo_incidencia = $_POST['tipo_incidencia'] ?? '';
-    $departamento = $_POST['departamento'] ?? '';
     $descripcion = $_POST['descripcion'] ?? '';
     $solicitante_nombre = $_POST['solicitante_nombre'] ?? '';
-    
-    // 2. Agregar campos faltantes en la tabla incidencias
-    $solicitante_apellido = $_POST['solicitante_apellido'] ?? ''; // Nuevo
-    
+    $solicitante_apellido = $_POST['solicitante_apellido'] ?? '';
     $solicitante_cedula = $_POST['solicitante_cedula'] ?? '';
     $solicitante_email = $_POST['solicitante_email'] ?? '';
     $solicitante_code = $_POST['solicitante_code'] ?? '';
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
     $piso = $_POST['piso'] ?? '';
-    $creador_incidencia = $_SESSION['id_user'];
-
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
-    // Normalizar el valor del técnico: el frontend a veces envía la cédula,
-    // otras veces el id_user. Queremos almacenar el id_user en la tabla incidencias.
-    $tecnico_id = null;
-    if (!empty($tecnico_asignado)) {
-        // Si viene un número entero, lo tomamos como id
-        if (ctype_digit(strval($tecnico_asignado))) {
-            $tecnico_id = (int)$tecnico_asignado;
-        } else {
-            // Si viene una cédula, buscar el id_user correspondiente
-            $queryUser = "SELECT id_user FROM user WHERE cedula = ? LIMIT 1";
-            $stmtUser = mysqli_prepare($conexion, $queryUser);
-            if ($stmtUser) {
-                mysqli_stmt_bind_param($stmtUser, 's', $tecnico_asignado);
-                mysqli_stmt_execute($stmtUser);
-                $resUser = mysqli_stmt_get_result($stmtUser);
-                if ($rowUser = mysqli_fetch_assoc($resUser)) {
-                    $tecnico_id = (int)$rowUser['id_user'];
-                }
-                mysqli_stmt_close($stmtUser);
-            }
-        }
-    }
-    
+    $creador_id_person = $_SESSION['usuario']['id_person'];
+
     // Validar campos requeridos
     $required = [
         'tipo_incidencia' => $tipo_incidencia,
@@ -151,88 +123,61 @@ function crearIncidencia($conexion) {
         ]);
         exit();
     }
-    
-    // Query actualizado en crearIncidencia
-    // Si no se seleccionó técnico ($tecnico_id === null) insertamos NULL en la columna tecnico_asignado,
-    // de lo contrario usamos un placeholder y lo bindemos como entero.
-    if ($tecnico_id === null) {
-        $query = "INSERT INTO incidencias (
-                    tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
-                    solicitante_email, solicitante_code, solicitante_telefono,
-                    solicitante_piso, departamento, estado, tecnico_asignado, usuario_creador, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', NULL, ?, NOW(), NOW())";
-        $stmt = mysqli_prepare($conexion, $query);
-        mysqli_stmt_bind_param(
-            $stmt,
-            'ssssssssiii',
-            $tipo_incidencia,
-            $descripcion,
-            $solicitante_nombre,
-            $solicitante_apellido,
-            $solicitante_cedula,
-            $solicitante_email,
-            $solicitante_code,
-            $solicitante_telefono,
-            $piso,
-            $departamento,
-            $creador_incidencia
-        );
+
+    // Verificar si el solicitante existe en person
+    $query_person = "SELECT id_person FROM person WHERE cedula = ? LIMIT 1";
+    $stmt_person = mysqli_prepare($conexion, $query_person);
+    mysqli_stmt_bind_param($stmt_person, 'i', $solicitante_cedula);
+    mysqli_stmt_execute($stmt_person);
+    $res_person = mysqli_stmt_get_result($stmt_person);
+    $solicitante_id = null;
+    if ($row_person = mysqli_fetch_assoc($res_person)) {
+        $solicitante_id = $row_person['id_person'];
     } else {
-        $query = "INSERT INTO incidencias (
-                    tipo_incidencia, descripcion, solicitante_nombre, solicitante_apellido, solicitante_cedula,
-                    solicitante_email, solicitante_code, solicitante_telefono, 
-                    solicitante_piso, departamento, estado, tecnico_asignado, usuario_creador, fecha_creacion, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_proceso', ?, ?, NOW(), NOW())";
-        $stmt = mysqli_prepare($conexion, $query);
-        mysqli_stmt_bind_param(
-            $stmt,
-            'ssssssssssii',
-            $tipo_incidencia,
-            $descripcion,
-            $solicitante_nombre,
-            $solicitante_apellido,
-            $solicitante_cedula,
-            $solicitante_email,
-            $solicitante_code,
-            $solicitante_telefono,
-            $piso,
-            $departamento,
-            $tecnico_id,
-            $creador_incidencia
-        );
+        // Insertar en person
+        $query_insert_person = "INSERT INTO person (name, apellido, nacionalidad, cedula, phone_code, phone, email, id_floor) VALUES (?, ?, 'V', ?, ?, ?, ?, ?)";
+        $stmt_insert = mysqli_prepare($conexion, $query_insert_person);
+        mysqli_stmt_bind_param($stmt_insert, 'ssiiisi', $solicitante_nombre, $solicitante_apellido, $solicitante_cedula, $solicitante_code, $solicitante_telefono, $solicitante_email, $piso);
+        mysqli_stmt_execute($stmt_insert);
+        $solicitante_id = mysqli_insert_id($conexion);
+        mysqli_stmt_close($stmt_insert);
     }
-    
-    if (!$stmt) {
-        http_response_code(500);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error al preparar la consulta: ' . mysqli_error($conexion)
-        ]);
-        exit();
+    mysqli_stmt_close($stmt_person);
+
+    // Obtener id_person del técnico si asignado
+    $tecnico_id_person = null;
+    if (!empty($tecnico_asignado)) {
+        $query_tecnico = "SELECT p.id_person FROM user u INNER JOIN person p ON u.id_person = p.id_person WHERE u.id_user = ? LIMIT 1";
+        $stmt_tecnico = mysqli_prepare($conexion, $query_tecnico);
+        mysqli_stmt_bind_param($stmt_tecnico, 'i', $tecnico_asignado);
+        mysqli_stmt_execute($stmt_tecnico);
+        $res_tecnico = mysqli_stmt_get_result($stmt_tecnico);
+        if ($row_tecnico = mysqli_fetch_assoc($res_tecnico)) {
+            $tecnico_id_person = $row_tecnico['id_person'];
+        }
+        mysqli_stmt_close($stmt_tecnico);
     }
-    
-    if (mysqli_stmt_execute($stmt)) {
+
+    // Insertar en incidencias
+    $status_incidencia = $tecnico_id_person ? 1 : 2; // 1 Asignado, 2 En Proceso
+    $query_incidencia = "INSERT INTO incidencias (tipo_incidencia, descripcion, status_incidencia, usuario_creador, tecnico_asignado, fecha_asignacion, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+    $stmt_incidencia = mysqli_prepare($conexion, $query_incidencia);
+    mysqli_stmt_bind_param($stmt_incidencia, 'iiiis', $tipo_incidencia, $descripcion, $status_incidencia, $solicitante_id, $tecnico_id_person);
+    if (mysqli_stmt_execute($stmt_incidencia)) {
         $incidencia_id = mysqli_insert_id($conexion);
-        // Limpiar cualquier salida antes de enviar la respuesta JSON
-        if (ob_get_length()) ob_clean();
-        header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
             'message' => 'Incidencia creada exitosamente',
             'id' => $incidencia_id
         ]);
-        exit();
     } else {
-        // Limpiar cualquier salida antes de enviar el error
-        if (ob_get_length()) ob_clean();
         http_response_code(500);
-        header('Content-Type: application/json');
         echo json_encode([
             'success' => false,
             'message' => 'Error al crear la incidencia: ' . mysqli_error($conexion)
         ]);
-        exit();
     }
+    mysqli_stmt_close($stmt_incidencia);
 }
 
 function buscarUsuario($conexion) {
@@ -580,24 +525,13 @@ function eliminarIncidencia($conexion) {
 }
 
 function obtenerTiposIncidencia($conexion) {
-    // Primero intentar obtener de la tabla reports_type
-    $query = "SELECT id_reports_type, name FROM reports_type ORDER BY id_reports_type ASC";
+    $query = "SELECT id_incident_type as id, name as value FROM incident_type ORDER BY id_incident_type ASC";
     $resultado = mysqli_query($conexion, $query);
     $tipos = [];
     
     if ($resultado && mysqli_num_rows($resultado) > 0) {
         while ($row = mysqli_fetch_assoc($resultado)) {
-            $tipos[] = ['id' => $row['id_reports_type'], 'value' => $row['name']];
-        }
-    } else {
-        // Si no hay datos en reports_type, obtener de incidencias existentes
-        $query = "SELECT DISTINCT tipo_incidencia FROM incidencias WHERE tipo_incidencia IS NOT NULL ORDER BY tipo_incidencia";
-        $resultado = mysqli_query($conexion, $query);
-        
-        if ($resultado) {
-            while ($row = mysqli_fetch_assoc($resultado)) {
-                $tipos[] = $row['tipo_incidencia'];
-            }
+            $tipos[] = $row;
         }
     }
     
@@ -612,8 +546,8 @@ function obtenerTiposIncidenciaPorDepartamento($conexion) {
             throw new Exception("ID de departamento no proporcionado");
         }
         
-        $query = "SELECT id_reports_type as id, name as nombre 
-                 FROM reports_type 
+        $query = "SELECT id_incident_type as id, name as nombre 
+                 FROM incident_type 
                  WHERE id_cargo = ? 
                  ORDER BY name ASC";
         

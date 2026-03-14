@@ -34,19 +34,19 @@ $response = [
 ];
 
 try {
-    // 3. Preparar y ejecutar la consulta en la tabla INCIDENCIA
-    // Buscamos el registro MÁS RECIENTE de esa cédula.
+    // 3. Preparar y ejecutar la consulta en la tabla person
+    // Buscamos por cédula en person
     $sql = "SELECT 
-                solicitante_nombre, 
-                solicitante_apellido, 
-                solicitante_email,
-                solicitante_code, 
-                solicitante_telefono,
-                solicitante_piso,
-                departamento
-            FROM incidencias 
-            WHERE solicitante_cedula = ?
-            ORDER BY id DESC
+                p.name, 
+                p.apellido, 
+                p.email,
+                p.phone_code, 
+                p.phone,
+                p.id_floor,
+                f.name as piso_name
+            FROM person p
+            LEFT JOIN floors f ON p.id_floor = f.id_floors
+            WHERE p.cedula = ?
             LIMIT 1";
     
     // Usar consultas preparadas para seguridad
@@ -67,14 +67,14 @@ try {
         
         $response['found'] = true;
         $response['data'] = [
-            // Mapeo de campos de la tabla incidencia a nombres de campos JS
-            'nombre' => $incidente_data['solicitante_nombre'],
-            'apellido' => $incidente_data['solicitante_apellido'],
-            'email' => $incidente_data['solicitante_email'],
-            'codigo_telefono' => $incidente_data['solicitante_code'],
-            'telefono' => $incidente_data['solicitante_telefono'], 
-            'departamento' => $incidente_data['departamento'],
-            'piso' => $incidente_data['solicitante_piso']
+            // Mapeo de campos de la tabla person a nombres de campos JS
+            'nombre' => $incidente_data['name'],
+            'apellido' => $incidente_data['apellido'],
+            'email' => $incidente_data['email'],
+            'codigo_telefono' => $incidente_data['phone_code'],
+            'telefono' => $incidente_data['phone'], 
+            'piso_id' => $incidente_data['id_floor'],
+            'piso_name' => $incidente_data['piso_name']
         ];
     } else {
         // Cédula NO encontrada en el historial de incidencias

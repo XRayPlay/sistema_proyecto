@@ -5,5 +5,5 @@
 define("host","localhost");
 define("user","root");
 define("pass","");
-define("database","sistema_proyecto");
+define("database","sistema_minec");
 ?>
