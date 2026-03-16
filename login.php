@@ -12,26 +12,11 @@
     $conexionFloors = new conectar();
     $conexionFloors = $conexionFloors->conexion();
     if ($conexionFloors instanceof mysqli) {
-      $floorQueries = [
-        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
-        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
-        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
-        "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC",
-      ];
-
-      foreach ($floorQueries as $sqlFloor) {
-        $resultFloor = @$conexionFloors->query($sqlFloor);
-        if ($resultFloor instanceof mysqli_result) {
-          while ($row = $resultFloor->fetch_assoc()) {
-            if (!isset($row['id']) || !isset($row['nombre'])) {
-              continue;
-            }
-            $floors[] = $row;
-          }
-          $resultFloor->free();
-          if (!empty($floors)) {
-            break;
-          }
+      $floorQueries = "SELECT id_floors AS id, name AS nombre FROM floors ORDER BY id_floors ASC LIMIT 10";
+      $result = $conexionFloors->query($floorQueries);
+      if ($result) {
+        while ($row = $result->fetch_assoc()) {
+          $floors[] = $row;
         }
       }
     }
@@ -43,26 +28,11 @@
   try {
     $conexionFloors = getConexion();
     if ($conexionFloors instanceof mysqli) {
-      $floorQueries = [
-        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-        "SELECT id_reports_type AS id, description AS nombre FROM reports_type ORDER BY id_reports_type ASC",
-      ];
-
-      foreach ($floorQueries as $sqlFloor) {
-        $resultFloor = @$conexionFloors->query($sqlFloor);
-        if ($resultFloor instanceof mysqli_result) {
-          while ($row = $resultFloor->fetch_assoc()) {
-            if (!isset($row['id']) || !isset($row['nombre'])) {
-              continue;
-            }
-            $tipo_incidencias[] = $row;
-          }
-          $resultFloor->free();
-          if (!empty($tipo_incidencias)) {
-            break;
-          }
+      $floorQueries = "SELECT id_incident_type AS id, description AS nombre FROM incident_type ORDER BY description ASC";
+      $result = $conexionFloors->query($floorQueries);
+      if ($result) {
+        while ($row = $result->fetch_assoc()) {
+          $tipo_incidencias[] = $row;
         }
       }
     }
@@ -223,7 +193,7 @@
                     </option>
                   <?php endforeach; ?>
                 <?php else: ?>
-                  <option value="" disabled>No hay pisos disponibles</option>
+                  <option value="" disabled>No se encontraron pisos disponibles</option>
                 <?php endif; ?>
               </select>
             </div>

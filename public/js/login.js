@@ -74,7 +74,7 @@ function validatePhone(value) { return phoneRegex.test(value); }
 function validatePhoneCode(value) { return phoneCodeRegex.test(value); }
 function validateRequiredText(value) { return value.trim().length > 0; }
 
-// --- FUNCIÓN AUXILIAR DE ERROR (Sin Cambios) ---
+// --- FUNCIÓN AUXILIAR DE ERROR ---
 function showError(message, field, errorDiv) {
     if (errorDiv) { errorDiv.textContent = message; errorDiv.style.display = 'block'; }
     if (field) { applyValidationClass(field, false); field.focus(); }

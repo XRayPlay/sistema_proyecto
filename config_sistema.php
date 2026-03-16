@@ -75,9 +75,3 @@ function getConexion() {
 }
 
 ?>
-
-
-
-
-
-

@@ -7,12 +7,9 @@
         $c = new conectar();
         $conexion = $c->conexion();
 
-        // --- 1. PREVENCIÓN DE SQL INJECTION Y OBTENCIÓN DE USUARIO ---
-        // Sanitizar la entrada para la consulta inicial
-        $input_user = mysqli_real_escape_string($conexion, $data[0]);
         
         // Obtener el usuario con su contraseña hasheada y el rol
-        $query = "SELECT id_user, pass, id_rol FROM user WHERE username='$input_user'";
+        $query = "SELECT id_user, pass, id_rol FROM user WHERE username='$data[0]'";
 
         $validar_login = mysqli_query($conexion, $query);
 
@@ -67,22 +64,22 @@
                                 error_log("[LOGIN] usuario_id={$user_id} id_rol={$row['id_rol']}");
                                 if ($row['id_rol'] == 3) {
                                         // TÉCNICO - Redirigir al panel principal de técnicos
-                                        $target = '../nuevo_diseno/tecnicos/dashboard_tecnico.php';
+                                        $target = '../vista/tecnicos/dashboard_tecnico.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } elseif ($row['id_rol'] == 4) {
                                         // ANALISTA - Redirigir directamente a la gestión de incidencias
-                                        $target = '../nuevo_diseno/gestionar_incidencias.php';
+                                        $target = '../vista/gestionar_incidencias.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } else {
                                         // ADMINISTRADOR/DIRECTOR - Redirigir al panel principal
-                                        $target = '../nuevo_diseno/inicio_completo.php';
+                                        $target = '../vista/inicio.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     }
                             }  else {
-                            header("location: ../nuevo_diseno/panel_usuario.php"); // Elegí una opción del código original
+                            header("location: ../vista/panel_usuario.php"); // Elegí una opción del código original
                         }
                         exit();
                     }
