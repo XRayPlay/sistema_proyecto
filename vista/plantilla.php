@@ -1,4 +1,6 @@
-<?php include '../page/head.php' ?>
+<?php include '../page/head.php' 
+// AGREGAR NUEVOS INCLUDE AQUI, ANTES DE CUALQUIER FUNCION
+?>
 
 
 <!-------	AGREGAR NUEVOS ESTILOS CSS AQUI  ----------->

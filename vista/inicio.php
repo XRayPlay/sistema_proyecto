@@ -8,6 +8,7 @@
 <section class="page-header">
   <h1>Panel de control</h1>
   <p>Usa los filtros para ajustar los gráficos y buscar incidencias por nombre.</p>
+  <button class="btn btn-secondary" onclick="exportToExcel()">Exportar a Excel</button>
 </section>
 
 <div class="dashboard">
@@ -85,5 +86,10 @@
 <script src="../public/js/filters.js"></script>
 
 <!-- INSERTAR NUEVOS JS AQUI-->
+<script>
+function exportToExcel() {
+    window.location.href = '../php/export_excel.php';
+}
+</script>
 
 <?php include '../page/end.php' ?>

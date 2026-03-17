@@ -125,6 +125,9 @@
           <input type="password" id="login-password" placeholder="Ingrese su contraseña"
             maxlength="15">
         </div>
+        <div class="forgot-password">
+          <a href="recuperar_password.php">¿Olvidaste tu contraseña?</a>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-cancel" data-modal="loginModal">Cancelar</button>

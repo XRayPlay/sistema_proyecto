@@ -79,7 +79,7 @@ form {
 <h1>Configuración de Usuarios</h1>
 
 <div class="tabs">
-    <button class="tab-button active" onclick="showTab('person')">Persona</button>
+    <button class="tab-button active" onclick="showTab('person')">Personaerson</button>
     <button class="tab-button" onclick="showTab('user')">Usuario</button>
 </div>
 
@@ -90,7 +90,7 @@ $conexion = $conn->conexion();
 // Función para obtener datos
 function getData($table, $conn) {
     if ($table == 'person') {
-        $sql = "SELECT p.*, f.name as floor_name, c.name as cargo_name FROM person p LEFT JOIN floors f ON p.id_floor = f.id_floors LEFT JOIN cargo c ON p.id_cargo = c.id_cargo";
+        $sql = "SELECT p.*, f.name as floor_name, c.name as cargo_name FROM person p LEFT JOIN floors f ON p.id_floor = f.id_floors LEFT JOIN cargo c ON p.id_cargo = c.id_cargo LEFT JOIN user u ON p.id_person = u.id_person";
     } elseif ($table == 'user') {
         $sql = "SELECT u.*, r.name as rol_name, s.name as status_name FROM user u LEFT JOIN rol r ON u.id_rol = r.id_rol LEFT JOIN status_user s ON u.id_status_user = s.id_status_user";
     } else {
@@ -161,7 +161,7 @@ function getOptions($table, $conn, $idField = null, $nameField = 'name') {
 }
 ?>
 <div id="person" class="tab-content active">
-    <h2>Persona</h2>
+    <h2>Personas</h2>
     <input type="text" class="search-input" placeholder="Buscar por nombre, apellido, nacionalidad, cédula, etc." onkeyup="filterTable('person-table', this.value)">
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal-person">Añadir Persona</button>
     <table id="person-table" class="table table-striped table-dark">

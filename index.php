@@ -15,14 +15,14 @@ if (isset($_SESSION['usuario']) && !empty($_SESSION['usuario'])) {
         switch ($id_rol) {
             case 1: // Administrador
             case 2: // Director
-                header("Location: nuevo_diseno/inicio_completo.php");
+                header("Location: php/inicio.php");
                 exit();
             case 3: // Técnico
-                header("Location: nuevo_diseno/tecnicos/dashboard_tecnico.php");
+                header("Location: php/incidencias.php");
                 exit();
             case 4: // Analista
                 // Rol 4 en este sistema corresponde a Analista
-                header("Location: nuevo_diseno/gestionar_incidencias.php");
+                header("Location: php/incidencias.php");
                 exit();
             default:
                 // Si no se reconoce el rol, ir al login

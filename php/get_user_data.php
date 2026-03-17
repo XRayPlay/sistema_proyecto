@@ -13,12 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // 1. Incluir la clase de conexión
 require_once "conexion_be.php";
 
-// 2. Obtener la cédula
+// 2. Obtener la cedula
 $cedula = isset($_POST['cedula']) ? $_POST['cedula'] : '';
 
-// Limpiar y validar la cédula (se puede mejorar, pero es una base)
+// Limpiar y validar la cedula
 $cedula = trim($cedula);
-if (empty($cedula) || !ctype_digit($cedula)) {
+if (empty($cedula) || !preg_match('/^\d{7,8}$/', $cedula)) {
     http_response_code(400); // Solicitud incorrecta
     echo json_encode(['found' => false, 'error' => 'Cédula inválida.']);
     exit();
@@ -34,18 +34,11 @@ $response = [
 ];
 
 try {
-    // 3. Preparar y ejecutar la consulta en la tabla person
-    // Buscamos por cédula en person
-    $sql = "SELECT 
-                p.name, 
-                p.apellido, 
-                p.email,
-                p.phone_code, 
-                p.phone,
-                p.id_floor,
-                f.name as piso_name
-            FROM person p
-            LEFT JOIN floors f ON p.id_floor = f.id_floors
+    // 3. Preparar y ejecutar la consulta
+    $sql = "SELECT p.name AS nombre, p.apellido, p.cedula, p.email, p.phone_code AS codigo_telefono, p.phone AS telefono, c.name as cargo, u.last_connection, u.avatar
+            FROM user u
+            JOIN person p ON u.id_person = p.id_person
+            LEFT JOIN cargo c ON p.id_cargo = c.id_cargo
             WHERE p.cedula = ?
             LIMIT 1";
     
@@ -62,22 +55,23 @@ try {
 
     // 4. Procesar el resultado
     if ($result->num_rows > 0) {
-        // Usuario encontrado en historial: Devolver sus datos
-        $incidente_data = $result->fetch_assoc();
+        // Usuario encontrado
+        $user_data = $result->fetch_assoc();
         
         $response['found'] = true;
         $response['data'] = [
-            // Mapeo de campos de la tabla person a nombres de campos JS
-            'nombre' => $incidente_data['name'],
-            'apellido' => $incidente_data['apellido'],
-            'email' => $incidente_data['email'],
-            'codigo_telefono' => $incidente_data['phone_code'],
-            'telefono' => $incidente_data['phone'], 
-            'piso_id' => $incidente_data['id_floor'],
-            'piso_name' => $incidente_data['piso_name']
+            'nombre' => $user_data['nombre'],
+            'apellido' => $user_data['apellido'],
+            'cedula' => $user_data['cedula'],
+            'email' => $user_data['email'],
+            'codigo_telefono' => $user_data['codigo_telefono'],
+            'telefono' => $user_data['telefono'],
+            'cargo' => $user_data['cargo'],
+            'last_connection' => $user_data['last_connection'],
+            'avatar' => $user_data['avatar']
         ];
     } else {
-        // Cédula NO encontrada en el historial de incidencias
+        // ID no encontrado
         $response['found'] = false;
     }
 

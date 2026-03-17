@@ -1,5 +1,13 @@
 </head>
 
+<?php
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+require_once __DIR__ . '/../config_sistema.php';
+$userInfo = obtenerInfoUsuario();
+?>
+
 <body>
   <header class="header">
     <div class="container">
@@ -25,6 +33,7 @@
         </div>
       </li>
 
+      <?php if (esAdmin() || esDirector()) : ?>
       <li class="sidebar_element">
         <a href="../vista/inicio.php" class="sidebar_link">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -37,6 +46,7 @@
           </div>
         </a>
       </li>
+      <?php endif; ?>
 
 
 
@@ -51,6 +61,7 @@
         </a>
       </li>
 
+      <?php if (tienePermiso('gestionar_tecnicos')) : ?>
       <li class="sidebar_element">
         <a href="../vista/tecnicos.php" class="sidebar_link">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="sidebar_icon">
@@ -61,7 +72,9 @@
           </div>
         </a>
       </li>
+      <?php endif; ?>
 
+      <?php if (esAdmin()) : ?>
       <li class="sidebar_element">
         <a href="../vista/analistas.php" class="sidebar_link">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="sidebar_icon">
@@ -74,18 +87,22 @@
           </div>
         </a>
       </li>
+      <?php endif; ?>
 
+      <?php if (tienePermiso('gestionar_usuarios')) : ?>
       <li class="sidebar_element">
         <a href="../vista/config_user.php" class="sidebar_link">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="sidebar_icon">
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+            <path d="M16 11c1.66 0 2.99 1.34 2.99 3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
           </svg>
           <div class="sidebar_hide">
             <p class="sidebar_text">Gestión usuarios</p>
           </div>
         </a>
       </li>
+      <?php endif; ?>
 
+      <?php if (tienePermiso('configuracion_sistema')) : ?>
       <li class="sidebar_element">
         <a href="../vista/config_bd.php" class="sidebar_link">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="sidebar_icon">
@@ -96,13 +113,14 @@
           </div>
         </a>
       </li>
+      <?php endif; ?>
 
       <li class="sidebar_element sidebar_element--avatar">
         <img src="../resources/image/sin_foto.png" class="sidebar_icon sidebar_icon--avatar">
 
         <div class="sidebar_hide">
-          <h3 class="sidebar_tittle">Usuario name</h3>
-          <p class="sidebar_info">Cuenta Admin</p>
+          <h3 class="sidebar_tittle"><?php echo htmlspecialchars($userInfo['nombre'] ?? 'Usuario'); ?></h3>
+          <p class="sidebar_info"><?php echo htmlspecialchars($userInfo['rol_nombre'] ?? 'Sin sesión'); ?></p>
         </div>
       </li>
 

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'php/clases.php';
+require_once 'config_sistema.php';
 
 $token = $_GET['token'] ?? '';
 $error = '';
@@ -10,20 +10,20 @@ if (empty($token)) {
     $error = 'Token de recuperación inválido';
 } else {
     try {
-        $c = new conectar();
-        $conexion = $c->conexion();
+        $conn = getConexion();
         
-        if (!$conexion) {
+        if (!$conn) {
             throw new Exception("Error de conexión a la base de datos");
         }
         
         // Verificar token
-        $query = "SELECT prt.*, u.name, u.email 
+        $query = "SELECT prt.*, p.name, p.apellido, p.email 
                   FROM password_reset_tokens prt 
                   JOIN user u ON prt.user_id = u.id_user 
+                  JOIN person p ON u.id_person = p.id_person 
                   WHERE prt.token = ? AND prt.used = FALSE AND prt.expires_at > NOW()";
         
-        $stmt = mysqli_prepare($conexion, $query);
+        $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 's', $token);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
@@ -46,13 +46,13 @@ if (empty($token)) {
                     // Actualizar contraseña
                     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
                     $update_query = "UPDATE user SET pass = ? WHERE id_user = ?";
-                    $stmt_update = mysqli_prepare($conexion, $update_query);
+                    $stmt_update = mysqli_prepare($conn, $update_query);
                     mysqli_stmt_bind_param($stmt_update, 'si', $hashed_password, $token_data['user_id']);
                     
                     if (mysqli_stmt_execute($stmt_update)) {
                         // Marcar token como usado
                         $mark_used = "UPDATE password_reset_tokens SET used = TRUE WHERE token = ?";
-                        $stmt_used = mysqli_prepare($conexion, $mark_used);
+                        $stmt_used = mysqli_prepare($conn, $mark_used);
                         mysqli_stmt_bind_param($stmt_used, 's', $token);
                         mysqli_stmt_execute($stmt_used);
                         mysqli_stmt_close($stmt_used);
@@ -69,11 +69,12 @@ if (empty($token)) {
         }
         
         mysqli_stmt_close($stmt);
-        mysqli_close($conexion);
+        mysqli_close($conn);
         
     } catch (Exception $e) {
         error_log("Error en reset_password.php: " . $e->getMessage());
-        $error = 'Error interno del servidor';
+        // Mostrar el detalle en desarrollo (elimina o ajusta en producción)
+        $error = 'Error interno del servidor: ' . $e->getMessage();
     }
 }
 ?>
@@ -81,114 +82,137 @@ if (empty($token)) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer Contraseña - Sistema MINEC</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .reset-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid rgba(37, 99, 235, 0.1);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-        }
-        
-        .form-control:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
-        }
-        
-        .alert {
-            border-radius: 8px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restablecer Contraseña - Sistema MINEC</title>
+  <link rel="stylesheet" href="public/css/login.css">
+  <link rel="stylesheet" href="resources/fontawesome/css/all.min.css">
+  <style>
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.55);
+    }
+    .modal-content {
+      border-radius: 18px;
+      padding: 1.5rem;
+      max-width: 460px;
+      width: 100%;
+    }
+    .form-group label {
+      font-weight: 600;
+    }
+    .toggle-password {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .toggle-password:hover {
+      color: rgba(0, 0, 0, 0.9);
+    }
+  </style>
 </head>
 <body>
-    <div class="reset-container">
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-dark">Restablecer Contraseña</h2>
-            <?php if ($token_data): ?>
-                <p class="text-muted">Hola <?php echo htmlspecialchars($token_data['name']); ?>, ingresa tu nueva contraseña</p>
-            <?php endif; ?>
+  <header class="navbar">
+    <div class="logo-container">
+      <i><img src="resources/image/logoMinec.jpg" alt=""></i>
+      <span class="logo-text"></span>
+      <span class="system-name">Sistema de Gestión de Incidencias</span>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="welcome-section">
+      <div class="desktop-icon">
+        <i class="fas fa-key"></i>
+      </div>
+      <h1>RESTABLECER CONTRASEÑA</h1>
+      <p class="subtitle">Ingresa tu nueva contraseña</p>
+    </div>
+
+    <div class="modal-overlay active" id="resetModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Restablecer Contraseña</h3>
+          <button class="close-modal" onclick="window.location.href='login.php'">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+    <?php if ($error): ?>
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <?php echo htmlspecialchars($error); ?>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="window.location.href='login.php'">Volver al Login</button>
+      </div>
+    <?php elseif ($success): ?>
+      <div class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <?php echo htmlspecialchars($success); ?>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="window.location.href='login.php'">Iniciar Sesión</button>
+      </div>
+    <?php elseif ($token_data): ?>
+      <form method="POST" id="resetForm">
+        <div class="form-group">
+          <label for="new_password">Nueva Contraseña</label>
+          <div class="input-group">
+            <input type="password" id="new_password" name="new_password" required minlength="6" placeholder="Ingresa tu nueva contraseña">
+            <button type="button" class="toggle-password" data-target="new_password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <small class="form-text">Mínimo 6 caracteres</small>
         </div>
         
-        <?php if ($error): ?>
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
-            <div class="text-center">
-                <a href="login.php" class="btn btn-primary">Volver al Login</a>
-            </div>
-        <?php elseif ($success): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i>
-                <?php echo htmlspecialchars($success); ?>
-            </div>
-            <div class="text-center">
-                <a href="login.php" class="btn btn-primary">Iniciar Sesión</a>
-            </div>
-        <?php elseif ($token_data): ?>
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="new_password" class="form-label">Nueva Contraseña</label>
-                    <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
-                    <div class="form-text">Mínimo 6 caracteres</div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="confirm_password" class="form-label">Confirmar Contraseña</label>
-                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
-                </div>
-                
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
-                </div>
-            </form>
-        <?php endif; ?>
+        <div class="form-group">
+          <label for="confirm_password">Confirmar Contraseña</label>
+          <div class="input-group">
+            <input type="password" id="confirm_password" name="confirm_password" required minlength="6" placeholder="Confirma tu nueva contraseña">
+            <button type="button" class="toggle-password" data-target="confirm_password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+        </div>
+      </form>
+    <?php endif; ?>
+        </div>
+      </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="public/js/login.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.addPasswordToggle) {
-                try {
-                    addPasswordToggle('#new_password');
-                    addPasswordToggle('#confirm_password');
-                } catch (e) { console.warn('No se pudo agregar toggle de contraseña en reset_password:', e); }
-            }
+  </main>
+
+  <script src="public/js/login.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      function togglePassword(button) {
+        const targetId = button.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          button.querySelector('i').classList.remove('fa-eye');
+          button.querySelector('i').classList.add('fa-eye-slash');
+        } else {
+          input.type = 'password';
+          button.querySelector('i').classList.remove('fa-eye-slash');
+          button.querySelector('i').classList.add('fa-eye');
+        }
+      }
+
+      document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', function() {
+          togglePassword(this);
         });
-    </script>
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+      });
+    });
+  </script>
 </body>
 </html>
 

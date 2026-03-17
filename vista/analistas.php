@@ -1,4 +1,5 @@
 <?php
+include '../php/clases.php';
 $conn = new conectar();
 $conexion = $conn->conexion();
 
@@ -25,7 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Función para obtener datos
 function getAnalistas($conn) {
-    $sql = "SELECT u.*, r.name as rol_name, s.name as status_name FROM user u LEFT JOIN rol r ON u.id_rol = r.id_rol LEFT JOIN status_user s ON u.id_status_user = s.id_status_user WHERE u.id_rol = 4";
+    $sql = "SELECT p.name, p.apellido, p.cedula, p.email, CONCAT(p.phone_code, '-', p.phone) as telefono, u.last_connection, u.id_user 
+            FROM user u 
+            JOIN person p ON u.id_person = p.id_person 
+            WHERE u.id_rol = 4";
     $result = mysqli_query($conn, $sql);
     return $result;
 }
@@ -79,7 +83,6 @@ function getOptions($table, $conn, $idField = null, $nameField = 'name') {
 }
 ?>
 <?php include '../page/head.php' ?>
-<?php include '../php/conexion_be.php'; ?>
 
 <!-------	AGREGAR NUEVOS ESTILOS CSS AQUI  ----------->
 <style>
@@ -114,26 +117,23 @@ form {
 
 <input type="text" class="search-input" placeholder="Buscar por username, email, etc." onkeyup="filterTable('analistas-table', this.value)">
 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal-analista">Añadir Analista</button>
+<button class="btn btn-secondary mb-3" onclick="exportToExcel()">Exportar a Excel</button>
 
 <table id="analistas-table" class="table table-striped table-dark">
     <thead>
-        <tr><th>ID</th><th>Username</th><th>Email</th><th>Rol</th><th>Status</th><th>Acciones</th></tr>
+        <tr><th>Nombre</th><th>Apellido</th><th>Cedula</th><th>Email</th><th>Telefono</th><th>Ultima Conexion</th><th>Acciones</th></tr>
     </thead>
     <tbody>
     <?php $result = getAnalistas($conexion); while ($row = mysqli_fetch_assoc($result)) { ?>
     <tr>
-        <td><?php echo $row['id_user']; ?></td>
-        <td><?php echo $row['username']; ?></td>
+        <td><?php echo $row['name']; ?></td>
+        <td><?php echo $row['apellido']; ?></td>
+        <td><?php echo $row['cedula']; ?></td>
         <td><?php echo $row['email']; ?></td>
-        <td><?php echo $row['rol_name']; ?></td>
-        <td><?php echo $row['status_name']; ?></td>
+        <td><?php echo $row['telefono']; ?></td>
+        <td><?php echo $row['last_connection']; ?></td>
         <td>
-            <button onclick="$('#edit-id').val(<?php echo $row['id_user']; ?>); $('#edit-username').val('<?php echo $row['username']; ?>'); $('#edit-email').val('<?php echo $row['email']; ?>'); $('#edit-id_status_user').val('<?php echo $row['id_status_user']; ?>'); $('#modal-edit-analista').modal('show');" class="btn btn-warning btn-sm">Editar</button>
-            <form method="post" style="display:inline;">
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="id" value="<?php echo $row['id_user']; ?>">
-                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-            </form>
+            <button class="btn btn-info btn-sm" onclick="verInfo(<?php echo $row['id_user']; ?>)">Ver Info</button>
         </td>
     </tr>
     <?php } ?>
@@ -149,11 +149,11 @@ form {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="post">
+                <form method="post" id="form-insert">
                     <input type="hidden" name="action" value="insert">
                     <div class="mb-3">
                         <label>Username</label>
-                        <input type="text" name="username" required class="form-control">
+                        <input type="text" name="username" required class="form-control" minlength="3" maxlength="20">
                     </div>
                     <div class="mb-3">
                         <label>Email</label>
@@ -161,7 +161,7 @@ form {
                     </div>
                     <div class="mb-3">
                         <label>Password</label>
-                        <input type="password" name="password" required class="form-control">
+                        <input type="password" name="password" required class="form-control" minlength="7" maxlength="15">
                     </div>
                     <div class="mb-3">
                         <label>Status</label>
@@ -186,12 +186,12 @@ form {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="post">
+                <form method="post" id="form-update">
                     <input type="hidden" name="action" value="update">
                     <input type="hidden" name="id" id="edit-id">
                     <div class="mb-3">
                         <label>Username</label>
-                        <input type="text" name="username" id="edit-username" required class="form-control">
+                        <input type="text" name="username" id="edit-username" required class="form-control" minlength="3" maxlength="20">
                     </div>
                     <div class="mb-3">
                         <label>Email</label>
@@ -199,7 +199,7 @@ form {
                     </div>
                     <div class="mb-3">
                         <label>Password (dejar vacío para no cambiar)</label>
-                        <input type="password" name="password" class="form-control">
+                        <input type="password" name="password" class="form-control" minlength="7" maxlength="15">
                     </div>
                     <div class="mb-3">
                         <label>Status</label>
@@ -215,6 +215,21 @@ form {
     </div>
 </div>
 
+<!-- Modal Ver Info -->
+<div class="modal fade" id="modal-info" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Información Completa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="info-content">
+                Cargando...
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function filterTable(tableId, query) {
     const table = document.getElementById(tableId);
@@ -223,7 +238,7 @@ function filterTable(tableId, query) {
     for (let i = 0; i < rows.length; i++) {
         const cells = rows[i].getElementsByTagName('td');
         let match = false;
-        for (let j = 1; j < cells.length - 1; j++) { // Skip ID and Actions
+        for (let j = 0; j < cells.length - 1; j++) { // Skip Actions
             if (cells[j].textContent.toLowerCase().includes(query)) {
                 match = true;
                 break;
@@ -232,6 +247,63 @@ function filterTable(tableId, query) {
         rows[i].style.display = match ? '' : 'none';
     }
 }
+
+function verInfo(id) {
+    fetch('../php/get_user_data.php?id_user=' + id)
+    .then(response => response.json())
+    .then(data => {
+        if (data.found) {
+            const d = data.data;
+            document.getElementById('info-content').innerHTML = `
+                <p><strong>Nombre:</strong> ${d.name}</p>
+                <p><strong>Apellido:</strong> ${d.apellido}</p>
+                <p><strong>Cedula:</strong> ${d.cedula}</p>
+                <p><strong>Email:</strong> ${d.email}</p>
+                <p><strong>Telefono:</strong> ${d.telefono}</p>
+                <p><strong>Ultima Conexion:</strong> ${d.last_connection}</p>
+            `;
+        } else {
+            document.getElementById('info-content').innerHTML = 'No encontrado';
+        }
+        $('#modal-info').modal('show');
+    })
+    .catch(error => {
+        document.getElementById('info-content').innerHTML = 'Error al cargar';
+        $('#modal-info').modal('show');
+    });
+}
+
+function exportToExcel() {
+    window.location.href = '../php/export_excel.php';
+}
+
+document.getElementById('form-update').addEventListener('submit', function(e) {
+    const username = this.username.value.trim();
+    const email = this.email.value;
+    const password = this.password.value;
+    const status = this.id_status_user.value;
+
+    if (username.length < 3 || username.length > 20) {
+        alert('Username debe tener entre 3 y 20 caracteres.');
+        e.preventDefault();
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Email inválido.');
+        e.preventDefault();
+        return;
+    }
+    if (password && (password.length < 7 || password.length > 15)) {
+        alert('Password debe tener entre 7 y 15 caracteres.');
+        e.preventDefault();
+        return;
+    }
+    if (!status) {
+        alert('Seleccione un status.');
+        e.preventDefault();
+        return;
+    }
+});
 </script>
 
 <?php include '../page/footer.php' ?>

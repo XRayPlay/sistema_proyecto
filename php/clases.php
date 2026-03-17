@@ -64,12 +64,12 @@
                                 error_log("[LOGIN] usuario_id={$user_id} id_rol={$row['id_rol']}");
                                 if ($row['id_rol'] == 3) {
                                         // TÉCNICO - Redirigir al panel principal de técnicos
-                                        $target = '../vista/tecnicos/dashboard_tecnico.php';
+                                        $target = '../vista/incidencias.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } elseif ($row['id_rol'] == 4) {
                                         // ANALISTA - Redirigir directamente a la gestión de incidencias
-                                        $target = '../vista/gestionar_incidencias.php';
+                                        $target = '../vista/incidencias.php';
                                         error_log("[LOGIN] redirigiendo a: $target");
                                         header("Location: $target");
                                     } else {
