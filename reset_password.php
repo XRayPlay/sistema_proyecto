@@ -44,7 +44,7 @@ if (empty($token)) {
                     $error = 'La contraseña debe tener al menos 6 caracteres';
                 } else {
                     // Actualizar contraseña
-                    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                    $hashed_password = hash('sha512', $new_password);
                     $update_query = "UPDATE user SET pass = ? WHERE id_user = ?";
                     $stmt_update = mysqli_prepare($conn, $update_query);
                     mysqli_stmt_bind_param($stmt_update, 'si', $hashed_password, $token_data['user_id']);

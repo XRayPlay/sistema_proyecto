@@ -1,5 +1,7 @@
 <?php
+session_start();
 include '../php/clases.php';
+require_once '../php/permisos.php';
 $conn = new conectar();
 $conexion = $conn->conexion();
 
@@ -117,7 +119,9 @@ form {
 <h1>Gestión de Técnicos</h1>
 
 <input type="text" class="search-input" placeholder="Buscar por username, email, etc." onkeyup="filterTable('tecnicos-table', this.value)">
-<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal-tecnico">Añadir Técnico</button>
+<?php if (esAdmin()): ?>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal-tecnico">Añadir Técnico</button>
+<?php endif; ?>
 <button class="btn btn-secondary mb-3" onclick="exportToExcel()">Exportar a Excel</button>
 
 <table id="tecnicos-table" class="table table-striped table-dark">
@@ -139,6 +143,14 @@ form {
             <button class="btn btn-info btn-sm" onclick="verInfo(<?php echo $row['id_user']; ?>)">Ver Info</button>
             <button class="btn btn-primary btn-sm" onclick="verIncidenciasAsignadas(<?php echo $row['id_user']; ?>)">Incidencias Asignadas</button>
             <button class="btn btn-success btn-sm" onclick="verIncidenciasResueltas(<?php echo $row['id_user']; ?>)">Incidencias Resueltas</button>
+            <?php if (esAdmin()): ?>
+                <button class="btn btn-warning btn-sm" onclick="editarTecnico(<?php echo $row['id_user']; ?>)">Editar</button>
+                <form method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="id" value="<?php echo $row['id_user']; ?>">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de eliminar este técnico?')">Eliminar</button>
+                </form>
+            <?php endif; ?>
         </td>
     </tr>
     <?php } ?>
@@ -348,6 +360,26 @@ function verIncidenciasResueltas(id) {
 
 function exportToExcel() {
     window.location.href = '../php/export_excel.php';
+}
+
+function editarTecnico(id) {
+    fetch('../php/get_user_data.php?id_user=' + id)
+    .then(response => response.json())
+    .then(data => {
+        if (data.found) {
+            const d = data.data;
+            document.getElementById('edit-id').value = d.id_user;
+            document.getElementById('edit-username').value = d.username;
+            document.getElementById('edit-email').value = d.email;
+            document.getElementById('edit-id_status_user').value = d.id_status_user;
+            $('#modal-edit-tecnico').modal('show');
+        } else {
+            alert('No se encontró el técnico');
+        }
+    })
+    .catch(error => {
+        alert('Error al cargar datos del técnico');
+    });
 }
 
 document.getElementById('form-insert-tecnico').addEventListener('submit', function(e) {

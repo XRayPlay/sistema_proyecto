@@ -3,26 +3,8 @@
 ini_set('display_errors', 0); 
 header('Content-Type: application/json');
 
-// Asegurar que solo se procesen peticiones POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Método no permitido
-    echo json_encode(['found' => false, 'error' => 'Método no permitido.']);
-    exit();
-}
-
 // 1. Incluir la clase de conexión
 require_once "conexion_be.php";
-
-// 2. Obtener la cedula
-$cedula = isset($_POST['cedula']) ? $_POST['cedula'] : '';
-
-// Limpiar y validar la cedula
-$cedula = trim($cedula);
-if (empty($cedula) || !preg_match('/^\d{7,8}$/', $cedula)) {
-    http_response_code(400); // Solicitud incorrecta
-    echo json_encode(['found' => false, 'error' => 'Cédula inválida.']);
-    exit();
-}
 
 $obj = new conectar();
 $conexion = $obj->conexion();
@@ -34,22 +16,70 @@ $response = [
 ];
 
 try {
-    // 3. Preparar y ejecutar la consulta
-    $sql = "SELECT p.name AS nombre, p.apellido, p.cedula, p.email, p.phone_code AS codigo_telefono, p.phone AS telefono, c.name as cargo, u.last_connection, u.avatar
-            FROM user u
-            JOIN person p ON u.id_person = p.id_person
-            LEFT JOIN cargo c ON p.id_cargo = c.id_cargo
-            WHERE p.cedula = ?
-            LIMIT 1";
+    // 2. Determinar el método y parámetros
+    $method = $_SERVER['REQUEST_METHOD'];
     
-    // Usar consultas preparadas para seguridad
-    $stmt = $conexion->prepare($sql);
-    
-    if ($stmt === false) {
-        throw new Exception("Error al preparar la consulta: " . $conexion->error);
+    if ($method === 'POST') {
+        // Para búsqueda por cédula (uso existente)
+        $cedula = isset($_POST['cedula']) ? $_POST['cedula'] : '';
+        
+        // Limpiar y validar la cedula
+        $cedula = trim($cedula);
+        if (empty($cedula) || !preg_match('/^\d{7,8}$/', $cedula)) {
+            http_response_code(400); // Solicitud incorrecta
+            echo json_encode(['found' => false, 'error' => 'Cédula inválida.']);
+            exit();
+        }
+        
+        // 3. Preparar y ejecutar la consulta por cédula
+        $sql = "SELECT p.name AS nombre, p.apellido, p.cedula, p.email, p.phone_code AS codigo_telefono, p.phone AS telefono, c.name as cargo, u.last_connection, u.avatar, p.id_floor AS floor, u.id_user, u.username, u.id_status_user
+                FROM user u
+                JOIN person p ON u.id_person = p.id_person
+                LEFT JOIN cargo c ON p.id_cargo = c.id_cargo
+                WHERE p.cedula = ?
+                LIMIT 1";
+        
+        $stmt = $conexion->prepare($sql);
+        if ($stmt === false) {
+            throw new Exception("Error al preparar la consulta: " . $conexion->error);
+        }
+        
+        $stmt->bind_param("s", $cedula);
+        
+    } elseif ($method === 'GET') {
+        // Para búsqueda por id_user (nuevo uso para tecnicos.php)
+        $id_user = isset($_GET['id_user']) ? $_GET['id_user'] : '';
+        
+        // Validar id_user
+        $id_user = trim($id_user);
+        if (empty($id_user) || !preg_match('/^\d+$/', $id_user)) {
+            http_response_code(400); // Solicitud incorrecta
+            echo json_encode(['found' => false, 'error' => 'ID de usuario inválido.']);
+            exit();
+        }
+        
+        // 3. Preparar y ejecutar la consulta por id_user
+        $sql = "SELECT p.name AS nombre, p.apellido, p.cedula, p.email, p.phone_code AS codigo_telefono, p.phone AS telefono, c.name as cargo, u.last_connection, u.avatar, p.id_floor AS floor, u.id_user, u.username, u.id_status_user
+                FROM user u
+                JOIN person p ON u.id_person = p.id_person
+                LEFT JOIN cargo c ON p.id_cargo = c.id_cargo
+                WHERE u.id_user = ?
+                LIMIT 1";
+        
+        $stmt = $conexion->prepare($sql);
+        if ($stmt === false) {
+            throw new Exception("Error al preparar la consulta: " . $conexion->error);
+        }
+        
+        $stmt->bind_param("i", $id_user);
+        
+    } else {
+        // Método no permitido
+        http_response_code(405);
+        echo json_encode(['found' => false, 'error' => 'Método no permitido.']);
+        exit();
     }
-
-    $stmt->bind_param("s", $cedula); 
+    
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -60,7 +90,9 @@ try {
         
         $response['found'] = true;
         $response['data'] = [
-            'nombre' => $user_data['nombre'],
+            'id_user' => $user_data['id_user'],
+            'username' => $user_data['username'],
+            'name' => $user_data['nombre'],
             'apellido' => $user_data['apellido'],
             'cedula' => $user_data['cedula'],
             'email' => $user_data['email'],
@@ -68,10 +100,12 @@ try {
             'telefono' => $user_data['telefono'],
             'cargo' => $user_data['cargo'],
             'last_connection' => $user_data['last_connection'],
-            'avatar' => $user_data['avatar']
+            'avatar' => $user_data['avatar'],
+            'piso' => $user_data['floor'],
+            'id_status_user' => $user_data['id_status_user']
         ];
     } else {
-        // ID no encontrado
+        // Usuario no encontrado
         $response['found'] = false;
     }
 
@@ -87,6 +121,4 @@ try {
 
 // 5. Devolver la respuesta en formato JSON
 echo json_encode($response);
-// NOTA: Recuerda revisar 'conexion_be.php' para asegurar que no haya salida inesperada (espacios en blanco)
-// que cause el SyntaxError.
 ?>

@@ -3,22 +3,15 @@ session_start();
 header('Content-Type: application/json');
 
 // Verificar autenticación
-if (!isset($_SESSION['usuario'])) {
+if ($_POST['action'] !== 'crear' && (!isset($_SESSION['usuario']) && !isset($_SESSION['id_user']))) {
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    echo json_encode(['success' => false, 'message' => 'Debe iniciar sesión para realizar esta acción']);
     exit();
 }
+
 
 require_once "permisos.php";
 require_once "clases.php";
-
-// Permitir acceso a Admin, Director y Analista para algunas operaciones (lectura).
-// Acciones de creación/actualización/eliminación seguirán requiriendo Admin/Director.
-if (!esAdmin() && !esDirector() && !esAnalista()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-    exit();
-}
 
 try {
     $c = new conectar();
@@ -32,12 +25,6 @@ try {
     
     switch ($action) {
         case 'crear':
-            // Crear solo para Admin/Director
-            if (!esAdmin() && !esDirector() && !esAnalista()) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear incidencias']);
-                return;
-            }
             crearIncidencia($conexion);
             break;
         case 'obtener':
@@ -93,7 +80,7 @@ function crearIncidencia($conexion) {
     $solicitante_telefono = $_POST['solicitante_telefono'] ?? '';
     $piso = $_POST['piso'] ?? '';
     $tecnico_asignado = $_POST['tecnico_asignado_id'] ?? '';
-    $creador_id_person = $_SESSION['usuario']['id_person'];
+    $creador_id_person = null; // Sin autenticación, no hay creador
 
     // Validar campos requeridos
     $required = [
@@ -160,9 +147,9 @@ function crearIncidencia($conexion) {
 
     // Insertar en incidencias
     $status_incidencia = $tecnico_id_person ? 1 : 2; // 1 Asignado, 2 En Proceso
-    $query_incidencia = "INSERT INTO incidencias (tipo_incidencia, descripcion, status_incidencia, usuario_creador, tecnico_asignado, fecha_asignacion, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+    $query_incidencia = "INSERT INTO incidencias (tipo_incidencia, descripcion, status_incidencia, usuario_creador, tecnico_asignado, fecha_asignacion, updated_at) VALUES (?, ?, ?, ?, ?, NULL, NOW())";
     $stmt_incidencia = mysqli_prepare($conexion, $query_incidencia);
-    mysqli_stmt_bind_param($stmt_incidencia, 'iiiis', $tipo_incidencia, $descripcion, $status_incidencia, $solicitante_id, $tecnico_id_person);
+    mysqli_stmt_bind_param($stmt_incidencia, 'isiis', $tipo_incidencia, $descripcion, $status_incidencia, $solicitante_id, $tecnico_id_person);
     if (mysqli_stmt_execute($stmt_incidencia)) {
         $incidencia_id = mysqli_insert_id($conexion);
         echo json_encode([

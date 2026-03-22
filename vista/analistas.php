@@ -1,5 +1,7 @@
 <?php
+session_start();
 include '../php/clases.php';
+require_once '../php/permisos.php';
 $conn = new conectar();
 $conexion = $conn->conexion();
 
@@ -116,7 +118,9 @@ form {
 <h1>Gestión de Analistas</h1>
 
 <input type="text" class="search-input" placeholder="Buscar por username, email, etc." onkeyup="filterTable('analistas-table', this.value)">
-<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal-analista">Añadir Analista</button>
+<?php if (esAdmin()): ?>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal-analista">Añadir Analista</button>
+<?php endif; ?>
 <button class="btn btn-secondary mb-3" onclick="exportToExcel()">Exportar a Excel</button>
 
 <table id="analistas-table" class="table table-striped table-dark">
@@ -134,6 +138,15 @@ form {
         <td><?php echo $row['last_connection']; ?></td>
         <td>
             <button class="btn btn-info btn-sm" onclick="verInfo(<?php echo $row['id_user']; ?>)">Ver Info</button>
+            <button class="btn btn-primary btn-sm" onclick="verIncidenciasCreadas(<?php echo $row['id_user']; ?>)">Incidencias Creadas</button>
+            <?php if (esAdmin()): ?>
+                <button class="btn btn-warning btn-sm" onclick="editarAnalista(<?php echo $row['id_user']; ?>)">Editar</button>
+                <form method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="id" value="<?php echo $row['id_user']; ?>">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de eliminar este analista?')">Eliminar</button>
+                </form>
+            <?php endif; ?>
         </td>
     </tr>
     <?php } ?>
@@ -215,6 +228,21 @@ form {
     </div>
 </div>
 
+<!-- Modal Incidencias Creadas -->
+<div class="modal fade" id="modal-creadas" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Incidencias Creadas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="creadas-content">
+                Cargando...
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Ver Info -->
 <div class="modal fade" id="modal-info" tabindex="-1">
     <div class="modal-dialog">
@@ -273,8 +301,46 @@ function verInfo(id) {
     });
 }
 
+function verIncidenciasCreadas(id) {
+    fetch('../php/get_incidencias_creadas.php?id_user=' + id)
+    .then(response => response.json())
+    .then(data => {
+        let html = '<table class="table table-striped"><thead><tr><th>ID</th><th>Tipo</th><th>Descripción</th><th>Status</th><th>Fecha Creación</th></tr></thead><tbody>';
+        data.forEach(inc => {
+            html += `<tr><td>${inc.id_incidencias}</td><td>${inc.tipo}</td><td>${inc.descripcion}</td><td>${inc.status}</td><td>${inc.fecha_creacion}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('creadas-content').innerHTML = html;
+        $('#modal-creadas').modal('show');
+    })
+    .catch(error => {
+        document.getElementById('creadas-content').innerHTML = 'Error al cargar';
+        $('#modal-creadas').modal('show');
+    });
+}
+
 function exportToExcel() {
     window.location.href = '../php/export_excel.php';
+}
+
+function editarAnalista(id) {
+    fetch('../php/get_user_data.php?id_user=' + id)
+    .then(response => response.json())
+    .then(data => {
+        if (data.found) {
+            const d = data.data;
+            document.getElementById('edit-id').value = d.id_user;
+            document.getElementById('edit-username').value = d.username;
+            document.getElementById('edit-email').value = d.email;
+            document.getElementById('edit-id_status_user').value = d.id_status_user;
+            $('#modal-edit-analista').modal('show');
+        } else {
+            alert('No se encontró el analista');
+        }
+    })
+    .catch(error => {
+        alert('Error al cargar datos del analista');
+    });
 }
 
 document.getElementById('form-update').addEventListener('submit', function(e) {

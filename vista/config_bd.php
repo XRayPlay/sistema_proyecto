@@ -1,7 +1,6 @@
 <?php
-include '../php/conexion_be.php';
-$conn = new conectar();
-$conexion = $conn->conexion();
+require_once '../php/conexion_be.php';
+
 
 // Manejar POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -89,7 +88,6 @@ form {
 <?php
 $conn = new conectar();
 $conexion = $conn->conexion();
-
 // Función para obtener datos
 function getData($table, $conn) {
     if ($table == 'incident_type') {

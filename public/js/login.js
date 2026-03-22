@@ -1,3 +1,138 @@
+// --- Sistema de Notificaciones con Estilo ---
+
+function showNotification(message, type = 'success', duration = 5000) {
+    // Crear contenedor de notificaciones si no existe
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notification-container';
+        notificationContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        document.body.appendChild(notificationContainer);
+    }
+
+    // Crear notificación
+    const notification = document.createElement('div');
+    const notificationId = 'notification-' + Date.now();
+    notification.id = notificationId;
+    
+    // Estilos base según tipo
+    const styles = {
+        success: {
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            icon: '✓',
+            borderLeft: '4px solid #059669'
+        },
+        error: {
+            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+            icon: '✕',
+            borderLeft: '4px solid #dc2626'
+        },
+        warning: {
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            icon: '⚠',
+            borderLeft: '4px solid #d97706'
+        },
+        info: {
+            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            icon: 'ℹ',
+            borderLeft: '4px solid #2563eb'
+        }
+    };
+
+    const style = styles[type] || styles.info;
+    
+    notification.style.cssText = `
+        ${style.borderLeft};
+        background: ${style.background};
+        color: white;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        cursor: pointer;
+        transform: translateX(100%);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        position: relative;
+        overflow: hidden;
+    `;
+
+    // Icono
+    const icon = document.createElement('span');
+    icon.style.cssText = `
+        font-size: 18px;
+        font-weight: bold;
+        margin-right: 12px;
+        min-width: 20px;
+        text-align: center;
+    `;
+    icon.textContent = style.icon;
+
+    // Mensaje
+    const messageElement = document.createElement('span');
+    messageElement.style.cssText = `
+        flex: 1;
+        font-weight: 500;
+    `;
+    messageElement.textContent = message;
+
+    // Botón cerrar
+    const closeBtn = document.createElement('span');
+    closeBtn.style.cssText = `
+        margin-left: 12px;
+        font-size: 16px;
+        opacity: 0.8;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    `;
+    closeBtn.textContent = '×';
+    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.8';
+
+    // Ensamblar
+    notification.appendChild(icon);
+    notification.appendChild(messageElement);
+    notification.appendChild(closeBtn);
+
+    // Animación de entrada
+    notificationContainer.appendChild(notification);
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Función para cerrar
+    const closeNotification = () => {
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    };
+
+    // Eventos para cerrar
+    closeBtn.onclick = closeNotification;
+    notification.onclick = closeNotification;
+
+    // Auto-cerrar
+    if (duration > 0) {
+        setTimeout(closeNotification, duration);
+    }
+
+    return notificationId;
+}
+
 // --- Funciones de Filtrado de Teclas (onkeypress) (Sin Cambios) ---
 
 function isCharKey(event) {
@@ -76,40 +211,53 @@ function validateRequiredText(value) { return value.trim().length > 0; }
 
 // --- FUNCIÓN AUXILIAR DE ERROR ---
 function showError(message, field, errorDiv) {
-    if (errorDiv) { errorDiv.textContent = message; errorDiv.style.display = 'block'; }
-    if (field) { applyValidationClass(field, false); field.focus(); }
+    if (errorDiv) { 
+        errorDiv.textContent = message; 
+        errorDiv.style.display = 'block'; 
+    }
+    if (field) { 
+        applyValidationClass(field, false); 
+        field.focus(); 
+    } else {
+        // Si no hay campo específico, mostrar notificación de error
+        showNotification(message, 'error', 5000);
+    }
     return false;
 };
 
 // ** NUEVA FUNCIÓN: Consulta de Datos de Usuario por Cédula **
 function fillIncidentFields(data) {
-    const fieldsToToggle = [incidentFields.nombre, incidentFields.apellido, incidentFields.email, incidentFields.codigoTelefono, incidentFields.telefono];
+    const fieldsToToggle = [incidentFields.nombre, incidentFields.apellido, incidentFields.email, incidentFields.codigoTelefono, incidentFields.telefono, incidentFields.pisos];
     if (data) {
         incidentFields.nombre.value = data.nombre || '';
         incidentFields.apellido.value = data.apellido || '';
         incidentFields.email.value = data.email || '';
         incidentFields.codigoTelefono.value = data.codigo_telefono || '';
         incidentFields.telefono.value = data.telefono || '';
-        if (incidentFields.piso) { incidentFields.piso.value = data.piso_id || ''; applyValidationClass(incidentFields.piso, !!data.piso_id); }
+        incidentFields.pisos.value = data.piso || '';
+        if (incidentFields.pisos) { incidentFields.pisos.value = data.piso || ''; applyValidationClass(incidentFields.pisos, !!data.piso); }
         fieldsToToggle.forEach(field => { if (field) field.setAttribute('readonly', true); });
         applyValidationClass(incidentFields.nombre, true);
         applyValidationClass(incidentFields.apellido, true);
         applyValidationClass(incidentFields.email, true);
         applyValidationClass(incidentFields.codigoTelefono, validatePhoneCode(data.codigo_telefono || ''));
         applyValidationClass(incidentFields.telefono, validatePhone(data.telefono || ''));
+        applyValidationClass(incidentFields.pisos, true);
     } else {
         incidentFields.nombre.value = '';
         incidentFields.apellido.value = '';
         incidentFields.email.value = '';
         incidentFields.codigoTelefono.value = '';
         incidentFields.telefono.value = '';
-        if (incidentFields.piso) { incidentFields.piso.value = ''; incidentFields.piso.classList.remove('is-valid', 'is-invalid'); }
+        incidentFields.pisos.value = '';
+        if (incidentFields.pisos) { incidentFields.pisos.value = ''; incidentFields.pisos.classList.remove('is-valid', 'is-invalid'); }
         fieldsToToggle.forEach(field => { if (field) field.removeAttribute('readonly'); });
         applyValidationClass(incidentFields.nombre, false);
         applyValidationClass(incidentFields.apellido, false);
         applyValidationClass(incidentFields.email, false);
         applyValidationClass(incidentFields.codigoTelefono, false);
         applyValidationClass(incidentFields.telefono, false);
+        applyValidationClass(incidentFields.pisos, false);
     }
 }
 
@@ -178,10 +326,13 @@ function validateAndSubmitIncident(event) {
     fetch('php/gestionar_incidencias_crud.php', { method: 'POST', body: formData })
     .then(response => response.json())
     .then(data => {
-        if (data.success) { alert(`Incidencia Creada con Éxito. N° Ticket: ${data.id}`); closeModal(document.getElementById('incidentModal')); document.getElementById('incidentForm').reset(); }
+        if (data.success) { 
+            showNotification(`Incidencia Creada con Éxito. N° Ticket: ${data.id}`, 'success', 6000); 
+            closeModal(document.getElementById('incidentModal')); 
+            document.getElementById('incidentForm').reset(); 
+        }
         else showError(`Error: ${data.error}`, null, errorDiv);
     })
-    .catch(error => { console.error('Error de red al crear incidencia:', error); showError('Error de conexión al servidor. Intente más tarde.', null, errorDiv); });
 }
 
 // --- Lógica Principal del DOM ---
@@ -207,7 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
         telefono: document.getElementById('incident-telefono'),
         piso: document.getElementById('incident-piso'),
         tipo: document.getElementById('incident-tipo'),
-        descripcion: document.getElementById('incident-descripcion')
+        descripcion: document.getElementById('incident-descripcion'),
+        pisos: document.getElementById('incident-piso')
     };
 
     function addPasswordToggle(selector) {
@@ -291,7 +443,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         const roleRes = await fetch('php/get_user_role.php');
                         const roleData = await roleRes.json();
-                        if (roleData.success && roleData.id_rol == 4) { window.location.href = '/sistema_proyecto/nuevo_diseno/gestionar_incidencias.php'; return; }
                     } catch (err) { console.error('Error al comprobar rol del usuario:', err); }
                 }
                 window.location.href = redirectUrl;
@@ -331,5 +482,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (incidentForm) incidentForm.addEventListener('submit', validateAndSubmitIncident);
 
     const chatBtn = document.querySelector('.chat-btn');
-    if (chatBtn) chatBtn.addEventListener('click', () => alert('Abriendo ventana de chat...'));
+    if (chatBtn) chatBtn.addEventListener('click', () => showNotification('Chat en mantenimiento', 'info', 3000));
 });
